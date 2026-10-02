@@ -50,3 +50,6 @@ pubspec.lock.local
 .env.local
 coverage/
 .kotlin/
+
+# Heap dumps
+*.hprof
