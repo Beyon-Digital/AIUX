@@ -7,7 +7,7 @@ import SwiftUI
 // `aiux.composer.cancel`, attach emits `aiux.composer.attach` (the host owns
 // the picker). Cancel is only enabled while a run is active.
 
-/// The message composer bar.
+/// The floating message composer — a margin-free pill over the content.
 public struct AIComposer: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
@@ -28,7 +28,7 @@ public struct AIComposer: View {
 
     public var body: some View {
         let colors = theme.colors(for: colorScheme)
-        HStack(alignment: .bottom, spacing: theme.space(.sm)) {
+        HStack(alignment: .center, spacing: theme.space(.sm)) {
             Button {
                 emit(AIUXAction(id: AIUXAction.composerAttach))
             } label: {
@@ -42,11 +42,12 @@ public struct AIComposer: View {
                         Circle()
                             .strokeBorder(colors.border, lineWidth: 1)
                     )
+                    .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Attach")
 
-            HStack(alignment: .bottom, spacing: theme.space(.xs)) {
+            HStack(alignment: .center, spacing: theme.space(.xs)) {
                 TextField(placeholder, text: $text, axis: .vertical)
                     .lineLimit(1...5)
                     .font(theme.typography.body)
@@ -86,11 +87,13 @@ public struct AIComposer: View {
                 Capsule()
                     .strokeBorder(colors.border, lineWidth: 1)
             )
+            // Floating composer: soft elevation instead of a docked bar.
+            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
 
         }
         .padding(.horizontal, theme.space(.md))
-        .padding(.vertical, theme.space(.sm))
-        .background(colors.background)
+        .padding(.top, theme.space(.xs))
+        .padding(.bottom, theme.space(.md))
     }
 
     private var canSend: Bool {

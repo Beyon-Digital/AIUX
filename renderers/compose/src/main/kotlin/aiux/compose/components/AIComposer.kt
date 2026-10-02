@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -44,9 +45,12 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Prompt composer (§23), styled after the ChatGPT mobile composer: a
- * standalone `+` circle on the left and a rounded pill containing the input
- * with a monochrome circular action button at its right edge — up-arrow to
- * send, stop-square while a run is active. Emits actions upward only.
+ * floating row — standalone `+` circle beside a rounded pill containing the
+ * input with a monochrome circular action button at its right edge
+ * (up-arrow to send, stop-square while a run is active). The row floats
+ * above the content with margins + soft elevation rather than docking as
+ * a bottom bar, and its contents center-align vertically. Emits actions
+ * upward only.
  */
 @Composable
 fun AIComposer(
@@ -76,13 +80,19 @@ fun AIComposer(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = theme.spacing.md, vertical = theme.spacing.sm),
-        verticalAlignment = Alignment.Bottom,
+            .padding(
+                start = theme.spacing.md,
+                end = theme.spacing.md,
+                top = theme.spacing.xs,
+                bottom = theme.spacing.md,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Standalone + circle — attachment hook.
         Box(
             modifier = Modifier
                 .size(44.dp)
+                .shadow(2.dp, CircleShape)
                 .clip(CircleShape)
                 .background(theme.colors.surfaceElevated)
                 .border(1.dp, theme.colors.border, CircleShape)
@@ -99,11 +109,12 @@ fun AIComposer(
         }
         Spacer(Modifier.width(theme.spacing.sm))
 
-        // Pill: input + trailing action circle inside one surface.
+        // Pill: input + trailing action circle inside one elevated surface.
         Surface(
             color = theme.colors.surfaceElevated,
             shape = RoundedCornerShape(26.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, theme.colors.border),
+            shadowElevation = 3.dp,
             modifier = Modifier.weight(1f),
         ) {
             Row(
