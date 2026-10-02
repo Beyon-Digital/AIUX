@@ -22,51 +22,58 @@ public struct AIArtifactPreview: View {
 
     public var body: some View {
         let colors = theme.colors(for: colorScheme)
-        Button {
-            detailPresented = true
-            var payload: [String: AIUXJSONValue] = [
-                "artifactId": .string(artifact.id),
-            ]
-            if let mode = artifact.workspace?.mode {
-                payload["mode"] = .string(mode.rawValue)
-            }
-            emit(AIUXAction(id: AIUXAction.artifactOpen, payload: payload))
-        } label: {
-            VStack(alignment: .leading, spacing: theme.space(.xs)) {
-                HStack(spacing: theme.space(.sm)) {
-                    Image(systemName: icon)
-                        .foregroundStyle(colors.accent)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(artifact.title ?? artifact.kind)
-                            .font(theme.typography.label)
-                            .lineLimit(1)
-                        Text("\(artifact.kind) · rev \(artifact.revision)")
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            Button {
+                detailPresented = true
+                var payload: [String: AIUXJSONValue] = [
+                    "artifactId": .string(artifact.id),
+                ]
+                if let mode = artifact.workspace?.mode {
+                    payload["mode"] = .string(mode.rawValue)
+                }
+                emit(AIUXAction(id: AIUXAction.artifactOpen, payload: payload))
+            } label: {
+                VStack(alignment: .leading, spacing: theme.space(.xs)) {
+                    HStack(spacing: theme.space(.sm)) {
+                        Image(systemName: icon)
+                            .foregroundStyle(colors.accent)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(artifact.title ?? artifact.kind)
+                                .font(theme.typography.label)
+                                .lineLimit(1)
+                            Text("\(artifact.kind) · rev \(artifact.revision)")
+                                .font(theme.typography.caption)
+                                .foregroundStyle(colors.muted)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(colors.muted)
+                    }
+                    if let summary = artifact.preview?.summary {
+                        Text(summary)
                             .font(theme.typography.caption)
                             .foregroundStyle(colors.muted)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundStyle(colors.muted)
                 }
-                if let summary = artifact.preview?.summary {
-                    Text(summary)
-                        .font(theme.typography.caption)
-                        .foregroundStyle(colors.muted)
-                }
-                if let descriptor = artifact.preview?.surface {
-                    AISurface(tree: AIUXSurfaceTree(id: descriptor.id, root: descriptor.root))
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .foregroundStyle(Color.primary)
             }
-            .padding(theme.space(.sm))
-            .background(colors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
-            .overlay(
-                RoundedRectangle(cornerRadius: theme.radius.radius(.md))
-                    .strokeBorder(colors.border, lineWidth: 1)
-            )
-            .foregroundStyle(Color.primary)
+            .buttonStyle(.plain)
+            // The preview surface lives outside the open-button: nested
+            // inside a Button label its own buttons/fields/toggles are
+            // swallowed by the outer tap target and can't be used.
+            if let descriptor = artifact.preview?.surface {
+                AISurface(tree: AIUXSurfaceTree(id: descriptor.id, root: descriptor.root))
+            }
         }
-        .buttonStyle(.plain)
+        .padding(theme.space(.sm))
+        .background(colors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.radius.radius(.md))
+                .strokeBorder(colors.border, lineWidth: 1)
+        )
         .accessibilityLabel("Artifact: \(artifact.title ?? artifact.kind), revision \(artifact.revision)")
         .sheet(isPresented: $detailPresented) {
             AIArtifactDetail(artifact: artifact)

@@ -140,11 +140,73 @@ final class AIUXModelDecodeTests: XCTestCase {
     func testJSONValueRoundTrip() throws {
         let json = #"{"a":1,"b":[true,"x"],"c":{"d":null}}"#
         let v = try decoder.decode(AIUXJSONValue.self, from: Data(json.utf8))
-        XCTAssertEqual(v["a"], .number(1))
+        XCTAssertEqual(v["a"], .int(1))
         XCTAssertEqual(v["b"], .array([.bool(true), .string("x")]))
         XCTAssertEqual(v["c"]?["d"], .null)
         let re = try decoder.decode(AIUXJSONValue.self, from: try JSONEncoder().encode(v))
         XCTAssertEqual(v, re)
+    }
+
+    func testJSONValuePreservesLargeIntegers() throws {
+        // Beyond Double's 2^53 bound this collapses to 9007199254740992 —
+        // integral wire values must stay exact through decode AND re-encode.
+        let big: Int64 = 9_007_199_254_740_993
+        let v = try decoder.decode(
+            AIUXJSONValue.self,
+            from: Data(#"{"n":9007199254740993}"#.utf8)
+        )
+        XCTAssertEqual(v["n"], .int(big))
+        XCTAssertEqual(v["n"]?.intValue, big)
+        XCTAssertEqual(v["n"]?.numberValue, Double(big))
+
+        let reencoded = try JSONEncoder().encode(v)
+        XCTAssertEqual(String(data: reencoded, encoding: .utf8), #"{"n":9007199254740993}"#)
+        let re = try decoder.decode(AIUXJSONValue.self, from: reencoded)
+        XCTAssertEqual(re["n"], .int(big))
+    }
+
+    func testJSONValuePreservesUnsignedIntegers() throws {
+        // Above Int64.max the value only fits u64 — falling back to Double
+        // would round 18446744073709551615 to 18446744073709552000.
+        let big: UInt64 = 18_446_744_073_709_551_615
+        let v = try decoder.decode(
+            AIUXJSONValue.self,
+            from: Data(#"{"n":18446744073709551615}"#.utf8)
+        )
+        XCTAssertEqual(v["n"], .uint(big))
+        XCTAssertEqual(v["n"]?.uintValue, big)
+        XCTAssertNil(v["n"]?.intValue)
+
+        let reencoded = try JSONEncoder().encode(v)
+        XCTAssertEqual(String(data: reencoded, encoding: .utf8), #"{"n":18446744073709551615}"#)
+        let re = try decoder.decode(AIUXJSONValue.self, from: reencoded)
+        XCTAssertEqual(re["n"], .uint(big))
+    }
+
+    func testJSONValueFractionalStaysDouble() throws {
+        let v = try decoder.decode(
+            AIUXJSONValue.self,
+            from: Data(#"{"n":1.5,"neg":-0.25}"#.utf8)
+        )
+        XCTAssertEqual(v["n"], .number(1.5))
+        XCTAssertEqual(v["neg"], .number(-0.25))
+        XCTAssertNil(v["n"]?.intValue)
+    }
+
+    // MARK: Tool payload display (aiuxJSONDescription)
+
+    func testJSONDescriptionRendersScalars() {
+        // Scalars can't go through JSONSerialization — a bare `true`, `42`,
+        // or `null` tool result must not render as nothing.
+        XCTAssertEqual(aiuxJSONDescription(.bool(true)), "true")
+        XCTAssertEqual(aiuxJSONDescription(.null), "null")
+        XCTAssertEqual(aiuxJSONDescription(.int(42)), "42")
+        XCTAssertEqual(aiuxJSONDescription(.int(-7)), "-7")
+        XCTAssertEqual(aiuxJSONDescription(.number(2.5)), "2.5")
+        XCTAssertEqual(aiuxJSONDescription(.number(3.0)), "3")
+        XCTAssertEqual(aiuxJSONDescription(.string("done")), "done")
+        XCTAssertNotNil(aiuxJSONDescription(.object(["ok": .bool(true)])))
+        XCTAssertNotNil(aiuxJSONDescription(.array([.int(1), .int(2)])))
     }
 
     func testActionDecode() throws {

@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 // MARK: - Shared display helpers
 //
@@ -46,9 +51,33 @@ func aiuxByteCount(_ bytes: UInt64?) -> String? {
 }
 
 /// Compact JSON string for free-form payloads (tool input/result, metadata).
+/// Scalars render verbatim — `JSONSerialization` only accepts top-level
+/// objects/arrays, so a bare `true`, `42`, or `null` result needs its own
+/// path rather than disappearing.
 func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
     guard let value else { return nil }
-    if case .string(let s) = value { return s }
+    switch value {
+    case .string(let s):
+        return s
+    case .int(let i):
+        return String(i)
+    case .uint(let u):
+        return String(u)
+    case .number(let n):
+        // Integral doubles print without the `.0`; below 2^53 every whole
+        // Double converts exactly and stays far inside Int64.
+        if n.truncatingRemainder(dividingBy: 1) == 0,
+           n.magnitude < 9_007_199_254_740_992 {
+            return String(Int64(n))
+        }
+        return String(n)
+    case .bool(let b):
+        return b ? "true" : "false"
+    case .null:
+        return "null"
+    case .array, .object:
+        break
+    }
     let object = value.object
     guard JSONSerialization.isValidJSONObject(object),
           let data = try? JSONSerialization.data(
@@ -58,6 +87,33 @@ func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
           let string = String(data: data, encoding: .utf8)
     else { return nil }
     return string
+}
+
+/// Decode an inline `data:image/…;base64,…` URI — rendered locally, never
+/// fetched (the same surface the web `<img>` gets for free). Nil for
+/// non-image, non-base64, oversized, or un-decodable URIs: payloads are
+/// agent-controlled, so the source is capped at ~11 MB of base64 (~8 MB
+/// decoded) before any allocation happens.
+func aiuxDecodeDataImage(_ url: URL) -> Image? {
+    let raw = url.absoluteString
+    guard raw.lowercased().hasPrefix("data:image/"),
+          let comma = raw.firstIndex(of: ",") else { return nil }
+    let meta = raw[raw.startIndex..<comma].lowercased()
+    guard meta.hasSuffix(";base64") else { return nil }
+    let payload = raw[raw.index(after: comma)...]
+    guard payload.count <= 11_000_000,
+          let data = Data(base64Encoded: String(payload)),
+          data.count <= 8 * 1024 * 1024
+    else { return nil }
+    #if canImport(UIKit)
+    guard let image = UIImage(data: data) else { return nil }
+    return Image(uiImage: image)
+    #elseif canImport(AppKit)
+    guard let image = NSImage(data: data) else { return nil }
+    return Image(nsImage: image)
+    #else
+    return nil
+    #endif
 }
 
 /// A small icon keyed to a semantic attachment `mimeType` prefix.

@@ -51,7 +51,11 @@ do {
     )
 
     // 3. Agent stream up to the approval request.
-    try ingest(backend, DemoScenario.preApprovalEvents(factory: &factory, turn: 1), stage: "agent stream")
+    try ingest(
+        backend,
+        DemoScenario.preApprovalEvents(turn: 1).map { factory.event($0) },
+        stage: "agent stream"
+    )
     snap = try snapshot(of: backend)
     guard snap.messages.count == 2,
           snap.tools.first?.status == .completed,
@@ -67,7 +71,7 @@ do {
     // 4. User approves → executed → markdown + artifact + surface + complete.
     try ingest(
         backend,
-        DemoScenario.postApprovalEvents(factory: &factory, turn: 1, approved: true),
+        DemoScenario.postApprovalEvents(turn: 1, approved: true).map { factory.event($0) },
         stage: "approve + result"
     )
     snap = try snapshot(of: backend)
@@ -89,14 +93,41 @@ do {
         }
     }
 
-    // 5. Serialize/restore parity.
+    // 5. Render-model resolution — views consume `AIUXRenderModel`, not the
+    // raw snapshot. Every entity a part references must resolve through it
+    // (headless CI can't instantiate views; this is the binding layer they
+    // bind to).
+    let model = AIUXRenderModel(snapshot: snap)
+    for tool in snap.tools {
+        guard model.tool(tool.id) != nil else {
+            throw GateError.stage(name: "render model", reason: "tool '\(tool.id)' unresolved")
+        }
+    }
+    for approval in snap.approvals {
+        guard model.approval(approval.id) != nil else {
+            throw GateError.stage(name: "render model", reason: "approval '\(approval.id)' unresolved")
+        }
+    }
+    for artifact in snap.artifacts {
+        guard model.artifact(artifact.id) != nil else {
+            throw GateError.stage(name: "render model", reason: "artifact '\(artifact.id)' unresolved")
+        }
+    }
+    for surface in snap.surfaces {
+        guard model.surface(surface.id) != nil else {
+            throw GateError.stage(name: "render model", reason: "surface '\(surface.id)' unresolved")
+        }
+    }
+    print("  ✓ render model (\(snap.tools.count + snap.approvals.count + snap.artifacts.count + snap.surfaces.count) entities resolved)")
+
+    // 6. Serialize/restore parity.
     let serialized = try backend.serialize()
     let restored = try UniFFIBackend.restore(serializedJson: serialized)
     guard try snapshot(of: restored) == snap else {
         throw GateError.stage(name: "restore", reason: "restored snapshot mismatch")
     }
 
-    print("Phase 3 gate passed — mocked agent interaction rendered end-to-end.")
+    print("Phase 3 gate passed — mocked agent interaction reduced end-to-end.")
 } catch {
     FileHandle.standardError.write(Data("FAIL: \(error)\n".utf8))
     exit(1)

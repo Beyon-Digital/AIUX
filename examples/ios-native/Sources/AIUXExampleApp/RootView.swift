@@ -153,9 +153,12 @@ public struct AIUXFixtureGallery: View {
         }
     }
 
-    /// A fresh UniFFI session for one fixture player.
+    /// A fresh UniFFI session for one fixture player. The config leaves the
+    /// session unbound so the fixture's own `sessionId` binds on its first
+    /// event — every conformance fixture addresses "s1", and the core
+    /// rejects events addressed to a differently-bound session.
     static func galleryBackend() -> AIUXSessionBackend {
-        (try? UniFFIBackend.create(configJson: #"{"sessionId":"gallery"}"#))
+        (try? UniFFIBackend.create(configJson: #"{}"#))
             ?? FailingBackend(error: CocoaError(.featureUnsupported))
     }
 }

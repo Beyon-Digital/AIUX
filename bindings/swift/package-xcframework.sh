@@ -7,6 +7,11 @@
 # Cross-compiles the Rust core for iOS device + iOS simulator + macOS (fat
 # binaries via lipo), then bundles per-platform slices into
 # build/xcframework/AIUXCore.xcframework ready for an SPM binaryTarget.
+#
+# The xcframework only carries the FFI library + C shim — the generated
+# Swift API (`AiuxSession` & co.) is staged next to it at
+# build/xcframework/Sources/AIUXCore/AIUXCore.swift for the consumer to
+# compile into its app/framework target (see bindings/swift/README.md).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,5 +66,11 @@ xcodebuild -create-xcframework \
     -library "$OUT/lib/macos/libaiux_uniffi.a" -headers "$OUT/include" \
     -output "$OUT/AIUXCore.xcframework"
 
+# An xcframework can't carry Swift sources — stage the generated Swift API
+# beside it so consumers can compile `AiuxSession` into their own target.
+mkdir -p "$OUT/Sources/AIUXCore"
+mv "$OUT/gen/AIUXCore.swift" "$OUT/Sources/AIUXCore/AIUXCore.swift"
+
 rm -rf "$OUT/gen"
 echo "Wrote $OUT/AIUXCore.xcframework"
+echo "Swift API → $OUT/Sources/AIUXCore/AIUXCore.swift (add to the consumer target)"
