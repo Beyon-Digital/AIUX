@@ -115,17 +115,22 @@ class MockAgent(private val sessionId: String = "s1") {
         putJsonObject("surface") {
             put("id", id); put("name", "invoice-card"); put("revision", 0)
             putJsonObject("root") {
-                put("type", "card"); put("title", "Invoice INV-9")
+                put("type", "surface") // schema: root node must be "surface"
                 putJsonArray("children") {
                     addJsonObject {
-                        put("type", "keyValue")
-                        putJsonArray("items") {
-                            addJsonObject { put("key", "Total"); put("value", "$420.00") }
-                            addJsonObject { put("key", "Status"); put("value", "sent") }
+                        put("type", "card"); put("title", "Invoice INV-9")
+                        putJsonArray("children") {
+                            addJsonObject {
+                                put("type", "keyValue")
+                                putJsonArray("items") {
+                                    addJsonObject { put("key", "Total"); put("value", "$420.00") }
+                                    addJsonObject { put("key", "Status"); put("value", "sent") }
+                                }
+                            }
+                            addJsonObject {
+                                put("type", "status"); put("text", "Delivered to Acme"); put("tone", "success")
+                            }
                         }
-                    }
-                    addJsonObject {
-                        put("type", "status"); put("text", "Delivered to Acme"); put("tone", "success")
                     }
                 }
             }
