@@ -75,6 +75,9 @@ export async function streamToBatches(
   let buffer: AiuxEvent[] = [];
   let batches = 0;
   let events = 0;
+  // The sink error that aborted the pump, if any — lets the outer catch
+  // avoid re-reporting a sink failure as a source failure.
+  let sinkError: unknown;
 
   const flush = async (): Promise<void> => {
     if (buffer.length === 0) return;
@@ -84,6 +87,7 @@ export async function streamToBatches(
       await sink(JSON.stringify(batch));
     } catch (error) {
       onError?.(error, "sink");
+      sinkError = error;
       throw error;
     }
     batches += 1;
@@ -91,12 +95,17 @@ export async function streamToBatches(
   };
 
   // Resolves once when `signal` aborts; raced against a pending `next()` so
-  // a source blocked forever still lets the pump exit.
+  // a source blocked forever still lets the pump exit. The listener is
+  // detached in `finally` — `once` only cleans up if it fires, so a
+  // normally-completing stream would otherwise leave it registered on a
+  // long-lived AbortSignal.
+  let abortListener: (() => void) | undefined;
   const aborted: Promise<"abort" | null> | null = signal
     ? new Promise((resolve) => {
         if (signal.aborted) resolve("abort");
         else {
-          signal.addEventListener("abort", () => resolve("abort"), {
+          abortListener = () => resolve("abort");
+          signal.addEventListener("abort", abortListener, {
             once: true,
           });
         }
@@ -137,16 +146,23 @@ export async function streamToBatches(
       }
     }
   } catch (error) {
-    onError?.(error, "source");
-    // Still deliver already-consumed events before propagating — a source
-    // failure must not strand a partial batch.
-    try {
-      await flush();
-    } catch (flushError) {
-      onError?.(flushError, "sink");
+    // A sink failure was already reported (and its batch cleared) inside
+    // flush() — reporting it again as "source" would double-count.
+    if (error !== sinkError) {
+      onError?.(error, "source");
+      // Still deliver already-consumed events before propagating — a
+      // source failure must not strand a partial batch.
+      try {
+        await flush();
+      } catch (flushError) {
+        onError?.(flushError, "sink");
+      }
     }
     throw error;
   } finally {
+    if (abortListener !== undefined) {
+      signal?.removeEventListener("abort", abortListener);
+    }
     // Tell finite sources to release. Never block on a pending next().
     const released = it.return?.();
     if (pendingNext === null) await released?.catch(() => undefined);

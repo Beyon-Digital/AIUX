@@ -193,6 +193,12 @@ export function createAiSdkAdapter(
             current = { ...current, toolName: pending.name };
           }
         }
+      } else if (current.type === "tool-input-delta") {
+        // Argument fragments belong to the buffered start — the complete
+        // input arrives in `tool-input-available`. Flushing the pending
+        // start here would mint a second `tool.started` when `available`
+        // lands (the reducer rejects duplicates for the same tool id).
+        continue;
       } else if (current.type.startsWith("tool-")) {
         yield* flush(toolIdOf(current, factory.peekSequence()));
       } else if (

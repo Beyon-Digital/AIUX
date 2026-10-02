@@ -8,8 +8,6 @@
  */
 import { bench, describe } from "vitest";
 import { EventBuffer } from "../src/buffer.js";
-import { MockCore } from "../src/mock.js";
-import { AiuxSession } from "../src/session.js";
 
 const DELTA = {
   eventId: "e",
@@ -20,21 +18,16 @@ const DELTA = {
   payload: { text: "lorem ipsum ".repeat(4) },
 };
 
-function sessionWithBuffer(policy: ConstructorParameters<typeof EventBuffer>[1]) {
-  const core = new MockCore();
-  const session = AiuxSession.create(core, { protocolVersion: "0.1" });
-  const buffer = new EventBuffer<string>(
-    (eventsJson) => {
-      session.dispatchBatch(eventsJson);
-      return eventsJson;
-    },
-    policy,
-  );
-  return { buffer, session };
+// Pass-through sink: the bench header promises JS-side overhead only, and
+// bench setup/teardown hooks run once per task (not per iteration) — a
+// dispatching sink would accumulate session state across thousands of
+// iterations and fold dispatch cost into the timed samples.
+function bufferWith(policy: ConstructorParameters<typeof EventBuffer>[1]) {
+  return new EventBuffer<string>((eventsJson) => eventsJson, policy);
 }
 
-// Session/buffer construction and the final close-flush live in setup/
-// teardown so the timed region measures steady-state pushes only.
+// Buffer construction and the final close-flush live in setup/teardown so
+// the timed region measures steady-state pushes only.
 describe("EventBuffer flush policies (provisional defaults)", () => {
   let buffer: EventBuffer<string>;
 
@@ -45,7 +38,7 @@ describe("EventBuffer flush policies (provisional defaults)", () => {
     },
     {
       setup: () => {
-        buffer = sessionWithBuffer({ flushIntervalMs: 32 }).buffer;
+        buffer = bufferWith({ flushIntervalMs: 32 });
       },
       teardown: () => {
         buffer.close();
@@ -60,7 +53,7 @@ describe("EventBuffer flush policies (provisional defaults)", () => {
     },
     {
       setup: () => {
-        buffer = sessionWithBuffer({ maxEvents: 64 }).buffer;
+        buffer = bufferWith({ maxEvents: 64 });
       },
       teardown: () => {
         buffer.close();
@@ -75,11 +68,11 @@ describe("EventBuffer flush policies (provisional defaults)", () => {
     },
     {
       setup: () => {
-        buffer = sessionWithBuffer({
+        buffer = bufferWith({
           flushIntervalMs: 50,
           maxEvents: Number.MAX_SAFE_INTEGER,
           maxBytes: Number.MAX_SAFE_INTEGER,
-        }).buffer;
+        });
       },
       teardown: () => {
         buffer.close();

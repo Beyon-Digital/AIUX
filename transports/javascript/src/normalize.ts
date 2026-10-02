@@ -88,24 +88,63 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
   // A run emits exactly one terminal event — `finish_reason` chunks and
   // `[DONE]` sentinels (or provider-specific terminal types) often arrive
   // back to back, and the reducer rejects the second `run.completed`.
+  // The mint is a callback: gating must run BEFORE the factory consumes a
+  // sequence, else a suppressed terminal leaves a hole in the reorder
+  // buffer that stalls every later event.
   let terminalEmitted = false;
-  const terminalOnce = (events: AiuxEvent[]): AiuxEvent[] => {
+  const terminalOnce = (mint: () => AiuxEvent[]): AiuxEvent[] => {
     if (terminalEmitted) return skip("duplicate-terminal");
     terminalEmitted = true;
-    return events;
+    return mint();
   };
 
   // OpenAI streams `tool_calls` as fragments keyed by `index`: the first
   // carries `id`+`name`, later chunks only append `arguments` string pieces
-  // (name omitted). The named fragment emits `tool.started` immediately;
-  // argument fragments accumulate per (choice, tool-call) index and stream
-  // out as `tool.progress` so the input isn't lost.
+  // (name omitted). `tool.started` carries the tool's complete input, so it
+  // emits once the accumulated arguments parse as JSON — or best-effort
+  // when the slot seals (a new named fragment, or the run ending). Once
+  // emitted, further fragments stream out as `tool.progress`.
   interface PendingToolCall {
     id: string;
     name: string;
     args: string;
+    emitted: boolean;
   }
   const pendingToolCalls = new Map<string, PendingToolCall>();
+
+  const tryParseArgs = (args: string): unknown => {
+    if (args === "") return undefined;
+    try {
+      return JSON.parse(args) as unknown;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const emitStart = (pending: PendingToolCall, force = false): AiuxEvent[] => {
+    if (pending.emitted) return [];
+    const parsed = tryParseArgs(pending.args);
+    if (!force && parsed === undefined) return [];
+    pending.emitted = true;
+    const tool: Tool = { id: pending.id, name: pending.name, status: "running" };
+    if (parsed !== undefined) tool.input = parsed;
+    else if (pending.args !== "") tool.input = { arguments: pending.args };
+    return [factory.toolStarted(tool)];
+  };
+
+  const sealPending = (key: string): AiuxEvent[] => {
+    const pending = pendingToolCalls.get(key);
+    if (pending === undefined) return [];
+    const out = emitStart(pending, true);
+    pendingToolCalls.delete(key);
+    return out;
+  };
+
+  const sealAllPending = (): AiuxEvent[] => {
+    const out: AiuxEvent[] = [];
+    for (const key of [...pendingToolCalls.keys()]) out.push(...sealPending(key));
+    return out;
+  };
 
   const runId = (item: Record<string, unknown>): string =>
     firstString(item["runId"], item["run_id"]) ?? target.runId;
@@ -155,24 +194,33 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
       case "finish":
       case "done":
       case "message_stop":
-        return terminalOnce([
-          factory.runCompleted(runId(item), item["result"]),
-        ]);
+        return [
+          ...sealAllPending(),
+          ...terminalOnce(() => [
+            factory.runCompleted(runId(item), item["result"]),
+          ]),
+        ];
       case "run.failed":
       case "error":
-        return terminalOnce([
-          factory.runFailed(
-            runId(item),
-            asError(item["error"] ?? item["message"] ?? item, "stream error"),
-          ),
-        ]);
+        return [
+          ...sealAllPending(),
+          ...terminalOnce(() => [
+            factory.runFailed(
+              runId(item),
+              asError(item["error"] ?? item["message"] ?? item, "stream error"),
+            ),
+          ]),
+        ];
       case "run.cancelled":
       case "cancelled":
       case "aborted":
       case "abort":
-        return terminalOnce([
-          factory.runCancelled(runId(item), firstString(item["reason"])),
-        ]);
+        return [
+          ...sealAllPending(),
+          ...terminalOnce(() => [
+            factory.runCancelled(runId(item), firstString(item["reason"])),
+          ]),
+        ];
       case "message.created": {
         if (!isRecord(item["message"])) return skip("missing-message", item);
         return [factory.messageCreated(item["message"] as unknown as Message)];
@@ -256,31 +304,35 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
             const argFragment =
               typeof fn["arguments"] === "string" ? fn["arguments"] : "";
             if (name) {
-              // A named fragment begins (or restarts) a call at this slot.
+              // A named fragment begins a call at this slot. An un-emitted
+              // pending for the slot is a truncated predecessor — seal it
+              // best-effort before replacing.
+              out.push(...sealPending(key));
               const pending: PendingToolCall = {
+                // Slot-keyed fallback id — two un-emitted pendings could
+                // peek the same sequence, minting colliding fallback ids.
                 id:
                   firstString(tc["id"], tc["toolCallId"]) ??
-                  `tool-${factory.peekSequence()}`,
+                  `tool-${key}`,
                 name,
                 args: argFragment,
+                emitted: false,
               };
               pendingToolCalls.set(key, pending);
-              const tool: Tool = {
-                id: pending.id,
-                name,
-                status: "running",
-                ...(argFragment !== "" && {
-                  input: { arguments: argFragment },
-                }),
-              };
-              out.push(factory.toolStarted(tool));
+              // Single-shot arguments (complete JSON in one fragment) emit
+              // immediately; streamed args emit once they parse complete.
+              out.push(...emitStart(pending));
               continue;
             }
             const pending = pendingToolCalls.get(key);
             if (pending) {
               pending.args += argFragment;
-              if (typeof tc["id"] === "string") pending.id = tc["id"];
-              if (argFragment !== "") {
+              if (!pending.emitted) {
+                // A fragment may still carry the real provider id — safe to
+                // adopt while the start is un-emitted.
+                if (typeof tc["id"] === "string") pending.id = tc["id"];
+                out.push(...emitStart(pending));
+              } else if (argFragment !== "") {
                 out.push(
                   factory.toolProgress(pending.id, {
                     label: "arguments",
@@ -297,7 +349,10 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
       const finish = firstString(raw["finish_reason"], raw["finishReason"]);
       if (finish)
         out.push(
-          ...terminalOnce([
+          // Tool starts seal before the terminal mint — their sequences
+          // precede it, keeping the run's event order intact.
+          ...sealAllPending(),
+          ...terminalOnce(() => [
             factory.runCompleted(runId(item), { finishReason: finish }),
           ]),
         );
@@ -311,7 +366,10 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
     // Raw non-JSON values (e.g. `[DONE]` sentinels) get a tiny mapping too.
     if (typeof item === "string") {
       if (item.trim() === "[DONE]")
-        return terminalOnce([factory.runCompleted(target.runId)]);
+        return [
+          ...sealAllPending(),
+          ...terminalOnce(() => [factory.runCompleted(target.runId)]),
+        ];
       return skip("unparseable-string", item);
     }
     if (!isRecord(item)) return skip("not-an-object", item);
