@@ -2,12 +2,14 @@ import type { AiuxCore, SessionHandle } from "./core.js";
 import type { JsonString } from "./types.js";
 
 /**
- * Shape of the wasm-bindgen module produced by `bindings/wasm/build.sh`
- * (`pkg/aiux_wasm.js`, `--target web`). Consumers run the crate's build script,
- * then `init()` the generated module and hand it to {@link wasmCore}:
+ * Shape of the wasm-bindgen module produced by the `aiux-wasm` build
+ * (`bindings/wasm/pkg/aiux_wasm.js`, `--target web`), vendored into this
+ * package by `scripts/copy-wasm.mjs` as the `./wasm` export. Consumers run
+ * `pnpm --filter @beyondigital/aiux-core build:wasm`, then `init()` the
+ * generated module and hand it to {@link wasmCore}:
  *
  * ```ts
- * import init, * as wasm from "../pkg/aiux_wasm.js";
+ * import init, * as wasm from "@beyondigital/aiux-core/wasm";
  * await init();
  * const core = wasmCore(wasm);
  * const session = AiuxSession.create(core, config);

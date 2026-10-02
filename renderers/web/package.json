@@ -2,11 +2,46 @@
   "name": "@beyondigital/aiux-web",
   "version": "0.1.0",
   "private": true,
-  "description": "React DOM renderer for AIUX surfaces.",
-  "main": "src/index.ts",
+  "description": "React DOM renderer for AIUX surfaces (plan §12) — session subscription → DOM/ARIA, theme roles → CSS custom properties, every protocol part + Surface Schema primitive.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "echo '@beyondigital/aiux-web: build lands in a later phase (docs/PLAN.md)'",
-    "test": "echo '@beyondigital/aiux-web: tests land in a later phase'",
-    "typecheck": "echo '@beyondigital/aiux-web: typecheck lands in a later phase'"
+    "build": "tsc -p tsconfig.build.json && node ./scripts/copy-assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@beyondigital/aiux-core": "workspace:*",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "peerDependencies": {
+    "react": ">=18.3",
+    "react-dom": ">=18.3"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

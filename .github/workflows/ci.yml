@@ -119,9 +119,18 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install wasm-bindgen-cli (must match Cargo.lock)
+        run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
       - run: pnpm install --frozen-lockfile=false
       - name: Build web packages
-        run: pnpm --filter "@beyondigital/aiux-web" --if-present run build || echo "aiux-web build not defined yet — Phase 5 deliverable."
+        # aiux-web dist + the example's vite build; the example wires
+        # aiux-wasm → bindings/wasm/pkg → aiux-core ./wasm export.
+        run: pnpm -r run build
+      - name: Web renderer tests (incl. wasm conformance gate)
+        run: pnpm --filter "@beyondigital/aiux-web" run test
 
   expo-android:
     name: Expo Android compile

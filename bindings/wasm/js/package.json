@@ -10,13 +10,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./wasm": "./wasm/aiux_wasm.js",
+    "./wasm/aiux_wasm_bg.wasm": "./wasm/aiux_wasm_bg.wasm"
   },
   "files": [
-    "dist"
+    "dist",
+    "wasm"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "build:wasm": "node ../scripts/build-wasm.mjs && node ./scripts/copy-wasm.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "bench": "vitest bench --run"

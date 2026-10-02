@@ -99,11 +99,18 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 5 — Web → PR 7
 
-- [ ] `aiux-wasm` — wasm-bindgen surface over core
-- [ ] `@beyondigital/aiux-core` (JS session wrapper + subscriptions)
-- [ ] `@beyondigital/aiux-web` React DOM renderer (fullscreen + embedded modes)
-- [ ] Web adapter + examples/web fixture playback
+- [x] `aiux-wasm` — wasm-bindgen surface over core (`scripts/build-wasm.mjs`
+      → `bindings/wasm/pkg/` → vendored as aiux-core `./wasm` export)
+- [x] `@beyondigital/aiux-core` (JS session wrapper + subscriptions)
+- [x] `@beyondigital/aiux-web` React DOM renderer (fullscreen + embedded modes)
+      — `AIConversation`, all 13 part types, all 26 surface primitives, ARIA
+      + keyboard/feed pattern, theme roles → scoped CSS vars (light/dark)
+- [x] Web adapter + examples/web fixture playback — `createEventDriver`
+      (EventBuffer → dispatchBatch); Vite app replays every fixture with a
+      live `serialize() === expected` conformance badge
 - **Gate:** same protocol fixture runs through iOS, Android, Expo and web.
+      Web side verified: `renderers/web/test/conformance.test.ts` replays all
+      21 fixtures through the real wasm core — byte-identical serialize().
 
 ## Phase 6 — Surface DSL + artifacts expansion → PR 8
 
