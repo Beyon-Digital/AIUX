@@ -9,12 +9,14 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 2 in flight** (UniFFI lane) + JS adapters lane in parallel
+- Current phase: **Phase 3 in flight** (SwiftUI ∥ Compose lanes) + JS adapters lane in parallel
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
   - PR 3 `devin/phase1-core` — Phase 1 protocol + core + conformance (green, gate met: 22/22 fixtures)
-  - Lane C `devin/phase2-bindings` — Phase 2 UniFFI Swift/Kotlin bindings (sub-agent)
+  - PR 4 `devin/phase2-bindings` — Phase 2 UniFFI Swift/Kotlin bindings (green, gate met on CI)
+  - Lane E `devin/phase3-swiftui` — AIUXSwiftUI renderer + iOS example (sub-agent)
+  - Lane F `devin/phase3-compose` — AIUXCompose renderer + Android example (sub-agent)
   - Lane D `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (sub-agent)
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
