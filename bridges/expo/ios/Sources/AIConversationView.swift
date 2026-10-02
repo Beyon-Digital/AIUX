@@ -34,7 +34,9 @@ public final class AIConversationView: ExpoView {
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return .default }
 
-        func flag(_ name: String) -> Bool { (root[name] as? Bool) ?? true }
+        func flag(_ name: String, default fallback: Bool) -> Bool {
+            (root[name] as? Bool) ?? fallback
+        }
         let extra: [AIUXComposerTool] = (root["extra"] as? [[String: Any]] ?? [])
             .compactMap { o in
                 guard let id = o["id"] as? String else { return nil }
@@ -45,9 +47,9 @@ public final class AIConversationView: ExpoView {
                 )
             }
         return AIUXComposerToolbar(
-            attach: flag("attach"),
-            tools: flag("tools"),
-            dictate: flag("dictate"),
+            attach: flag("attach", default: true),
+            tools: flag("tools", default: false),
+            dictate: flag("dictate", default: true),
             extra: extra
         )
     }

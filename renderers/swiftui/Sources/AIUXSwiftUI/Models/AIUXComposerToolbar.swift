@@ -45,6 +45,7 @@ public struct AIUXComposerToolbar: Sendable {
     /// Show the `+` attach control (emits `aiux.composer.attach`).
     public var attach: Bool
     /// Show the accent-ringed tools toggle (emits `aiux.composer.tools`).
+    /// Opt-in — hidden by default (matches the current ChatGPT composer).
     public var tools: Bool
     /// Show the outline mic (emits `aiux.composer.dictate`).
     public var dictate: Bool
@@ -53,7 +54,7 @@ public struct AIUXComposerToolbar: Sendable {
 
     public init(
         attach: Bool = true,
-        tools: Bool = true,
+        tools: Bool = false,
         dictate: Bool = true,
         extra: [AIUXComposerTool] = []
     ) {

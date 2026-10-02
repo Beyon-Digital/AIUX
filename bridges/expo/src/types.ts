@@ -124,7 +124,7 @@ export interface AIUXComposerToolSpec {
 export interface AIUXComposerToolbarSpec {
   /** Show the `+` attach control (default true). */
   attach?: boolean;
-  /** Show the accent-ringed tools toggle (default true). */
+  /** Show the accent-ringed tools toggle (default false — opt-in). */
   tools?: boolean;
   /** Show the outline mic (default true). */
   dictate?: boolean;

@@ -156,9 +156,9 @@ class AIConversationView(context: Context, appContext: AppContext) :
             } catch (_: Exception) {
                 return AIComposerToolbar.Default
             }
-            fun flag(name: String) =
+            fun flag(name: String, default: Boolean) =
                 (root[name] as? kotlinx.serialization.json.JsonPrimitive)
-                    ?.contentOrNull?.toBooleanStrictOrNull() ?: true
+                    ?.contentOrNull?.toBooleanStrictOrNull() ?: default
             val extras = (root["extra"] as? kotlinx.serialization.json.JsonArray)
                 ?.mapNotNull { el ->
                     val o = el as? kotlinx.serialization.json.JsonObject
@@ -178,9 +178,9 @@ class AIConversationView(context: Context, appContext: AppContext) :
                     )
                 } ?: emptyList()
             return AIComposerToolbar(
-                attach = flag("attach"),
-                tools = flag("tools"),
-                dictate = flag("dictate"),
+                attach = flag("attach", true),
+                tools = flag("tools", false),
+                dictate = flag("dictate", true),
                 extra = extras,
             )
         }

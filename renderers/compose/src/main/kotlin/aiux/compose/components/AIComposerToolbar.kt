@@ -28,8 +28,9 @@ import androidx.compose.runtime.Composable
 data class AIComposerToolbar(
     /** Show the `+` attach control (emits `aiux.composer.attach`). */
     val attach: Boolean = true,
-    /** Show the accent-ringed tools toggle (emits `aiux.composer.tools`). */
-    val tools: Boolean = true,
+    /** Show the accent-ringed tools toggle (emits `aiux.composer.tools`).
+     *  Opt-in — hidden by default (matches the current ChatGPT composer). */
+    val tools: Boolean = false,
     /** Show the outline mic (emits `aiux.composer.dictate`). */
     val dictate: Boolean = true,
     /**
