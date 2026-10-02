@@ -104,8 +104,10 @@ class EventQueue {
     if (this.done) return;
     this.done = true;
     this.failure = error;
-    this.items.length = 0;
     // A pending read must see the transport error, not a clean completion.
+    // Buffered batches are kept: next() drains them in order before the
+    // stored failure throws once — a socket error must not discard events
+    // the server already delivered.
     for (const w of this.waiters.splice(0)) w.reject(error);
   }
 

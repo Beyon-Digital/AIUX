@@ -146,6 +146,27 @@ describe("createWebSocketAdapter", () => {
     await expect(it.next()).rejects.toThrow(/closed abnormally/);
   });
 
+  it("delivers already-buffered batches before surfacing a terminal failure", async () => {
+    FakeSocket.instances = [];
+    const adapter = createWebSocketAdapter(baseOpts({ reconnect: false }));
+    const it = adapter[Symbol.asyncIterator]();
+    const sock = FakeSocket.instances[0]!;
+    sock.emitOpen();
+    // A complete batch lands before the abnormal close — it must not be
+    // discarded just because the transport failed.
+    sock.emitMessage(JSON.stringify({ type: "text.delta", delta: "x" }));
+    sock.emitMessage(JSON.stringify({ type: "text.delta", delta: "y" }));
+    sock.emitClose(1006);
+
+    const first = await it.next();
+    expect(first.done).toBe(false);
+    expect(first.value?.map((e: AiuxEvent) => e.type)).toEqual(["text.delta"]);
+    const second = await it.next();
+    expect(second.done).toBe(false);
+    expect(second.value?.map((e: AiuxEvent) => e.type)).toEqual(["text.delta"]);
+    await expect(it.next()).rejects.toThrow(/closed abnormally/);
+  });
+
   it("exhausts the retry budget and fails the iterator", async () => {
     FakeSocket.instances = [];
     const adapter = createWebSocketAdapter(
