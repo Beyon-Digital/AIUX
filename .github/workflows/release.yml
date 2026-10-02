@@ -211,11 +211,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # upload files only — `release/**` also matches artifact dirs and
+          # `gh release create` fails with "is a directory" on those
+          mapfile -t assets < <(find release -type f | sort)
           gh release create "${GITHUB_REF_NAME}" \
             --draft \
             --title "AIUX ${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
-            release/** SHA256SUMS
+            "${assets[@]}" SHA256SUMS
           echo "Draft release created — review + publish to ship."
           echo "JS package tarballs are ready for GitHub Packages"
           echo "(npm.pkg.github.com, @beyondigital scope) — publish after review."
