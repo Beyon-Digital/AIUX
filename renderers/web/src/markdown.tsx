@@ -19,8 +19,9 @@ export function safeUrl(url: string): string {
   return SAFE_URL.test(trimmed) ? trimmed : "";
 }
 
-/** Image sources: same allowlist plus inline `data:image/*`. */
-const SAFE_IMG = /^(data:image\/|https?:|#|\/|\.\/|\.\.\/)/i;
+/** Image sources: same allowlist plus inline `data:image/*` and
+ * host-mediated `aiux:` URIs (attachment fixtures use them). */
+const SAFE_IMG = /^(aiux:|data:image\/|https?:|#|\/|\.\/|\.\.\/)/i;
 export function safeImageSrc(url: string): string {
   const trimmed = url.trim();
   return SAFE_IMG.test(trimmed) ? trimmed : "";
