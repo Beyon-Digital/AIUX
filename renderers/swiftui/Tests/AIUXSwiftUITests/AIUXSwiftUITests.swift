@@ -2,7 +2,7 @@ import XCTest
 @testable import AIUXSwiftUI
 
 final class AIUXSwiftUITests: XCTestCase {
-    func testPlaceholder() {
-        XCTAssertEqual(AIUXSwiftUI.placeholder, "0.1.0")
+    func testProtocolVersion() {
+        XCTAssertEqual(AIUXSwiftUI.protocolVersion, "0.1")
     }
 }

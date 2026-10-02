@@ -87,15 +87,26 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 3 — SwiftUI + Compose MVP → PRs 4 + 5 (parallel lanes)
 
-- [ ] SwiftUI: `AIConversation AIComposer AIMessage AIToolStatus AIApproval
+- [x] SwiftUI: `AIConversation AIComposer AIMessage AIToolStatus AIApproval
   AIArtifactPreview AISurface AIContextBar` (plan §8)
 - [ ] Compose: same component set (plan §9)
 - [ ] Fixture catalog both renderers: text, markdown, code, status, tool,
   approval, composer, context chip, surface/card/button
+  - [x] SwiftUI: `AIFixturePlayer` + `AIUXFixtureCatalog` replaying
+    `conformance/fixtures/*.json`; conformance parity test vs `expected/`
+  - [ ] Compose: fixture catalog
 - [ ] Theme contract mapping + light/dark (plan §7)
+  - [x] SwiftUI: `AIUXTheme` roles (colors/typography/spacing/radius/motion/
+    density), light + dark via `AIUXColor`
+  - [ ] Compose: theme mapping
 - [ ] Examples: ios-native app, android-native app
+  - [x] ios-native: real app over UniFFI (conversation + fixture gallery +
+    agent log), headless `swift run AIUXExample` scenario gate
+  - [ ] android-native: real app
 - **Gate:** mocked agent interaction end-to-end on both platforms: user prompt →
   stream → tool start/finish → approval → approve → render result.
+  - [x] iOS (`AIUXExample` scenario + XCTest, verified on macOS CI)
+  - [ ] Android
 
 ## Phase 4 — Expo SDK 57 bridge → PR 6
 
