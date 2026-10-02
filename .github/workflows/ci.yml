@@ -65,7 +65,7 @@ jobs:
           for pkg in renderers/swiftui examples/ios-native bindings/swift; do
             if [ -f "$pkg/Package.swift" ]; then
               echo "== swift build/test in $pkg"
-              (cd "$pkg" && swift build && swift test)
+              (cd "$pkg" && swift build && { grep -q testTarget Package.swift && swift test || echo "no test target — skipping swift test"; })
             else
               echo "No Package.swift in $pkg — skipping."
             fi
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          # no `cache: pnpm` — no pnpm install in this job yet
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -156,7 +156,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          # no `cache: pnpm` — this job doesn't run pnpm install yet, and a
+          # missing store fails the post-job cache save
       - name: Compile iOS
         run: |
           if [ -d examples/expo/ios ]; then

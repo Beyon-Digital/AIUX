@@ -9,14 +9,22 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 0 → Phase 1**
+- Current phase: **Phase 1 in flight** (sub-agent lane) + WASM/JS lane in parallel
+- Active lanes (2026-10-02):
+  - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze
+  - Lane A `devin/phase1-core` — Phase 1 protocol + core + conformance (sub-agent)
+  - Lane B `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (sub-agent)
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
-- Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM (PR 7)
-  can run parallel once PR 2 lands. Expo (PR 6) needs PRs 4+5.
+- Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
+  runs parallel to Phase 1 via the frozen `AiuxSession` contract. Expo (PR 6)
+  needs PRs 4+5.
 - Constraints: Linux dev box — Rust/Kotlin/WASM/Web/Compose verifiable locally;
   Swift compile + iOS verify via macOS CI runners only. UniFFI version is pinned —
   do not bump without compat CI.
+- Frozen contracts: `AiuxSession` facade + `ProtocolError`/`DispatchReport`
+  signatures (core/rust/session, core/rust/protocol) — never change without an
+  ADR; bindings code against them.
 
 ## Phase 0 — Repository + engineering foundation → PR 1
 
