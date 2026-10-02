@@ -55,8 +55,6 @@ type ActiveRun = {
 };
 
 export class DemoController {
-  private static instances = 0;
-  private readonly dcId = ++DemoController.instances;
   readonly sessionId: string;
   private readonly transport: AIUXTransport;
   private readonly agent: MockAgent;
@@ -76,7 +74,6 @@ export class DemoController {
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
-    console.log(`[dc${this.dcId}] ctor`);
     this.agent = new MockAgent(sessionId);
     this.transport = createAIUXTransport(sessionId, {
       policy: {
@@ -88,7 +85,6 @@ export class DemoController {
 
   /** Toggle real-LLM mode; `key`/`model` apply on the next prompt. */
   setLive(enabled: boolean, key?: string, model?: string): void {
-    console.log(`[dc${this.dcId}] setLive(${enabled}) key=${key ? "set" : "unset"}`);
     this.live = enabled;
     if (key !== undefined) this.liveKey = key;
     if (model) this.liveModel = model;
@@ -164,9 +160,6 @@ export class DemoController {
 
   /** Routes to the live model or the scripted scenario. */
   async sendPrompt(text: string): Promise<void> {
-    console.log(
-      `[dc${this.dcId}] sendPrompt live=${this.live} key=${this.liveKey ? "set" : "unset"} nextN=${this.messageN + 1} text=${JSON.stringify(text.slice(0, 40))}`,
-    );
     if (this.live && this.liveKey) {
       this.lastPrompt = text;
       return this.livePrompt(text);
