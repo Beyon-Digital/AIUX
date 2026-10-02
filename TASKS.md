@@ -66,11 +66,14 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 - [ ] SwiftUI: `AIConversation AIComposer AIMessage AIToolStatus AIApproval
   AIArtifactPreview AISurface AIContextBar` (plan §8)
-- [ ] Compose: same component set (plan §9)
+- [x] Compose: same component set (plan §9)
 - [ ] Fixture catalog both renderers: text, markdown, code, status, tool,
-  approval, composer, context chip, surface/card/button
-- [ ] Theme contract mapping + light/dark (plan §7)
-- [ ] Examples: ios-native app, android-native app
+  approval, composer, context chip, surface/card/button — Compose done
+  (SnapshotMappingTest replays all 21 fixtures; unknown node/part coverage)
+- [ ] Theme contract mapping + light/dark (plan §7) — Compose done
+  (AIUXTheme §7 roles → Material3, light + dark)
+- [ ] Examples: ios-native app, android-native app — android-native done
+  (mocked agent script + fixture browser)
 - **Gate:** mocked agent interaction end-to-end on both platforms: user prompt →
   stream → tool start/finish → approval → approve → render result.
 
