@@ -1,0 +1,72 @@
+{
+  "events": [
+    {
+      "eventId": "context-injection-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "context": [
+            {
+              "id": "ctx-1",
+              "kind": "file",
+              "label": "Cargo.toml",
+              "uri": "aiux://files/cargo-toml"
+            },
+            {
+              "data": {
+                "priority": "high"
+              },
+              "id": "ctx-2",
+              "kind": "issue",
+              "label": "AIUX-7"
+            }
+          ],
+          "id": "s1",
+          "title": "Context injection"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "context-injection-1",
+      "payload": {
+        "context": [
+          {
+            "id": "ctx-3",
+            "kind": "url",
+            "label": "Design doc",
+            "uri": "https://docs.beyondigital.in/aiux"
+          }
+        ],
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "context-injection-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "context-injection",
+  "protocolVersion": "0.1"
+}

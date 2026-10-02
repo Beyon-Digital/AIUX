@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "ApprovalDecision": {
+      "description": "The decision carried by `approval.resolved`.",
+      "enum": [
+        "approved",
+        "rejected",
+        "expired",
+        "executed"
+      ],
+      "type": "string"
+    },
+    "ApprovalResolution": {
+      "additionalProperties": true,
+      "description": "Recorded resolution of an approval.",
+      "properties": {
+        "decision": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApprovalDecision"
+            }
+          ],
+          "description": "Resolution outcome."
+        },
+        "note": {
+          "description": "Optional note attached to the resolution.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedAt": {
+          "description": "Resolution timestamp (ISO-8601, host-supplied).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedBy": {
+          "description": "Who/what resolved it (`user`, `host`, `timeout`, ...).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "type": "object"
+    },
+    "ApprovalResolved": {
+      "description": "`approval.resolved` — resolves a requested approval, or marks an approved one executed. Resolutions on an already-resolved approval are absorbed without effect so replays never re-execute (plan §23).",
+      "properties": {
+        "approvalId": {
+          "description": "Approval id.",
+          "type": "string"
+        },
+        "protocolVersion": {
+          "default": "0.1",
+          "description": "Protocol version carried by the payload.",
+          "type": "string"
+        },
+        "resolution": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApprovalResolution"
+            }
+          ],
+          "description": "The resolution."
+        }
+      },
+      "required": [
+        "approvalId",
+        "resolution"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "The canonical event envelope. `P` defaults to a raw JSON payload for dispatch-time parsing; typed instantiations (`AiuxEvent<SessionCreated>`) are used for schema generation and typed producers.",
+  "properties": {
+    "eventId": {
+      "description": "Unique event identifier — replays of a known id are ignored.",
+      "type": "string"
+    },
+    "payload": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApprovalResolved"
+        }
+      ],
+      "description": "Type-specific payload."
+    },
+    "protocolVersion": {
+      "default": "0.1",
+      "description": "Protocol version of this event.",
+      "type": "string"
+    },
+    "sequence": {
+      "description": "Monotonic sequence within the session (0-based).",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "sessionId": {
+      "description": "Owning session.",
+      "type": "string"
+    },
+    "timestamp": {
+      "description": "Event timestamp (ISO-8601, host-supplied — never core-generated).",
+      "type": "string"
+    },
+    "type": {
+      "description": "Event type, e.g. `session.created`. Unknown values deserialize fine and fail later with `ProtocolError::Unsupported`.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventId",
+    "payload",
+    "sequence",
+    "sessionId",
+    "timestamp",
+    "type"
+  ],
+  "title": "AiuxEvent_for_ApprovalResolved",
+  "type": "object"
+}

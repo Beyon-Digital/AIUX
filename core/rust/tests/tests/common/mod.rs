@@ -1,0 +1,191 @@
+//! Shared event builders for integration tests. Events are built as JSON
+//! strings because the facade boundary is JSON end-to-end.
+
+use serde_json::{json, Value};
+
+/// Session id used across the base scenario.
+pub const SID: &str = "s1";
+
+/// Merge `protocolVersion` into a payload object.
+pub fn pv(mut v: Value) -> Value {
+    v.as_object_mut()
+        .expect("payload must be an object")
+        .insert("protocolVersion".into(), json!("0.1"));
+    v
+}
+
+/// Build a canonical event envelope JSON string.
+pub fn event(seq: u64, kind: &str, payload: Value) -> String {
+    json!({
+        "eventId": format!("ev-{seq}"),
+        "sessionId": SID,
+        "sequence": seq,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "type": kind,
+        "protocolVersion": "0.1",
+        "payload": payload,
+    })
+    .to_string()
+}
+
+/// The canonical ~20-event scenario exercising every Phase-1 lifecycle —
+/// semantically valid when applied in `sequence` order (which reorder
+/// buffering guarantees regardless of delivery order).
+pub fn base_events() -> Vec<String> {
+    vec![
+        event(
+            0,
+            "session.created",
+            pv(json!({
+                "session": {
+                    "id": SID,
+                    "title": "Conformance base",
+                    "createdAt": "2026-01-01T00:00:00Z",
+                    "capabilities": [{"id": "tools.execute"}],
+                    "context": [{"id": "ctx-1", "kind": "file", "label": "main.rs"}],
+                }
+            })),
+        ),
+        event(
+            1,
+            "run.started",
+            pv(json!({
+                "run": {"id": "r1", "status": "running", "startedAt": "2026-01-01T00:00:01Z"},
+                "context": [{"id": "ctx-2", "kind": "issue", "label": "AIUX-42"}],
+            })),
+        ),
+        event(
+            2,
+            "message.created",
+            pv(json!({
+                "message": {"id": "m-user", "role": "user",
+                    "parts": [{"type": "text", "id": "p0", "text": "Summarise"}]}
+            })),
+        ),
+        event(
+            3,
+            "message.created",
+            pv(json!({
+                "message": {"id": "m1", "role": "assistant", "status": "streaming"}
+            })),
+        ),
+        event(
+            4,
+            "part.added",
+            pv(json!({
+                "messageId": "m1",
+                "part": {"type": "text", "id": "p1", "text": "Hello"}
+            })),
+        ),
+        event(
+            5,
+            "text.delta",
+            pv(json!({"messageId": "m1", "partId": "p1", "delta": ", "})),
+        ),
+        event(
+            6,
+            "text.delta",
+            pv(json!({"messageId": "m1", "partId": "p1", "delta": "world"})),
+        ),
+        event(
+            7,
+            "tool.started",
+            pv(json!({
+                "tool": {"id": "t1", "name": "search", "status": "running",
+                    "input": {"q": "aiux"}}
+            })),
+        ),
+        event(
+            8,
+            "tool.progress",
+            pv(json!({
+                "toolId": "t1",
+                "progress": {"current": 1, "total": 2, "label": "fetching"}
+            })),
+        ),
+        event(
+            9,
+            "tool.completed",
+            pv(json!({"toolId": "t1", "result": {"hits": 3}})),
+        ),
+        event(
+            10,
+            "part.added",
+            pv(json!({
+                "messageId": "m1",
+                "part": {"type": "tool", "id": "p2", "toolId": "t1"}
+            })),
+        ),
+        event(
+            11,
+            "approval.requested",
+            pv(json!({
+                "approval": {"id": "a1", "prompt": "Apply changes?",
+                    "status": "requested"}
+            })),
+        ),
+        event(
+            12,
+            "approval.resolved",
+            pv(json!({
+                "approvalId": "a1",
+                "resolution": {"decision": "approved", "resolvedBy": "user"}
+            })),
+        ),
+        event(
+            13,
+            "approval.resolved",
+            pv(json!({
+                "approvalId": "a1",
+                "resolution": {"decision": "executed", "resolvedBy": "host"}
+            })),
+        ),
+        event(
+            14,
+            "artifact.created",
+            pv(json!({
+                "artifact": {"id": "art-1", "kind": "code", "title": "main.rs",
+                    "revision": 0, "content": "fn main() {}"}
+            })),
+        ),
+        event(
+            15,
+            "artifact.updated",
+            pv(json!({
+                "artifactId": "art-1",
+                "content": "fn main() { println!(\"hi\"); }"
+            })),
+        ),
+        event(
+            16,
+            "surface.created",
+            pv(json!({
+                "surface": {"id": "sf-1", "revision": 0,
+                    "root": {"type": "surface", "children": [
+                        {"type": "heading", "level": 1, "text": "Summary"},
+                        {"type": "text", "text": "v1 body"},
+                    ]}}
+            })),
+        ),
+        event(
+            17,
+            "surface.updated",
+            pv(json!({
+                "surfaceId": "sf-1",
+                "root": {"type": "surface", "children": [
+                    {"type": "text", "text": "v2 body"},
+                ]}
+            })),
+        ),
+        event(
+            18,
+            "message.updated",
+            pv(json!({"messageId": "m1", "status": "complete"})),
+        ),
+        event(
+            19,
+            "run.completed",
+            pv(json!({"runId": "r1", "result": {"ok": true}})),
+        ),
+    ]
+}

@@ -1,0 +1,4550 @@
+{
+  "events": [
+    {
+      "eventId": "large-history-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Large history"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "large-history-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "large-history-2",
+      "payload": {
+        "message": {
+          "id": "m-u0",
+          "parts": [
+            {
+              "id": "p-u0",
+              "text": "Question 0",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-3",
+      "payload": {
+        "message": {
+          "id": "m-a0",
+          "parts": [
+            {
+              "id": "p-a0",
+              "text": "Answer 0",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-4",
+      "payload": {
+        "message": {
+          "id": "m-u1",
+          "parts": [
+            {
+              "id": "p-u1",
+              "text": "Question 1",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-5",
+      "payload": {
+        "message": {
+          "id": "m-a1",
+          "parts": [
+            {
+              "id": "p-a1",
+              "text": "Answer 1",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-6",
+      "payload": {
+        "message": {
+          "id": "m-u2",
+          "parts": [
+            {
+              "id": "p-u2",
+              "text": "Question 2",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-7",
+      "payload": {
+        "message": {
+          "id": "m-a2",
+          "parts": [
+            {
+              "id": "p-a2",
+              "text": "Answer 2",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-8",
+      "payload": {
+        "message": {
+          "id": "m-u3",
+          "parts": [
+            {
+              "id": "p-u3",
+              "text": "Question 3",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-9",
+      "payload": {
+        "message": {
+          "id": "m-a3",
+          "parts": [
+            {
+              "id": "p-a3",
+              "text": "Answer 3",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 9,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:09Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-10",
+      "payload": {
+        "message": {
+          "id": "m-u4",
+          "parts": [
+            {
+              "id": "p-u4",
+              "text": "Question 4",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 10,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:10Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-11",
+      "payload": {
+        "message": {
+          "id": "m-a4",
+          "parts": [
+            {
+              "id": "p-a4",
+              "text": "Answer 4",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 11,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:11Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-12",
+      "payload": {
+        "message": {
+          "id": "m-u5",
+          "parts": [
+            {
+              "id": "p-u5",
+              "text": "Question 5",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 12,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:12Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-13",
+      "payload": {
+        "message": {
+          "id": "m-a5",
+          "parts": [
+            {
+              "id": "p-a5",
+              "text": "Answer 5",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 13,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:13Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-14",
+      "payload": {
+        "message": {
+          "id": "m-u6",
+          "parts": [
+            {
+              "id": "p-u6",
+              "text": "Question 6",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 14,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:14Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-15",
+      "payload": {
+        "message": {
+          "id": "m-a6",
+          "parts": [
+            {
+              "id": "p-a6",
+              "text": "Answer 6",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 15,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:15Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-16",
+      "payload": {
+        "message": {
+          "id": "m-u7",
+          "parts": [
+            {
+              "id": "p-u7",
+              "text": "Question 7",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 16,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:16Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-17",
+      "payload": {
+        "message": {
+          "id": "m-a7",
+          "parts": [
+            {
+              "id": "p-a7",
+              "text": "Answer 7",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 17,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:17Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-18",
+      "payload": {
+        "message": {
+          "id": "m-u8",
+          "parts": [
+            {
+              "id": "p-u8",
+              "text": "Question 8",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 18,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:18Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-19",
+      "payload": {
+        "message": {
+          "id": "m-a8",
+          "parts": [
+            {
+              "id": "p-a8",
+              "text": "Answer 8",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 19,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:19Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-20",
+      "payload": {
+        "message": {
+          "id": "m-u9",
+          "parts": [
+            {
+              "id": "p-u9",
+              "text": "Question 9",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 20,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:20Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-21",
+      "payload": {
+        "message": {
+          "id": "m-a9",
+          "parts": [
+            {
+              "id": "p-a9",
+              "text": "Answer 9",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 21,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:21Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-22",
+      "payload": {
+        "message": {
+          "id": "m-u10",
+          "parts": [
+            {
+              "id": "p-u10",
+              "text": "Question 10",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 22,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:22Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-23",
+      "payload": {
+        "message": {
+          "id": "m-a10",
+          "parts": [
+            {
+              "id": "p-a10",
+              "text": "Answer 10",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 23,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:23Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-24",
+      "payload": {
+        "message": {
+          "id": "m-u11",
+          "parts": [
+            {
+              "id": "p-u11",
+              "text": "Question 11",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 24,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:24Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-25",
+      "payload": {
+        "message": {
+          "id": "m-a11",
+          "parts": [
+            {
+              "id": "p-a11",
+              "text": "Answer 11",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 25,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:25Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-26",
+      "payload": {
+        "message": {
+          "id": "m-u12",
+          "parts": [
+            {
+              "id": "p-u12",
+              "text": "Question 12",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 26,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:26Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-27",
+      "payload": {
+        "message": {
+          "id": "m-a12",
+          "parts": [
+            {
+              "id": "p-a12",
+              "text": "Answer 12",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 27,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:27Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-28",
+      "payload": {
+        "message": {
+          "id": "m-u13",
+          "parts": [
+            {
+              "id": "p-u13",
+              "text": "Question 13",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 28,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:28Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-29",
+      "payload": {
+        "message": {
+          "id": "m-a13",
+          "parts": [
+            {
+              "id": "p-a13",
+              "text": "Answer 13",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 29,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:29Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-30",
+      "payload": {
+        "message": {
+          "id": "m-u14",
+          "parts": [
+            {
+              "id": "p-u14",
+              "text": "Question 14",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 30,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:30Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-31",
+      "payload": {
+        "message": {
+          "id": "m-a14",
+          "parts": [
+            {
+              "id": "p-a14",
+              "text": "Answer 14",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 31,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:31Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-32",
+      "payload": {
+        "message": {
+          "id": "m-u15",
+          "parts": [
+            {
+              "id": "p-u15",
+              "text": "Question 15",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 32,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:32Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-33",
+      "payload": {
+        "message": {
+          "id": "m-a15",
+          "parts": [
+            {
+              "id": "p-a15",
+              "text": "Answer 15",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 33,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:33Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-34",
+      "payload": {
+        "message": {
+          "id": "m-u16",
+          "parts": [
+            {
+              "id": "p-u16",
+              "text": "Question 16",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 34,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:34Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-35",
+      "payload": {
+        "message": {
+          "id": "m-a16",
+          "parts": [
+            {
+              "id": "p-a16",
+              "text": "Answer 16",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 35,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:35Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-36",
+      "payload": {
+        "message": {
+          "id": "m-u17",
+          "parts": [
+            {
+              "id": "p-u17",
+              "text": "Question 17",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 36,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:36Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-37",
+      "payload": {
+        "message": {
+          "id": "m-a17",
+          "parts": [
+            {
+              "id": "p-a17",
+              "text": "Answer 17",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 37,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:37Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-38",
+      "payload": {
+        "message": {
+          "id": "m-u18",
+          "parts": [
+            {
+              "id": "p-u18",
+              "text": "Question 18",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 38,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:38Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-39",
+      "payload": {
+        "message": {
+          "id": "m-a18",
+          "parts": [
+            {
+              "id": "p-a18",
+              "text": "Answer 18",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 39,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:39Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-40",
+      "payload": {
+        "message": {
+          "id": "m-u19",
+          "parts": [
+            {
+              "id": "p-u19",
+              "text": "Question 19",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 40,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:40Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-41",
+      "payload": {
+        "message": {
+          "id": "m-a19",
+          "parts": [
+            {
+              "id": "p-a19",
+              "text": "Answer 19",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 41,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:41Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-42",
+      "payload": {
+        "message": {
+          "id": "m-u20",
+          "parts": [
+            {
+              "id": "p-u20",
+              "text": "Question 20",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 42,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:42Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-43",
+      "payload": {
+        "message": {
+          "id": "m-a20",
+          "parts": [
+            {
+              "id": "p-a20",
+              "text": "Answer 20",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 43,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:43Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-44",
+      "payload": {
+        "message": {
+          "id": "m-u21",
+          "parts": [
+            {
+              "id": "p-u21",
+              "text": "Question 21",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 44,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:44Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-45",
+      "payload": {
+        "message": {
+          "id": "m-a21",
+          "parts": [
+            {
+              "id": "p-a21",
+              "text": "Answer 21",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 45,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:45Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-46",
+      "payload": {
+        "message": {
+          "id": "m-u22",
+          "parts": [
+            {
+              "id": "p-u22",
+              "text": "Question 22",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 46,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:46Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-47",
+      "payload": {
+        "message": {
+          "id": "m-a22",
+          "parts": [
+            {
+              "id": "p-a22",
+              "text": "Answer 22",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 47,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:47Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-48",
+      "payload": {
+        "message": {
+          "id": "m-u23",
+          "parts": [
+            {
+              "id": "p-u23",
+              "text": "Question 23",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 48,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:48Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-49",
+      "payload": {
+        "message": {
+          "id": "m-a23",
+          "parts": [
+            {
+              "id": "p-a23",
+              "text": "Answer 23",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 49,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:49Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-50",
+      "payload": {
+        "message": {
+          "id": "m-u24",
+          "parts": [
+            {
+              "id": "p-u24",
+              "text": "Question 24",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 50,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:50Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-51",
+      "payload": {
+        "message": {
+          "id": "m-a24",
+          "parts": [
+            {
+              "id": "p-a24",
+              "text": "Answer 24",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 51,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:51Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-52",
+      "payload": {
+        "message": {
+          "id": "m-u25",
+          "parts": [
+            {
+              "id": "p-u25",
+              "text": "Question 25",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 52,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:52Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-53",
+      "payload": {
+        "message": {
+          "id": "m-a25",
+          "parts": [
+            {
+              "id": "p-a25",
+              "text": "Answer 25",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 53,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:53Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-54",
+      "payload": {
+        "message": {
+          "id": "m-u26",
+          "parts": [
+            {
+              "id": "p-u26",
+              "text": "Question 26",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 54,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:54Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-55",
+      "payload": {
+        "message": {
+          "id": "m-a26",
+          "parts": [
+            {
+              "id": "p-a26",
+              "text": "Answer 26",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 55,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:55Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-56",
+      "payload": {
+        "message": {
+          "id": "m-u27",
+          "parts": [
+            {
+              "id": "p-u27",
+              "text": "Question 27",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 56,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:56Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-57",
+      "payload": {
+        "message": {
+          "id": "m-a27",
+          "parts": [
+            {
+              "id": "p-a27",
+              "text": "Answer 27",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 57,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:57Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-58",
+      "payload": {
+        "message": {
+          "id": "m-u28",
+          "parts": [
+            {
+              "id": "p-u28",
+              "text": "Question 28",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 58,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:58Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-59",
+      "payload": {
+        "message": {
+          "id": "m-a28",
+          "parts": [
+            {
+              "id": "p-a28",
+              "text": "Answer 28",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 59,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:59Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-60",
+      "payload": {
+        "message": {
+          "id": "m-u29",
+          "parts": [
+            {
+              "id": "p-u29",
+              "text": "Question 29",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 60,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:00Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-61",
+      "payload": {
+        "message": {
+          "id": "m-a29",
+          "parts": [
+            {
+              "id": "p-a29",
+              "text": "Answer 29",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 61,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:01Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-62",
+      "payload": {
+        "message": {
+          "id": "m-u30",
+          "parts": [
+            {
+              "id": "p-u30",
+              "text": "Question 30",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 62,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-63",
+      "payload": {
+        "message": {
+          "id": "m-a30",
+          "parts": [
+            {
+              "id": "p-a30",
+              "text": "Answer 30",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 63,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:03Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-64",
+      "payload": {
+        "message": {
+          "id": "m-u31",
+          "parts": [
+            {
+              "id": "p-u31",
+              "text": "Question 31",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 64,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-65",
+      "payload": {
+        "message": {
+          "id": "m-a31",
+          "parts": [
+            {
+              "id": "p-a31",
+              "text": "Answer 31",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 65,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:05Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-66",
+      "payload": {
+        "message": {
+          "id": "m-u32",
+          "parts": [
+            {
+              "id": "p-u32",
+              "text": "Question 32",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 66,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:06Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-67",
+      "payload": {
+        "message": {
+          "id": "m-a32",
+          "parts": [
+            {
+              "id": "p-a32",
+              "text": "Answer 32",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 67,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:07Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-68",
+      "payload": {
+        "message": {
+          "id": "m-u33",
+          "parts": [
+            {
+              "id": "p-u33",
+              "text": "Question 33",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 68,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:08Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-69",
+      "payload": {
+        "message": {
+          "id": "m-a33",
+          "parts": [
+            {
+              "id": "p-a33",
+              "text": "Answer 33",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 69,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:09Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-70",
+      "payload": {
+        "message": {
+          "id": "m-u34",
+          "parts": [
+            {
+              "id": "p-u34",
+              "text": "Question 34",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 70,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:10Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-71",
+      "payload": {
+        "message": {
+          "id": "m-a34",
+          "parts": [
+            {
+              "id": "p-a34",
+              "text": "Answer 34",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 71,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:11Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-72",
+      "payload": {
+        "message": {
+          "id": "m-u35",
+          "parts": [
+            {
+              "id": "p-u35",
+              "text": "Question 35",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 72,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:12Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-73",
+      "payload": {
+        "message": {
+          "id": "m-a35",
+          "parts": [
+            {
+              "id": "p-a35",
+              "text": "Answer 35",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 73,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:13Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-74",
+      "payload": {
+        "message": {
+          "id": "m-u36",
+          "parts": [
+            {
+              "id": "p-u36",
+              "text": "Question 36",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 74,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:14Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-75",
+      "payload": {
+        "message": {
+          "id": "m-a36",
+          "parts": [
+            {
+              "id": "p-a36",
+              "text": "Answer 36",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 75,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:15Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-76",
+      "payload": {
+        "message": {
+          "id": "m-u37",
+          "parts": [
+            {
+              "id": "p-u37",
+              "text": "Question 37",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 76,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:16Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-77",
+      "payload": {
+        "message": {
+          "id": "m-a37",
+          "parts": [
+            {
+              "id": "p-a37",
+              "text": "Answer 37",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 77,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:17Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-78",
+      "payload": {
+        "message": {
+          "id": "m-u38",
+          "parts": [
+            {
+              "id": "p-u38",
+              "text": "Question 38",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 78,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:18Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-79",
+      "payload": {
+        "message": {
+          "id": "m-a38",
+          "parts": [
+            {
+              "id": "p-a38",
+              "text": "Answer 38",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 79,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:19Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-80",
+      "payload": {
+        "message": {
+          "id": "m-u39",
+          "parts": [
+            {
+              "id": "p-u39",
+              "text": "Question 39",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 80,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:20Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-81",
+      "payload": {
+        "message": {
+          "id": "m-a39",
+          "parts": [
+            {
+              "id": "p-a39",
+              "text": "Answer 39",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 81,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:21Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-82",
+      "payload": {
+        "message": {
+          "id": "m-u40",
+          "parts": [
+            {
+              "id": "p-u40",
+              "text": "Question 40",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 82,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:22Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-83",
+      "payload": {
+        "message": {
+          "id": "m-a40",
+          "parts": [
+            {
+              "id": "p-a40",
+              "text": "Answer 40",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 83,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:23Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-84",
+      "payload": {
+        "message": {
+          "id": "m-u41",
+          "parts": [
+            {
+              "id": "p-u41",
+              "text": "Question 41",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 84,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:24Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-85",
+      "payload": {
+        "message": {
+          "id": "m-a41",
+          "parts": [
+            {
+              "id": "p-a41",
+              "text": "Answer 41",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 85,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:25Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-86",
+      "payload": {
+        "message": {
+          "id": "m-u42",
+          "parts": [
+            {
+              "id": "p-u42",
+              "text": "Question 42",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 86,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:26Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-87",
+      "payload": {
+        "message": {
+          "id": "m-a42",
+          "parts": [
+            {
+              "id": "p-a42",
+              "text": "Answer 42",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 87,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:27Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-88",
+      "payload": {
+        "message": {
+          "id": "m-u43",
+          "parts": [
+            {
+              "id": "p-u43",
+              "text": "Question 43",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 88,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:28Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-89",
+      "payload": {
+        "message": {
+          "id": "m-a43",
+          "parts": [
+            {
+              "id": "p-a43",
+              "text": "Answer 43",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 89,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:29Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-90",
+      "payload": {
+        "message": {
+          "id": "m-u44",
+          "parts": [
+            {
+              "id": "p-u44",
+              "text": "Question 44",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 90,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:30Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-91",
+      "payload": {
+        "message": {
+          "id": "m-a44",
+          "parts": [
+            {
+              "id": "p-a44",
+              "text": "Answer 44",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 91,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:31Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-92",
+      "payload": {
+        "message": {
+          "id": "m-u45",
+          "parts": [
+            {
+              "id": "p-u45",
+              "text": "Question 45",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 92,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:32Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-93",
+      "payload": {
+        "message": {
+          "id": "m-a45",
+          "parts": [
+            {
+              "id": "p-a45",
+              "text": "Answer 45",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 93,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:33Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-94",
+      "payload": {
+        "message": {
+          "id": "m-u46",
+          "parts": [
+            {
+              "id": "p-u46",
+              "text": "Question 46",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 94,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:34Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-95",
+      "payload": {
+        "message": {
+          "id": "m-a46",
+          "parts": [
+            {
+              "id": "p-a46",
+              "text": "Answer 46",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 95,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:35Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-96",
+      "payload": {
+        "message": {
+          "id": "m-u47",
+          "parts": [
+            {
+              "id": "p-u47",
+              "text": "Question 47",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 96,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:36Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-97",
+      "payload": {
+        "message": {
+          "id": "m-a47",
+          "parts": [
+            {
+              "id": "p-a47",
+              "text": "Answer 47",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 97,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:37Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-98",
+      "payload": {
+        "message": {
+          "id": "m-u48",
+          "parts": [
+            {
+              "id": "p-u48",
+              "text": "Question 48",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 98,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:38Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-99",
+      "payload": {
+        "message": {
+          "id": "m-a48",
+          "parts": [
+            {
+              "id": "p-a48",
+              "text": "Answer 48",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 99,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:39Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-100",
+      "payload": {
+        "message": {
+          "id": "m-u49",
+          "parts": [
+            {
+              "id": "p-u49",
+              "text": "Question 49",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 100,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:40Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-101",
+      "payload": {
+        "message": {
+          "id": "m-a49",
+          "parts": [
+            {
+              "id": "p-a49",
+              "text": "Answer 49",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 101,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:41Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-102",
+      "payload": {
+        "message": {
+          "id": "m-u50",
+          "parts": [
+            {
+              "id": "p-u50",
+              "text": "Question 50",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 102,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:42Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-103",
+      "payload": {
+        "message": {
+          "id": "m-a50",
+          "parts": [
+            {
+              "id": "p-a50",
+              "text": "Answer 50",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 103,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:43Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-104",
+      "payload": {
+        "message": {
+          "id": "m-u51",
+          "parts": [
+            {
+              "id": "p-u51",
+              "text": "Question 51",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 104,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:44Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-105",
+      "payload": {
+        "message": {
+          "id": "m-a51",
+          "parts": [
+            {
+              "id": "p-a51",
+              "text": "Answer 51",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 105,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:45Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-106",
+      "payload": {
+        "message": {
+          "id": "m-u52",
+          "parts": [
+            {
+              "id": "p-u52",
+              "text": "Question 52",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 106,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:46Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-107",
+      "payload": {
+        "message": {
+          "id": "m-a52",
+          "parts": [
+            {
+              "id": "p-a52",
+              "text": "Answer 52",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 107,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:47Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-108",
+      "payload": {
+        "message": {
+          "id": "m-u53",
+          "parts": [
+            {
+              "id": "p-u53",
+              "text": "Question 53",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 108,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:48Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-109",
+      "payload": {
+        "message": {
+          "id": "m-a53",
+          "parts": [
+            {
+              "id": "p-a53",
+              "text": "Answer 53",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 109,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:49Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-110",
+      "payload": {
+        "message": {
+          "id": "m-u54",
+          "parts": [
+            {
+              "id": "p-u54",
+              "text": "Question 54",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 110,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:50Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-111",
+      "payload": {
+        "message": {
+          "id": "m-a54",
+          "parts": [
+            {
+              "id": "p-a54",
+              "text": "Answer 54",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 111,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:51Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-112",
+      "payload": {
+        "message": {
+          "id": "m-u55",
+          "parts": [
+            {
+              "id": "p-u55",
+              "text": "Question 55",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 112,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:52Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-113",
+      "payload": {
+        "message": {
+          "id": "m-a55",
+          "parts": [
+            {
+              "id": "p-a55",
+              "text": "Answer 55",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 113,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:53Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-114",
+      "payload": {
+        "message": {
+          "id": "m-u56",
+          "parts": [
+            {
+              "id": "p-u56",
+              "text": "Question 56",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 114,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:54Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-115",
+      "payload": {
+        "message": {
+          "id": "m-a56",
+          "parts": [
+            {
+              "id": "p-a56",
+              "text": "Answer 56",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 115,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:55Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-116",
+      "payload": {
+        "message": {
+          "id": "m-u57",
+          "parts": [
+            {
+              "id": "p-u57",
+              "text": "Question 57",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 116,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:56Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-117",
+      "payload": {
+        "message": {
+          "id": "m-a57",
+          "parts": [
+            {
+              "id": "p-a57",
+              "text": "Answer 57",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 117,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:57Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-118",
+      "payload": {
+        "message": {
+          "id": "m-u58",
+          "parts": [
+            {
+              "id": "p-u58",
+              "text": "Question 58",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 118,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:58Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-119",
+      "payload": {
+        "message": {
+          "id": "m-a58",
+          "parts": [
+            {
+              "id": "p-a58",
+              "text": "Answer 58",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 119,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:01:59Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-120",
+      "payload": {
+        "message": {
+          "id": "m-u59",
+          "parts": [
+            {
+              "id": "p-u59",
+              "text": "Question 59",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 120,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:00Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-121",
+      "payload": {
+        "message": {
+          "id": "m-a59",
+          "parts": [
+            {
+              "id": "p-a59",
+              "text": "Answer 59",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 121,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:01Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-122",
+      "payload": {
+        "message": {
+          "id": "m-u60",
+          "parts": [
+            {
+              "id": "p-u60",
+              "text": "Question 60",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 122,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-123",
+      "payload": {
+        "message": {
+          "id": "m-a60",
+          "parts": [
+            {
+              "id": "p-a60",
+              "text": "Answer 60",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 123,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:03Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-124",
+      "payload": {
+        "message": {
+          "id": "m-u61",
+          "parts": [
+            {
+              "id": "p-u61",
+              "text": "Question 61",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 124,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-125",
+      "payload": {
+        "message": {
+          "id": "m-a61",
+          "parts": [
+            {
+              "id": "p-a61",
+              "text": "Answer 61",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 125,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:05Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-126",
+      "payload": {
+        "message": {
+          "id": "m-u62",
+          "parts": [
+            {
+              "id": "p-u62",
+              "text": "Question 62",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 126,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:06Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-127",
+      "payload": {
+        "message": {
+          "id": "m-a62",
+          "parts": [
+            {
+              "id": "p-a62",
+              "text": "Answer 62",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 127,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:07Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-128",
+      "payload": {
+        "message": {
+          "id": "m-u63",
+          "parts": [
+            {
+              "id": "p-u63",
+              "text": "Question 63",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 128,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:08Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-129",
+      "payload": {
+        "message": {
+          "id": "m-a63",
+          "parts": [
+            {
+              "id": "p-a63",
+              "text": "Answer 63",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 129,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:09Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-130",
+      "payload": {
+        "message": {
+          "id": "m-u64",
+          "parts": [
+            {
+              "id": "p-u64",
+              "text": "Question 64",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 130,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:10Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-131",
+      "payload": {
+        "message": {
+          "id": "m-a64",
+          "parts": [
+            {
+              "id": "p-a64",
+              "text": "Answer 64",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 131,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:11Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-132",
+      "payload": {
+        "message": {
+          "id": "m-u65",
+          "parts": [
+            {
+              "id": "p-u65",
+              "text": "Question 65",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 132,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:12Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-133",
+      "payload": {
+        "message": {
+          "id": "m-a65",
+          "parts": [
+            {
+              "id": "p-a65",
+              "text": "Answer 65",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 133,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:13Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-134",
+      "payload": {
+        "message": {
+          "id": "m-u66",
+          "parts": [
+            {
+              "id": "p-u66",
+              "text": "Question 66",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 134,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:14Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-135",
+      "payload": {
+        "message": {
+          "id": "m-a66",
+          "parts": [
+            {
+              "id": "p-a66",
+              "text": "Answer 66",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 135,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:15Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-136",
+      "payload": {
+        "message": {
+          "id": "m-u67",
+          "parts": [
+            {
+              "id": "p-u67",
+              "text": "Question 67",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 136,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:16Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-137",
+      "payload": {
+        "message": {
+          "id": "m-a67",
+          "parts": [
+            {
+              "id": "p-a67",
+              "text": "Answer 67",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 137,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:17Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-138",
+      "payload": {
+        "message": {
+          "id": "m-u68",
+          "parts": [
+            {
+              "id": "p-u68",
+              "text": "Question 68",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 138,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:18Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-139",
+      "payload": {
+        "message": {
+          "id": "m-a68",
+          "parts": [
+            {
+              "id": "p-a68",
+              "text": "Answer 68",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 139,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:19Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-140",
+      "payload": {
+        "message": {
+          "id": "m-u69",
+          "parts": [
+            {
+              "id": "p-u69",
+              "text": "Question 69",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 140,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:20Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-141",
+      "payload": {
+        "message": {
+          "id": "m-a69",
+          "parts": [
+            {
+              "id": "p-a69",
+              "text": "Answer 69",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 141,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:21Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-142",
+      "payload": {
+        "message": {
+          "id": "m-u70",
+          "parts": [
+            {
+              "id": "p-u70",
+              "text": "Question 70",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 142,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:22Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-143",
+      "payload": {
+        "message": {
+          "id": "m-a70",
+          "parts": [
+            {
+              "id": "p-a70",
+              "text": "Answer 70",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 143,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:23Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-144",
+      "payload": {
+        "message": {
+          "id": "m-u71",
+          "parts": [
+            {
+              "id": "p-u71",
+              "text": "Question 71",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 144,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:24Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-145",
+      "payload": {
+        "message": {
+          "id": "m-a71",
+          "parts": [
+            {
+              "id": "p-a71",
+              "text": "Answer 71",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 145,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:25Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-146",
+      "payload": {
+        "message": {
+          "id": "m-u72",
+          "parts": [
+            {
+              "id": "p-u72",
+              "text": "Question 72",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 146,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:26Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-147",
+      "payload": {
+        "message": {
+          "id": "m-a72",
+          "parts": [
+            {
+              "id": "p-a72",
+              "text": "Answer 72",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 147,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:27Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-148",
+      "payload": {
+        "message": {
+          "id": "m-u73",
+          "parts": [
+            {
+              "id": "p-u73",
+              "text": "Question 73",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 148,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:28Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-149",
+      "payload": {
+        "message": {
+          "id": "m-a73",
+          "parts": [
+            {
+              "id": "p-a73",
+              "text": "Answer 73",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 149,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:29Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-150",
+      "payload": {
+        "message": {
+          "id": "m-u74",
+          "parts": [
+            {
+              "id": "p-u74",
+              "text": "Question 74",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 150,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:30Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-151",
+      "payload": {
+        "message": {
+          "id": "m-a74",
+          "parts": [
+            {
+              "id": "p-a74",
+              "text": "Answer 74",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 151,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:31Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-152",
+      "payload": {
+        "message": {
+          "id": "m-u75",
+          "parts": [
+            {
+              "id": "p-u75",
+              "text": "Question 75",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 152,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:32Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-153",
+      "payload": {
+        "message": {
+          "id": "m-a75",
+          "parts": [
+            {
+              "id": "p-a75",
+              "text": "Answer 75",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 153,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:33Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-154",
+      "payload": {
+        "message": {
+          "id": "m-u76",
+          "parts": [
+            {
+              "id": "p-u76",
+              "text": "Question 76",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 154,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:34Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-155",
+      "payload": {
+        "message": {
+          "id": "m-a76",
+          "parts": [
+            {
+              "id": "p-a76",
+              "text": "Answer 76",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 155,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:35Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-156",
+      "payload": {
+        "message": {
+          "id": "m-u77",
+          "parts": [
+            {
+              "id": "p-u77",
+              "text": "Question 77",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 156,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:36Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-157",
+      "payload": {
+        "message": {
+          "id": "m-a77",
+          "parts": [
+            {
+              "id": "p-a77",
+              "text": "Answer 77",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 157,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:37Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-158",
+      "payload": {
+        "message": {
+          "id": "m-u78",
+          "parts": [
+            {
+              "id": "p-u78",
+              "text": "Question 78",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 158,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:38Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-159",
+      "payload": {
+        "message": {
+          "id": "m-a78",
+          "parts": [
+            {
+              "id": "p-a78",
+              "text": "Answer 78",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 159,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:39Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-160",
+      "payload": {
+        "message": {
+          "id": "m-u79",
+          "parts": [
+            {
+              "id": "p-u79",
+              "text": "Question 79",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 160,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:40Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-161",
+      "payload": {
+        "message": {
+          "id": "m-a79",
+          "parts": [
+            {
+              "id": "p-a79",
+              "text": "Answer 79",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 161,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:41Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-162",
+      "payload": {
+        "message": {
+          "id": "m-u80",
+          "parts": [
+            {
+              "id": "p-u80",
+              "text": "Question 80",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 162,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:42Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-163",
+      "payload": {
+        "message": {
+          "id": "m-a80",
+          "parts": [
+            {
+              "id": "p-a80",
+              "text": "Answer 80",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 163,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:43Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-164",
+      "payload": {
+        "message": {
+          "id": "m-u81",
+          "parts": [
+            {
+              "id": "p-u81",
+              "text": "Question 81",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 164,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:44Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-165",
+      "payload": {
+        "message": {
+          "id": "m-a81",
+          "parts": [
+            {
+              "id": "p-a81",
+              "text": "Answer 81",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 165,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:45Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-166",
+      "payload": {
+        "message": {
+          "id": "m-u82",
+          "parts": [
+            {
+              "id": "p-u82",
+              "text": "Question 82",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 166,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:46Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-167",
+      "payload": {
+        "message": {
+          "id": "m-a82",
+          "parts": [
+            {
+              "id": "p-a82",
+              "text": "Answer 82",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 167,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:47Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-168",
+      "payload": {
+        "message": {
+          "id": "m-u83",
+          "parts": [
+            {
+              "id": "p-u83",
+              "text": "Question 83",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 168,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:48Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-169",
+      "payload": {
+        "message": {
+          "id": "m-a83",
+          "parts": [
+            {
+              "id": "p-a83",
+              "text": "Answer 83",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 169,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:49Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-170",
+      "payload": {
+        "message": {
+          "id": "m-u84",
+          "parts": [
+            {
+              "id": "p-u84",
+              "text": "Question 84",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 170,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:50Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-171",
+      "payload": {
+        "message": {
+          "id": "m-a84",
+          "parts": [
+            {
+              "id": "p-a84",
+              "text": "Answer 84",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 171,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:51Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-172",
+      "payload": {
+        "message": {
+          "id": "m-u85",
+          "parts": [
+            {
+              "id": "p-u85",
+              "text": "Question 85",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 172,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:52Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-173",
+      "payload": {
+        "message": {
+          "id": "m-a85",
+          "parts": [
+            {
+              "id": "p-a85",
+              "text": "Answer 85",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 173,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:53Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-174",
+      "payload": {
+        "message": {
+          "id": "m-u86",
+          "parts": [
+            {
+              "id": "p-u86",
+              "text": "Question 86",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 174,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:54Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-175",
+      "payload": {
+        "message": {
+          "id": "m-a86",
+          "parts": [
+            {
+              "id": "p-a86",
+              "text": "Answer 86",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 175,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:55Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-176",
+      "payload": {
+        "message": {
+          "id": "m-u87",
+          "parts": [
+            {
+              "id": "p-u87",
+              "text": "Question 87",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 176,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:56Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-177",
+      "payload": {
+        "message": {
+          "id": "m-a87",
+          "parts": [
+            {
+              "id": "p-a87",
+              "text": "Answer 87",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 177,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:57Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-178",
+      "payload": {
+        "message": {
+          "id": "m-u88",
+          "parts": [
+            {
+              "id": "p-u88",
+              "text": "Question 88",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 178,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:58Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-179",
+      "payload": {
+        "message": {
+          "id": "m-a88",
+          "parts": [
+            {
+              "id": "p-a88",
+              "text": "Answer 88",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 179,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:02:59Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-180",
+      "payload": {
+        "message": {
+          "id": "m-u89",
+          "parts": [
+            {
+              "id": "p-u89",
+              "text": "Question 89",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 180,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:00Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-181",
+      "payload": {
+        "message": {
+          "id": "m-a89",
+          "parts": [
+            {
+              "id": "p-a89",
+              "text": "Answer 89",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 181,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:01Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-182",
+      "payload": {
+        "message": {
+          "id": "m-u90",
+          "parts": [
+            {
+              "id": "p-u90",
+              "text": "Question 90",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 182,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-183",
+      "payload": {
+        "message": {
+          "id": "m-a90",
+          "parts": [
+            {
+              "id": "p-a90",
+              "text": "Answer 90",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 183,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:03Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-184",
+      "payload": {
+        "message": {
+          "id": "m-u91",
+          "parts": [
+            {
+              "id": "p-u91",
+              "text": "Question 91",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 184,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-185",
+      "payload": {
+        "message": {
+          "id": "m-a91",
+          "parts": [
+            {
+              "id": "p-a91",
+              "text": "Answer 91",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 185,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:05Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-186",
+      "payload": {
+        "message": {
+          "id": "m-u92",
+          "parts": [
+            {
+              "id": "p-u92",
+              "text": "Question 92",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 186,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:06Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-187",
+      "payload": {
+        "message": {
+          "id": "m-a92",
+          "parts": [
+            {
+              "id": "p-a92",
+              "text": "Answer 92",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 187,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:07Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-188",
+      "payload": {
+        "message": {
+          "id": "m-u93",
+          "parts": [
+            {
+              "id": "p-u93",
+              "text": "Question 93",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 188,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:08Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-189",
+      "payload": {
+        "message": {
+          "id": "m-a93",
+          "parts": [
+            {
+              "id": "p-a93",
+              "text": "Answer 93",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 189,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:09Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-190",
+      "payload": {
+        "message": {
+          "id": "m-u94",
+          "parts": [
+            {
+              "id": "p-u94",
+              "text": "Question 94",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 190,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:10Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-191",
+      "payload": {
+        "message": {
+          "id": "m-a94",
+          "parts": [
+            {
+              "id": "p-a94",
+              "text": "Answer 94",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 191,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:11Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-192",
+      "payload": {
+        "message": {
+          "id": "m-u95",
+          "parts": [
+            {
+              "id": "p-u95",
+              "text": "Question 95",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 192,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:12Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-193",
+      "payload": {
+        "message": {
+          "id": "m-a95",
+          "parts": [
+            {
+              "id": "p-a95",
+              "text": "Answer 95",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 193,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:13Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-194",
+      "payload": {
+        "message": {
+          "id": "m-u96",
+          "parts": [
+            {
+              "id": "p-u96",
+              "text": "Question 96",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 194,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:14Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-195",
+      "payload": {
+        "message": {
+          "id": "m-a96",
+          "parts": [
+            {
+              "id": "p-a96",
+              "text": "Answer 96",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 195,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:15Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-196",
+      "payload": {
+        "message": {
+          "id": "m-u97",
+          "parts": [
+            {
+              "id": "p-u97",
+              "text": "Question 97",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 196,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:16Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-197",
+      "payload": {
+        "message": {
+          "id": "m-a97",
+          "parts": [
+            {
+              "id": "p-a97",
+              "text": "Answer 97",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 197,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:17Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-198",
+      "payload": {
+        "message": {
+          "id": "m-u98",
+          "parts": [
+            {
+              "id": "p-u98",
+              "text": "Question 98",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 198,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:18Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-199",
+      "payload": {
+        "message": {
+          "id": "m-a98",
+          "parts": [
+            {
+              "id": "p-a98",
+              "text": "Answer 98",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 199,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:19Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-200",
+      "payload": {
+        "message": {
+          "id": "m-u99",
+          "parts": [
+            {
+              "id": "p-u99",
+              "text": "Question 99",
+              "type": "text"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 200,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:20Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-201",
+      "payload": {
+        "message": {
+          "id": "m-a99",
+          "parts": [
+            {
+              "id": "p-a99",
+              "text": "Answer 99",
+              "type": "text"
+            }
+          ],
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 201,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:21Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "large-history-202",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 202,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:03:22Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "large-history",
+  "protocolVersion": "0.1"
+}

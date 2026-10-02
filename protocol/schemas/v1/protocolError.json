@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Recoverable, explicitly-typed failures crossing the session boundary.\n\nOut-of-order and unknown-required-semantics cases map to these variants; nothing may silently corrupt state (ADR 0001, plan §4/§21).",
+  "oneOf": [
+    {
+      "description": "Event payload failed schema/type validation.",
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "invalidEvent"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "detail",
+        "kind"
+      ],
+      "type": "object"
+    },
+    {
+      "description": "Sequence gap exceeded the reorder buffer — recoverable by resync.",
+      "properties": {
+        "expected": {
+          "format": "uint64",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "sequenceGap"
+          ],
+          "type": "string"
+        },
+        "received": {
+          "format": "uint64",
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "expected",
+        "kind",
+        "received"
+      ],
+      "type": "object"
+    },
+    {
+      "description": "Payload requires semantics this build doesn't support.",
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "unsupported"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "detail",
+        "kind"
+      ],
+      "type": "object"
+    },
+    {
+      "description": "Serialized state failed to parse/validate on restore.",
+      "properties": {
+        "detail": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "corruptState"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "detail",
+        "kind"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "ProtocolError"
+}

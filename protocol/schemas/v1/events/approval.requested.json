@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "Action": {
+      "description": "A semantic action emitted by interactive nodes (button, menu).\n\nPayloads are data only (§23); the host resolves `id` through its own policy before executing anything.",
+      "properties": {
+        "id": {
+          "description": "Semantic action identifier, e.g. `invoice.approve`.",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "description": "Arbitrary JSON payload carried to the host.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": true,
+      "description": "An approval request tracked by the session.",
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Action"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Semantic action executed on approval (data only — §23)."
+        },
+        "description": {
+          "description": "Longer description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expiresAt": {
+          "description": "Expiry timestamp (ISO-8601, host-supplied).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable identifier.",
+          "type": "string"
+        },
+        "prompt": {
+          "description": "What is being approved.",
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ApprovalResolution"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Recorded resolution, once resolved."
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApprovalStatus"
+            }
+          ],
+          "description": "Lifecycle status."
+        },
+        "toolId": {
+          "description": "Tool invocation this approval gates, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "status"
+      ],
+      "type": "object"
+    },
+    "ApprovalDecision": {
+      "description": "The decision carried by `approval.resolved`.",
+      "enum": [
+        "approved",
+        "rejected",
+        "expired",
+        "executed"
+      ],
+      "type": "string"
+    },
+    "ApprovalRequested": {
+      "description": "`approval.requested`.",
+      "properties": {
+        "approval": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Approval"
+            }
+          ],
+          "description": "The approval request."
+        },
+        "protocolVersion": {
+          "default": "0.1",
+          "description": "Protocol version carried by the payload.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval"
+      ],
+      "type": "object"
+    },
+    "ApprovalResolution": {
+      "additionalProperties": true,
+      "description": "Recorded resolution of an approval.",
+      "properties": {
+        "decision": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApprovalDecision"
+            }
+          ],
+          "description": "Resolution outcome."
+        },
+        "note": {
+          "description": "Optional note attached to the resolution.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedAt": {
+          "description": "Resolution timestamp (ISO-8601, host-supplied).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedBy": {
+          "description": "Who/what resolved it (`user`, `host`, `timeout`, ...).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "type": "object"
+    },
+    "ApprovalStatus": {
+      "description": "Approval lifecycle status (plan §23). `approved` → `executed` is the only permitted terminal-to-terminal transition; resolutions on an already resolved approval are absorbed as no-ops so replays never re-execute.",
+      "enum": [
+        "requested",
+        "approved",
+        "rejected",
+        "expired",
+        "executed"
+      ],
+      "type": "string"
+    }
+  },
+  "description": "The canonical event envelope. `P` defaults to a raw JSON payload for dispatch-time parsing; typed instantiations (`AiuxEvent<SessionCreated>`) are used for schema generation and typed producers.",
+  "properties": {
+    "eventId": {
+      "description": "Unique event identifier — replays of a known id are ignored.",
+      "type": "string"
+    },
+    "payload": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApprovalRequested"
+        }
+      ],
+      "description": "Type-specific payload."
+    },
+    "protocolVersion": {
+      "default": "0.1",
+      "description": "Protocol version of this event.",
+      "type": "string"
+    },
+    "sequence": {
+      "description": "Monotonic sequence within the session (0-based).",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "sessionId": {
+      "description": "Owning session.",
+      "type": "string"
+    },
+    "timestamp": {
+      "description": "Event timestamp (ISO-8601, host-supplied — never core-generated).",
+      "type": "string"
+    },
+    "type": {
+      "description": "Event type, e.g. `session.created`. Unknown values deserialize fine and fail later with `ProtocolError::Unsupported`.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventId",
+    "payload",
+    "sequence",
+    "sessionId",
+    "timestamp",
+    "type"
+  ],
+  "title": "AiuxEvent_for_ApprovalRequested",
+  "type": "object"
+}

@@ -1,0 +1,97 @@
+{
+  "events": [
+    {
+      "eventId": "artifact-update-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Artifact update"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "artifact-update-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "artifact-update-2",
+      "payload": {
+        "artifact": {
+          "content": "pub fn a() {}",
+          "id": "art-1",
+          "kind": "code",
+          "revision": 0,
+          "title": "lib.rs"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "artifact.created"
+    },
+    {
+      "eventId": "artifact-update-3",
+      "payload": {
+        "artifactId": "art-1",
+        "content": "pub fn a() {}\npub fn b() {}",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "artifact.updated"
+    },
+    {
+      "eventId": "artifact-update-4",
+      "payload": {
+        "artifactId": "art-1",
+        "metadata": {
+          "format": "rustfmt"
+        },
+        "protocolVersion": "0.1",
+        "title": "lib.rs (v2)"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "artifact.updated"
+    },
+    {
+      "eventId": "artifact-update-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "artifact-update",
+  "protocolVersion": "0.1"
+}

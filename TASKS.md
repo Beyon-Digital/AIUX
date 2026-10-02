@@ -57,20 +57,20 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 1 — Protocol v1 + Rust core → PR 2
 
-- [ ] JSON schemas in `protocol/schemas/v1/` for all core entities + events
-- [ ] `aiux-protocol` — types, serde, protocolVersion, envelope validation
-- [ ] `aiux-session` — session state, ordering buffer, idempotency (eventId set)
-- [ ] `aiux-reducer` — deterministic `dispatch`/`dispatch_batch`
-- [ ] Tool/approval/artifact lifecycles (in `aiux-tools/-approvals/-artifacts`)
-- [ ] `aiux-surfaces` — initial Surface Schema primitives per plan §6
-- [ ] `aiux-persistence` — serialize/restore (JSON, canonical ordering)
-- [ ] Public API: `create_session / restore_session / dispatch /
+- [x] JSON schemas in `protocol/schemas/v1/` for all core entities + events
+- [x] `aiux-protocol` — types, serde, protocolVersion, envelope validation
+- [x] `aiux-session` — session state, ordering buffer, idempotency (eventId set)
+- [x] `aiux-reducer` — deterministic `dispatch`/`dispatch_batch`
+- [x] Tool/approval/artifact lifecycles (in `aiux-tools/-approvals/-artifacts`)
+- [x] `aiux-surfaces` — initial Surface Schema primitives per plan §6
+- [x] `aiux-persistence` — serialize/restore (JSON, canonical ordering)
+- [x] Public API: `create_session / restore_session / dispatch /
   dispatch_batch / snapshot / serialize / reset` (plan §4)
-- [ ] Out-of-order handling: buffer or explicit recoverable error — never
+- [x] Out-of-order handling: buffer or explicit recoverable error — never
   silent corruption
-- [ ] Conformance: `conformance/harness` fixture runner +
+- [x] Conformance: `conformance/harness` fixture runner +
   `conformance/fixtures/*` + `conformance/expected/*` (plan §17 list)
-- [ ] Property/replay/serialization tests (plan §18)
+- [x] Property/replay/serialization tests (plan §18)
 - **Gate:** same event fixture → exact expected serialized state.
   **No UI begins before this gate passes.**
 

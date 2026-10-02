@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "Capability": {
+      "additionalProperties": true,
+      "description": "A declared session capability (e.g. `tools.execute`, `files.upload`).",
+      "properties": {
+        "description": {
+          "description": "Human-readable description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "default": true,
+          "description": "Whether the capability is enabled (default true).",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Capability identifier.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ContextEntity": {
+      "additionalProperties": true,
+      "description": "A contextual entity injected into the session (file, record, URL, ...).",
+      "properties": {
+        "data": {
+          "description": "Free-form structured data for the host/renderer."
+        },
+        "description": {
+          "description": "Longer description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable identifier.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Semantic kind, e.g. `file`, `issue`, `customer`.",
+          "type": "string"
+        },
+        "label": {
+          "description": "Display label.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "Link target for the renderer.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "label"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "An AI interaction session.",
+  "properties": {
+    "capabilities": {
+      "description": "Declared capabilities.",
+      "items": {
+        "$ref": "#/definitions/Capability"
+      },
+      "type": "array"
+    },
+    "context": {
+      "description": "Context entities bound to the session.",
+      "items": {
+        "$ref": "#/definitions/ContextEntity"
+      },
+      "type": "array"
+    },
+    "createdAt": {
+      "description": "Creation timestamp (ISO-8601, supplied by the host).",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "description": "Session identifier — matches the event envelope `sessionId`.",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "Free-form host metadata."
+    },
+    "title": {
+      "description": "Display title.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "title": "Session",
+  "type": "object"
+}

@@ -11,6 +11,7 @@ members = [
     "core/rust/persistence",
     "core/rust/tests",
     "bindings/wasm",
+    "conformance/harness",
 ]
 
 [workspace.package]
@@ -18,3 +19,18 @@ version = "0.1.0"
 edition = "2021"
 license = "Proprietary"
 publish = false
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "0.8.22"
+proptest = "1"
+
+aiux-protocol = { path = "core/rust/protocol" }
+aiux-surfaces = { path = "core/rust/surfaces" }
+aiux-tools = { path = "core/rust/tools" }
+aiux-approvals = { path = "core/rust/approvals" }
+aiux-artifacts = { path = "core/rust/artifacts" }
+aiux-reducer = { path = "core/rust/reducer" }
+aiux-persistence = { path = "core/rust/persistence" }
+aiux-session = { path = "core/rust/session" }

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "description": "A file/media reference carried by parts or messages.",
+  "properties": {
+    "id": {
+      "description": "Stable identifier.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mimeType": {
+      "description": "MIME type.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "name": {
+      "description": "File name.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sizeBytes": {
+      "description": "Size in bytes.",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "uri": {
+      "description": "Resource URI (host-mediated).",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "title": "Attachment",
+  "type": "object"
+}

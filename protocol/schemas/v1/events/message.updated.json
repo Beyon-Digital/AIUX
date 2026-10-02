@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "MessageRole": {
+      "description": "Message author role.",
+      "enum": [
+        "user",
+        "assistant",
+        "system",
+        "tool"
+      ],
+      "type": "string"
+    },
+    "MessageStatus": {
+      "description": "Message lifecycle status.",
+      "enum": [
+        "streaming",
+        "complete",
+        "failed",
+        "cancelled"
+      ],
+      "type": "string"
+    },
+    "MessageUpdated": {
+      "description": "`message.updated` — partial update; absent fields are untouched and parts are never modified here (they accumulate via `part.added`/`part.updated`).",
+      "properties": {
+        "messageId": {
+          "description": "Message id.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "New metadata, if changing."
+        },
+        "protocolVersion": {
+          "default": "0.1",
+          "description": "Protocol version carried by the payload.",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MessageRole"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "New role, if changing."
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MessageStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "New status, if changing."
+        }
+      },
+      "required": [
+        "messageId"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "The canonical event envelope. `P` defaults to a raw JSON payload for dispatch-time parsing; typed instantiations (`AiuxEvent<SessionCreated>`) are used for schema generation and typed producers.",
+  "properties": {
+    "eventId": {
+      "description": "Unique event identifier — replays of a known id are ignored.",
+      "type": "string"
+    },
+    "payload": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MessageUpdated"
+        }
+      ],
+      "description": "Type-specific payload."
+    },
+    "protocolVersion": {
+      "default": "0.1",
+      "description": "Protocol version of this event.",
+      "type": "string"
+    },
+    "sequence": {
+      "description": "Monotonic sequence within the session (0-based).",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "sessionId": {
+      "description": "Owning session.",
+      "type": "string"
+    },
+    "timestamp": {
+      "description": "Event timestamp (ISO-8601, host-supplied — never core-generated).",
+      "type": "string"
+    },
+    "type": {
+      "description": "Event type, e.g. `session.created`. Unknown values deserialize fine and fail later with `ProtocolError::Unsupported`.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventId",
+    "payload",
+    "sequence",
+    "sessionId",
+    "timestamp",
+    "type"
+  ],
+  "title": "AiuxEvent_for_MessageUpdated",
+  "type": "object"
+}

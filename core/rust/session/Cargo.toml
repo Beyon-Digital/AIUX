@@ -6,4 +6,8 @@ license = "Proprietary"
 publish = false
 
 [dependencies]
-aiux-protocol = { path = "../protocol" }
+aiux-protocol = { workspace = true }
+aiux-reducer = { workspace = true }
+aiux-persistence = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

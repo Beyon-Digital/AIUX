@@ -1,0 +1,111 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 6,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-created-0",
+    "surface-created-1",
+    "surface-created-2",
+    "surface-created-3",
+    "surface-created-4",
+    "surface-created-5"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "surfaceId": "sf-1",
+            "type": "surface"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Surface created"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "invoice-card",
+        "revision": 0,
+        "root": {
+          "children": [
+            {
+              "level": 1,
+              "text": "Invoice summary",
+              "type": "heading"
+            },
+            {
+              "children": [
+                {
+                  "items": [
+                    {
+                      "key": "Total",
+                      "value": "$420.00"
+                    },
+                    {
+                      "key": "Status",
+                      "value": "pending"
+                    }
+                  ],
+                  "type": "keyValue"
+                },
+                {
+                  "text": "Due soon",
+                  "tone": "warning",
+                  "type": "badge"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "sm",
+              "type": "stack"
+            },
+            {
+              "children": [
+                {
+                  "action": {
+                    "id": "invoice.approve",
+                    "payload": {
+                      "id": "inv-9"
+                    }
+                  },
+                  "label": "Approve",
+                  "type": "button",
+                  "variant": "primary"
+                },
+                {
+                  "action": {
+                    "id": "invoice.decline",
+                    "payload": {
+                      "id": "inv-9"
+                    }
+                  },
+                  "label": "Decline",
+                  "type": "button",
+                  "variant": "secondary"
+                }
+              ],
+              "type": "actions"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ]
+  }
+}

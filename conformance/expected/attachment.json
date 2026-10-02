@@ -1,0 +1,50 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 4,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "attachment-0",
+    "attachment-1",
+    "attachment-2",
+    "attachment-3"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m-u",
+        "parts": [
+          {
+            "id": "p0",
+            "text": "See the spec:",
+            "type": "text"
+          },
+          {
+            "attachment": {
+              "id": "file-1",
+              "mimeType": "application/pdf",
+              "name": "aiux-spec.pdf",
+              "sizeBytes": 20480,
+              "uri": "aiux://files/file-1"
+            },
+            "id": "p1",
+            "type": "attachment"
+          }
+        ],
+        "role": "user"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Attachment"
+    }
+  }
+}

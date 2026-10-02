@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "A semantic action emitted by interactive nodes (button, menu).\n\nPayloads are data only (§23); the host resolves `id` through its own policy before executing anything.",
+  "properties": {
+    "id": {
+      "description": "Semantic action identifier, e.g. `invoice.approve`.",
+      "type": "string"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "description": "Arbitrary JSON payload carried to the host.",
+      "type": "object"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "title": "Action",
+  "type": "object"
+}

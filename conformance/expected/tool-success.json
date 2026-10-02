@@ -1,0 +1,47 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 7,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "tool-success-0",
+    "tool-success-1",
+    "tool-success-2",
+    "tool-success-3",
+    "tool-success-4",
+    "tool-success-5",
+    "tool-success-6"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Tool success"
+    },
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "aiux spec"
+        },
+        "name": "search",
+        "progress": {
+          "current": 3.0,
+          "label": "ranking",
+          "total": 4.0
+        },
+        "result": {
+          "hits": 3
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

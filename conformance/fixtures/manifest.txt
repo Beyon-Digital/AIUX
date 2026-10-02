@@ -1,0 +1,38 @@
+# AIUX conformance fixture manifest (plan §17)
+#
+# Every *.json file in this directory is replayed by `aiux-conformance verify`
+# and byte-compared against ../expected/<name>.json.
+#
+# Phase 1 fixtures (protocol + core semantics):
+#   basic-response          session + run + message lifecycle, run.completed
+#   streaming-response      text.delta accumulation
+#   markdown-code           markdown/code parts + part.updated
+#   tool-started            tool.started -> running
+#   tool-progress           started -> progress*
+#   tool-success            started -> progress -> completed
+#   tool-failure            started -> progress -> failed -> run.failed
+#   approval-requested      approval.requested pending
+#   approval-rejected       requested -> rejected
+#   approval-accepted       requested -> approved -> executed
+#   artifact-update         created -> updated (revision bumps)
+#   attachment              attachment part on a message
+#   citation                citation part on a message
+#   context-injection       session + run context entities
+#   retry                   run.failed -> run.started retryOf -> completed
+#   cancel                  run.cancelled + message cancelled
+#   network-reconnect       duplicate resend + out-of-order drain after stall
+#   duplicate-events        literal eventId replays absorbed
+#   out-of-order-events     shuffled delivery converges via reorder buffer
+#   large-history           200 messages
+#   surface-created         Surface Schema v1 tree accepted
+#   surface-updated         created -> updated (revision bumps)
+#
+# Deferred to Phase 3+ (renderer-facing fixtures — render adapters do not
+# exist yet, so these are listed but not authored):
+#   dark-mode               surface/message rendering under dark theme
+#   rtl                     right-to-left layout + text direction
+#   reduced-motion          animation-disable preference propagation
+#   high-contrast           contrast preference propagation
+#   compact-density         density token propagation
+#   long-markdown           renderer stress on large markdown payloads
+#   nested-surfaces         surfaces embedding surfaces via parts

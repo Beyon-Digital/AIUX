@@ -1,0 +1,36 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 3,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "tool-started-0",
+    "tool-started-1",
+    "tool-started-2"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "activeRunId": "r1",
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "running"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Tool started"
+    },
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "aiux spec"
+        },
+        "name": "search",
+        "status": "running"
+      }
+    ]
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "events": [
+    {
+      "eventId": "retry-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Retry"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "retry-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "retry-2",
+      "payload": {
+        "error": {
+          "code": "UPSTREAM_503",
+          "message": "backend unavailable",
+          "retryable": true
+        },
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "run.failed"
+    },
+    {
+      "eventId": "retry-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r2",
+          "retryOf": "r1",
+          "startedAt": "2026-01-01T00:00:30Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "retry-4",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "retry-5",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "text": "Retry succeeded.",
+          "type": "text"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "retry-6",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "retry-7",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "attempt": 2
+        },
+        "runId": "r2"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "retry",
+  "protocolVersion": "0.1"
+}

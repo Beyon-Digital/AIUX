@@ -1,0 +1,46 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 6,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "cancel-0",
+    "cancel-1",
+    "cancel-2",
+    "cancel-3",
+    "cancel-4",
+    "cancel-5"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "Partial answ",
+            "type": "text"
+          }
+        ],
+        "role": "assistant",
+        "status": "cancelled"
+      }
+    ],
+    "runs": [
+      {
+        "error": {
+          "code": "cancelled",
+          "message": "user pressed stop"
+        },
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "cancelled"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Cancel"
+    }
+  }
+}

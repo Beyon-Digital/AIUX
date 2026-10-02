@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "description": "A declared session capability (e.g. `tools.execute`, `files.upload`).",
+  "properties": {
+    "description": {
+      "description": "Human-readable description.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "enabled": {
+      "default": true,
+      "description": "Whether the capability is enabled (default true).",
+      "type": "boolean"
+    },
+    "id": {
+      "description": "Capability identifier.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "title": "Capability",
+  "type": "object"
+}

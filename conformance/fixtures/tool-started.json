@@ -1,0 +1,57 @@
+{
+  "events": [
+    {
+      "eventId": "tool-started-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Tool started"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "tool-started-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "tool-started-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "aiux spec"
+          },
+          "name": "search",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    }
+  ],
+  "name": "tool-started",
+  "protocolVersion": "0.1"
+}

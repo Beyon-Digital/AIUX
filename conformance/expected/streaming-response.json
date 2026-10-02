@@ -1,0 +1,47 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 11,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "streaming-response-0",
+    "streaming-response-1",
+    "streaming-response-10",
+    "streaming-response-2",
+    "streaming-response-3",
+    "streaming-response-4",
+    "streaming-response-5",
+    "streaming-response-6",
+    "streaming-response-7",
+    "streaming-response-8",
+    "streaming-response-9"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "Hello, streaming world!",
+            "type": "text"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Streaming response"
+    }
+  }
+}

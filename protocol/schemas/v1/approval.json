@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "Action": {
+      "description": "A semantic action emitted by interactive nodes (button, menu).\n\nPayloads are data only (§23); the host resolves `id` through its own policy before executing anything.",
+      "properties": {
+        "id": {
+          "description": "Semantic action identifier, e.g. `invoice.approve`.",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "description": "Arbitrary JSON payload carried to the host.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ApprovalDecision": {
+      "description": "The decision carried by `approval.resolved`.",
+      "enum": [
+        "approved",
+        "rejected",
+        "expired",
+        "executed"
+      ],
+      "type": "string"
+    },
+    "ApprovalResolution": {
+      "additionalProperties": true,
+      "description": "Recorded resolution of an approval.",
+      "properties": {
+        "decision": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ApprovalDecision"
+            }
+          ],
+          "description": "Resolution outcome."
+        },
+        "note": {
+          "description": "Optional note attached to the resolution.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedAt": {
+          "description": "Resolution timestamp (ISO-8601, host-supplied).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedBy": {
+          "description": "Who/what resolved it (`user`, `host`, `timeout`, ...).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "type": "object"
+    },
+    "ApprovalStatus": {
+      "description": "Approval lifecycle status (plan §23). `approved` → `executed` is the only permitted terminal-to-terminal transition; resolutions on an already resolved approval are absorbed as no-ops so replays never re-execute.",
+      "enum": [
+        "requested",
+        "approved",
+        "rejected",
+        "expired",
+        "executed"
+      ],
+      "type": "string"
+    }
+  },
+  "description": "An approval request tracked by the session.",
+  "properties": {
+    "action": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Action"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Semantic action executed on approval (data only — §23)."
+    },
+    "description": {
+      "description": "Longer description.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expiresAt": {
+      "description": "Expiry timestamp (ISO-8601, host-supplied).",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "description": "Stable identifier.",
+      "type": "string"
+    },
+    "prompt": {
+      "description": "What is being approved.",
+      "type": "string"
+    },
+    "resolution": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ApprovalResolution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Recorded resolution, once resolved."
+    },
+    "status": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApprovalStatus"
+        }
+      ],
+      "description": "Lifecycle status."
+    },
+    "toolId": {
+      "description": "Tool invocation this approval gates, if any.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "prompt",
+    "status"
+  ],
+  "title": "Approval",
+  "type": "object"
+}

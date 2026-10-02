@@ -1,0 +1,97 @@
+{
+  "events": [
+    {
+      "eventId": "cancel-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Cancel"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "cancel-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "cancel-2",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "cancel-3",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "text": "Partial answ",
+          "type": "text"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "cancel-4",
+      "payload": {
+        "protocolVersion": "0.1",
+        "reason": "user pressed stop",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "run.cancelled"
+    },
+    {
+      "eventId": "cancel-5",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "cancelled"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "message.updated"
+    }
+  ],
+  "name": "cancel",
+  "protocolVersion": "0.1"
+}

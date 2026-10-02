@@ -6,3 +6,5 @@ license = "Proprietary"
 publish = false
 
 [dependencies]
+aiux-protocol = { workspace = true }
+serde_json = { workspace = true }

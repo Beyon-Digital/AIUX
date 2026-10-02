@@ -1,0 +1,43 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 5,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "tool-progress-0",
+    "tool-progress-1",
+    "tool-progress-2",
+    "tool-progress-3",
+    "tool-progress-4"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "activeRunId": "r1",
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "running"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Tool progress"
+    },
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "aiux spec"
+        },
+        "name": "search",
+        "progress": {
+          "current": 3.0,
+          "label": "ranking",
+          "total": 4.0
+        },
+        "status": "running"
+      }
+    ]
+  }
+}

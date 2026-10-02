@@ -1,0 +1,166 @@
+{
+  "events": [
+    {
+      "eventId": "streaming-response-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Streaming response"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "streaming-response-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "streaming-response-2",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "streaming-response-3",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "text": "",
+          "type": "text"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "streaming-response-4",
+      "payload": {
+        "delta": "Hello, ",
+        "messageId": "m1",
+        "partId": "p1",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "text.delta"
+    },
+    {
+      "eventId": "streaming-response-5",
+      "payload": {
+        "delta": "stream",
+        "messageId": "m1",
+        "partId": "p1",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "text.delta"
+    },
+    {
+      "eventId": "streaming-response-6",
+      "payload": {
+        "delta": "ing ",
+        "messageId": "m1",
+        "partId": "p1",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "text.delta"
+    },
+    {
+      "eventId": "streaming-response-7",
+      "payload": {
+        "delta": "world",
+        "messageId": "m1",
+        "partId": "p1",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "text.delta"
+    },
+    {
+      "eventId": "streaming-response-8",
+      "payload": {
+        "delta": "!",
+        "messageId": "m1",
+        "partId": "p1",
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "text.delta"
+    },
+    {
+      "eventId": "streaming-response-9",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 9,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:09Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "streaming-response-10",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 10,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:10Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "streaming-response",
+  "protocolVersion": "0.1"
+}

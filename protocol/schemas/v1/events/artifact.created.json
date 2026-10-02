@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "Artifact": {
+      "additionalProperties": true,
+      "description": "A versioned artifact produced during the session.",
+      "properties": {
+        "content": {
+          "description": "Inline content (text/code/JSON).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable identifier.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Semantic kind, e.g. `code`, `document`, `dashboard`.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form host metadata."
+        },
+        "revision": {
+          "default": 0,
+          "description": "Monotonic revision; bumps on every `artifact.updated`.",
+          "format": "uint64",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "title": {
+          "description": "Display title.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "description": "External content URI (host-mediated).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "ArtifactCreated": {
+      "description": "`artifact.created`.",
+      "properties": {
+        "artifact": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Artifact"
+            }
+          ],
+          "description": "The artifact."
+        },
+        "protocolVersion": {
+          "default": "0.1",
+          "description": "Protocol version carried by the payload.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "The canonical event envelope. `P` defaults to a raw JSON payload for dispatch-time parsing; typed instantiations (`AiuxEvent<SessionCreated>`) are used for schema generation and typed producers.",
+  "properties": {
+    "eventId": {
+      "description": "Unique event identifier — replays of a known id are ignored.",
+      "type": "string"
+    },
+    "payload": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ArtifactCreated"
+        }
+      ],
+      "description": "Type-specific payload."
+    },
+    "protocolVersion": {
+      "default": "0.1",
+      "description": "Protocol version of this event.",
+      "type": "string"
+    },
+    "sequence": {
+      "description": "Monotonic sequence within the session (0-based).",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "sessionId": {
+      "description": "Owning session.",
+      "type": "string"
+    },
+    "timestamp": {
+      "description": "Event timestamp (ISO-8601, host-supplied — never core-generated).",
+      "type": "string"
+    },
+    "type": {
+      "description": "Event type, e.g. `session.created`. Unknown values deserialize fine and fail later with `ProtocolError::Unsupported`.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventId",
+    "payload",
+    "sequence",
+    "sessionId",
+    "timestamp",
+    "type"
+  ],
+  "title": "AiuxEvent_for_ArtifactCreated",
+  "type": "object"
+}

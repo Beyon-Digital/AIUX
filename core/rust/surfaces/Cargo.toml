@@ -6,3 +6,6 @@ license = "Proprietary"
 publish = false
 
 [dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+schemars = { workspace = true }

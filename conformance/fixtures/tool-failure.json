@@ -1,0 +1,107 @@
+{
+  "events": [
+    {
+      "eventId": "tool-failure-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Tool failure"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "tool-failure-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "tool-failure-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "aiux spec"
+          },
+          "name": "search",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "tool-failure-3",
+      "payload": {
+        "progress": {
+          "current": 1,
+          "label": "querying",
+          "total": 4
+        },
+        "protocolVersion": "0.1",
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.progress"
+    },
+    {
+      "eventId": "tool-failure-4",
+      "payload": {
+        "error": {
+          "code": "TIMEOUT",
+          "message": "search backend timed out after 30s",
+          "retryable": true
+        },
+        "protocolVersion": "0.1",
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "tool.failed"
+    },
+    {
+      "eventId": "tool-failure-5",
+      "payload": {
+        "error": {
+          "code": "TOOL_FAILURE",
+          "message": "search failed"
+        },
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "run.failed"
+    }
+  ],
+  "name": "tool-failure",
+  "protocolVersion": "0.1"
+}

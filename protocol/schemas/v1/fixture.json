@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AiuxEvent_for_AnyValue": {
+      "additionalProperties": true,
+      "description": "The canonical event envelope. `P` defaults to a raw JSON payload for dispatch-time parsing; typed instantiations (`AiuxEvent<SessionCreated>`) are used for schema generation and typed producers.",
+      "properties": {
+        "eventId": {
+          "description": "Unique event identifier — replays of a known id are ignored.",
+          "type": "string"
+        },
+        "payload": {
+          "description": "Type-specific payload."
+        },
+        "protocolVersion": {
+          "default": "0.1",
+          "description": "Protocol version of this event.",
+          "type": "string"
+        },
+        "sequence": {
+          "description": "Monotonic sequence within the session (0-based).",
+          "format": "uint64",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "sessionId": {
+          "description": "Owning session.",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Event timestamp (ISO-8601, host-supplied — never core-generated).",
+          "type": "string"
+        },
+        "type": {
+          "description": "Event type, e.g. `session.created`. Unknown values deserialize fine and fail later with `ProtocolError::Unsupported`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "eventId",
+        "payload",
+        "sequence",
+        "sessionId",
+        "timestamp",
+        "type"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "Canonical conformance fixture format: `{name, protocolVersion, events}`.",
+  "properties": {
+    "events": {
+      "description": "Ordered event list replayed through `AiuxSession`.",
+      "items": {
+        "$ref": "#/definitions/AiuxEvent_for_AnyValue"
+      },
+      "type": "array"
+    },
+    "name": {
+      "description": "Fixture name.",
+      "type": "string"
+    },
+    "protocolVersion": {
+      "description": "Protocol version the fixture targets.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "events",
+    "name",
+    "protocolVersion"
+  ],
+  "title": "ConformanceFixture",
+  "type": "object"
+}
