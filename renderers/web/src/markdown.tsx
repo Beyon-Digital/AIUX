@@ -9,11 +9,19 @@ import remarkGfm from "remark-gfm";
  * by default; we additionally keep `skipHtml` explicit).
  */
 
-const SAFE_URL = /^(https?:|mailto:|tel:|#|\/|\.\/|\.\.\/)/i;
+// `aiux:` is the protocol's own host-mediated scheme (attachments, context
+// chips); everything script-capable (`javascript:`, `data:`, `vbscript:`) drops.
+const SAFE_URL = /^(aiux:|https?:|mailto:|tel:|#|\/|\.\/|\.\.\/)/i;
 
 /** Drop non-web / script-capable URL schemes (`javascript:`, `data:`, `vbscript:`). */
-function safeUrl(url: string): string {
+export function safeUrl(url: string): string {
   return SAFE_URL.test(url.trim()) ? url : "";
+}
+
+/** Image sources: same allowlist plus inline `data:image/*`. */
+const SAFE_IMG = /^(data:image\/|https?:|#|\/|\.\/|\.\.\/)/i;
+export function safeImageSrc(url: string): string {
+  return SAFE_IMG.test(url.trim()) ? url : "";
 }
 
 const COMPONENTS = {

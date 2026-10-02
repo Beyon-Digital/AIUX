@@ -1,4 +1,5 @@
 import { AiuxIcon } from "./icons.jsx";
+import { safeUrl } from "./markdown.jsx";
 import { AISurface } from "./AISurface.jsx";
 import { useAiuxRenderContext } from "./context.js";
 import { AIUX_ACTIONS, type Artifact } from "./types.js";
@@ -25,6 +26,7 @@ export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
     artifact.content !== undefined &&
     artifact.content.split("\n").length > PREVIEW_LINES;
   const workspaceMode = artifact.workspace?.mode ?? "fullscreen";
+  const artifactUri = artifact.uri ? safeUrl(artifact.uri) : "";
 
   return (
     <section className="aiux-artifact" aria-label={`Artifact: ${title}`}>
@@ -58,10 +60,10 @@ export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
         </span>
       ) : null}
       <div className="aiux-artifact__foot">
-        {artifact.uri ? (
+        {artifactUri ? (
           <a
             className="aiux-btn aiux-btn--secondary"
-            href={artifact.uri}
+            href={artifactUri}
             target="_blank"
             rel="noopener noreferrer"
           >

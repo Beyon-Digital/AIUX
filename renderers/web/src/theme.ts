@@ -180,16 +180,14 @@ export function resolveTheme(theme: AiuxTheme = {}): ResolvedAiuxTheme {
   const baseColors = scheme === "dark" ? DARK_COLORS : LIGHT_COLORS;
   const density = theme.density ?? "comfortable";
   const spacingScale = density === "compact" ? 0.8 : 1;
-  const spacing = { ...BASE_SPACING, ...theme.spacing };
-  const scaledSpacing: AiuxThemeSpacing =
-    theme.spacing || density === "comfortable"
-      ? spacing
-      : (Object.fromEntries(
-          Object.entries(spacing).map(([k, v]) => [
-            k,
-            `calc(${v} * ${spacingScale})`,
-          ]),
-        ) as unknown as AiuxThemeSpacing);
+  // Compact density scales base tokens; explicit overrides pass through as-is.
+  const scaledSpacing: AiuxThemeSpacing = Object.fromEntries(
+    Object.entries(BASE_SPACING).map(([k, v]) => [
+      k,
+      theme.spacing?.[k as keyof AiuxThemeSpacing] ??
+        (density === "compact" ? `calc(${v} * ${spacingScale})` : v),
+    ]),
+  ) as unknown as AiuxThemeSpacing;
 
   const typography = { ...BASE_TYPOGRAPHY };
   if (theme.typography) {

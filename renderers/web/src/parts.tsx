@@ -1,5 +1,5 @@
 import { AiuxIcon } from "./icons.jsx";
-import { AiuxMarkdown } from "./markdown.jsx";
+import { AiuxMarkdown, safeUrl } from "./markdown.jsx";
 import { useAiuxRenderContext } from "./context.js";
 import { useCopyToClipboard } from "./hooks.js";
 import { AIApproval } from "./AIApproval.jsx";
@@ -99,9 +99,11 @@ export function AttachmentPartView({ attachment }: { attachment: Attachment }) {
       {meta ? <span className="aiux-attachment__meta">{meta}</span> : null}
     </>
   );
-  // URIs are host-mediated references (§23) — render a real link when present.
-  return attachment.uri ? (
-    <a className="aiux-attachment" href={attachment.uri}>
+  // URIs are host-mediated references (§23) — render a real link when
+  // present and the scheme is web-safe; untrusted schemes stay inert text.
+  const uri = attachment.uri ? safeUrl(attachment.uri) : "";
+  return uri ? (
+    <a className="aiux-attachment" href={uri}>
       {body}
     </a>
   ) : (
@@ -120,14 +122,15 @@ export function CitationPartView({
   };
 }) {
   const title = citation.title ?? citation.uri ?? "Source";
+  const citationUri = citation.uri ? safeUrl(citation.uri) : "";
   return (
     <aside className="aiux-citation">
       <AiuxIcon name="citation" />
       <div className="aiux-citation__body">
-        {citation.uri ? (
+        {citationUri ? (
           <a
             className="aiux-citation__title"
-            href={citation.uri}
+            href={citationUri}
             target="_blank"
             rel="noopener noreferrer"
           >

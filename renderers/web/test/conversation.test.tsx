@@ -14,7 +14,7 @@ const SNAPSHOT: AiuxSnapshot = {
     title: "Fixture chat",
     createdAt: "2026-01-01T00:00:00Z",
     context: [
-      { id: "c1", kind: "file", label: "README.md", uri: "file:///README.md" },
+      { id: "c1", kind: "file", label: "README.md", uri: "aiux://files/README.md" },
     ],
   },
   messages: [
