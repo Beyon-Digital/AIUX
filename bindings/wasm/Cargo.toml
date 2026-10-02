@@ -1,0 +1,11 @@
+[package]
+name = "aiux-wasm"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]

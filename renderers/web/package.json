@@ -1,0 +1,12 @@
+{
+  "name": "@beyondigital/aiux-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React DOM renderer for AIUX surfaces.",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo '@beyondigital/aiux-web: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo '@beyondigital/aiux-web: tests land in a later phase'",
+    "typecheck": "echo '@beyondigital/aiux-web: typecheck lands in a later phase'"
+  }
+}

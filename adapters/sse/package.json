@@ -1,0 +1,12 @@
+{
+  "name": "@beyondigital/aiux-adapter-sse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Adapter: SSE streams → AIUXEvent[].",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo '@beyondigital/aiux-adapter-sse: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo '@beyondigital/aiux-adapter-sse: tests land in a later phase'",
+    "typecheck": "echo '@beyondigital/aiux-adapter-sse: typecheck lands in a later phase'"
+  }
+}

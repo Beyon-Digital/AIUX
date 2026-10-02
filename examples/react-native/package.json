@@ -1,0 +1,12 @@
+{
+  "name": "aiux-example-react-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example bare-RN app mounting AIConversation.",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo 'aiux-example-react-native: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo 'aiux-example-react-native: tests land in a later phase'",
+    "typecheck": "echo 'aiux-example-react-native: typecheck lands in a later phase'"
+  }
+}

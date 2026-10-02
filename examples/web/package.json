@@ -1,0 +1,12 @@
+{
+  "name": "aiux-example-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example web app rendering an AIUX session.",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo 'aiux-example-web: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo 'aiux-example-web: tests land in a later phase'",
+    "typecheck": "echo 'aiux-example-web: typecheck lands in a later phase'"
+  }
+}

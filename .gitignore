@@ -1,0 +1,47 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock.local
+
+# JS / pnpm
+node_modules/
+.pnpm-store/
+dist/
+*.tsbuildinfo
+
+# WASM
+**/pkg/
+
+# Swift / Apple
+.build/
+DerivedData/
+*.xcframework
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+.swiftpm/
+
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.cxx/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.flutter-plugins*
+pubspec.lock.local
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Misc
+.env
+.env.local
+coverage/
+.kotlin/

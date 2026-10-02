@@ -1,0 +1,8 @@
+packages:
+  - "bridges/*"
+  - "transports/javascript"
+  - "adapters/*"
+  - "renderers/web"
+  - "examples/expo"
+  - "examples/react-native"
+  - "examples/web"

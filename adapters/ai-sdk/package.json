@@ -1,0 +1,12 @@
+{
+  "name": "@beyondigital/aiux-adapter-ai-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Adapter: Vercel AI SDK streams → AIUXEvent[].",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo '@beyondigital/aiux-adapter-ai-sdk: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo '@beyondigital/aiux-adapter-ai-sdk: tests land in a later phase'",
+    "typecheck": "echo '@beyondigital/aiux-adapter-ai-sdk: typecheck lands in a later phase'"
+  }
+}
