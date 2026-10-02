@@ -61,6 +61,10 @@ internal object AIUXSessionRegistry {
             ?: error("serialized session is missing sessionId")
         // Close the displaced store — it owns a coroutine scope + session
         // that would leak once rebound views drop their reference.
+        // Ordering is the concurrency contract: the new store lands in the
+        // map BEFORE the generation bump notifies collectors, so a rebinding
+        // view always resolves the newest store. `.update` (not `.value += 1`)
+        // keeps overlapping restores from coalescing a lost increment.
         stores.put(sessionId, store)?.close()
         generations.getOrPut(sessionId) { MutableStateFlow(0L) }.update { it + 1 }
         return sessionId
