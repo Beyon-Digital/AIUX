@@ -65,7 +65,8 @@ jobs:
           for pkg in renderers/swiftui examples/ios-native bindings/swift; do
             if [ -f "$pkg/Package.swift" ]; then
               echo "== swift build/test in $pkg"
-              (cd "$pkg" && swift build && swift test)
+              (cd "$pkg" && swift build && \
+                if [ -d Tests ]; then swift test; else echo "No Tests dir — skipping swift test."; fi)
             else
               echo "No Package.swift in $pkg — skipping."
             fi
