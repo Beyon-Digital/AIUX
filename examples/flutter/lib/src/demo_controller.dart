@@ -33,6 +33,10 @@ class DemoController extends ChangeNotifier {
   int _turn = 0;
   Completer<bool>? _approvalGate;
   bool _waitingForApproval = false;
+  /// Monotonic guard against stale turns: `prompt` and `cancel` bump it,
+  /// so an older `_runTurn` resuming from a trickle or approval delay sees
+  /// `live() == false` and exits instead of dispatching into a superseded
+  /// run.
   int _turnGeneration = 0;
   bool _runActive = false;
 
