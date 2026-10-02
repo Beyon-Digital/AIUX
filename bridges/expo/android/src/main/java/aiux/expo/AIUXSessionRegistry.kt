@@ -70,6 +70,11 @@ internal object AIUXSessionRegistry {
         return sessionId
     }
 
+    /**
+     * Awaits the full reset: serializes behind the store's dispatch mutex
+     * and returns only after the cleared snapshot republishes — the JS
+     * `resetAIUXSession` promise resolves on completion, not fire-and-forget.
+     */
     suspend fun reset(sessionId: String) {
         getOrCreate(sessionId).reset()
     }
