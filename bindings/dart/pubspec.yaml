@@ -1,6 +1,14 @@
 name: aiux_ffi
-description: "AIUX dart — stub, implementation lands in a later phase (docs/PLAN.md)."
+description: "Dart FFI wrapper over the AIUX C ABI (aiux-capi)."
 version: 0.1.0
 publish_to: none
+
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  ffi: ^2.1.0
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.24.0

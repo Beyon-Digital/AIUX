@@ -19,6 +19,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "aiux-capi"
+version = "0.1.0"
+dependencies = [
+ "aiux-protocol",
+ "aiux-session",
+ "serde_json",
+]
+
+[[package]]
 name = "aiux-conformance"
 version = "0.1.0"
 dependencies = [
