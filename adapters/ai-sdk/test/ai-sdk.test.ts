@@ -93,10 +93,16 @@ describe("createAiSdkAdapter", () => {
     expect(events.map((e) => e.type)).toEqual([
       "text.delta",
       "tool.started",
-      "tool.started",
       "tool.completed",
       "run.completed",
     ]);
+    // tool-input-start must not double-emit tool.started — the reducer
+    // rejects the second start for the same tool id; the single start
+    // carries the completed input from tool-input-available.
+    const started = events.find((e) => e.type === "tool.started")!;
+    expect((started.payload as { tool: { input: unknown } }).tool.input).toEqual(
+      { url: "https://a" },
+    );
   });
 
   it("maps error parts to run.failed with a schema-valid AiuxError", async () => {

@@ -90,6 +90,19 @@ export async function streamToBatches(
     events += batch.length;
   };
 
+  // Resolves once when `signal` aborts; raced against a pending `next()` so
+  // a source blocked forever still lets the pump exit.
+  const aborted: Promise<"abort" | null> | null = signal
+    ? new Promise((resolve) => {
+        if (signal.aborted) resolve("abort");
+        else {
+          signal.addEventListener("abort", () => resolve("abort"), {
+            once: true,
+          });
+        }
+      })
+    : null;
+
   let pendingNext: Promise<IteratorResult<EventOrBatch>> | null = null;
   try {
     for (;;) {
@@ -99,25 +112,39 @@ export async function streamToBatches(
         continue;
       }
       pendingNext ??= it.next();
-      let result: IteratorResult<EventOrBatch> | "flush-tick";
+      const racers: Promise<IteratorResult<EventOrBatch> | "flush-tick" | "abort" | null>[] =
+        [pendingNext];
       if (buffer.length > 0 && flushIntervalMs > 0) {
-        result = await Promise.race([pendingNext, delay(flushIntervalMs).then(() => "flush-tick" as const)]);
-      } else {
-        result = await pendingNext;
+        racers.push(delay(flushIntervalMs).then(() => "flush-tick" as const));
       }
+      if (aborted) racers.push(aborted);
+      const result = await Promise.race(racers);
+      if (result === "abort") break;
       if (result === "flush-tick") {
         // The iterator next() is still in flight — keep it for the next loop.
         await flush();
         continue;
       }
       pendingNext = null;
-      if (result.done) break;
+      if (result === null || result.done) break;
       const value = result.value;
-      if (Array.isArray(value)) buffer.push(...value);
-      else buffer.push(value as AiuxEvent);
+      const items = Array.isArray(value) ? value : [value];
+      // Push one event at a time so an oversized yield still flushes at
+      // maxBatchSize boundaries instead of producing an oversized batch.
+      for (const item of items) {
+        buffer.push(item as AiuxEvent);
+        if (buffer.length >= maxBatchSize) await flush();
+      }
     }
   } catch (error) {
     onError?.(error, "source");
+    // Still deliver already-consumed events before propagating — a source
+    // failure must not strand a partial batch.
+    try {
+      await flush();
+    } catch (flushError) {
+      onError?.(flushError, "sink");
+    }
     throw error;
   } finally {
     // Tell finite sources to release. Never block on a pending next().

@@ -159,11 +159,54 @@ export function createAiSdkAdapter(
   const streamRef = stream;
 
   async function* iterate(): AsyncGenerator<AiuxEvent[]> {
+    // v5 streams tool-input-start → tool-input-delta* → tool-input-available.
+    // `tool.started` must fire exactly once per call (the core reducer
+    // rejects a second start for the same tool id), so starts are buffered
+    // and emitted when tool-input-available lands with the full input — or
+    // flushed early when another part references the call, a terminal part
+    // arrives, or the stream ends.
+    const pendingStarts = new Map<string, Tool>();
+    const flush = function* (onlyId?: string): Generator<AiuxEvent[]> {
+      for (const [id, tool] of pendingStarts) {
+        if (onlyId !== undefined && id !== onlyId) continue;
+        pendingStarts.delete(id);
+        yield [factory.toolStarted(tool)];
+      }
+    };
     for await (const part of streamRef) {
-      const events = mapAiSdkPart(part, factory, options.target, onIssue);
+      let current = part;
+      if (current.type === "tool-input-start") {
+        const id = toolIdOf(current, factory.peekSequence());
+        pendingStarts.set(id, {
+          id,
+          name: firstString(current["toolName"], current["name"]) ?? "tool",
+          status: "running",
+        });
+        continue;
+      }
+      if (current.type === "tool-input-available") {
+        const id = toolIdOf(current, factory.peekSequence());
+        const pending = pendingStarts.get(id);
+        if (pending !== undefined) {
+          pendingStarts.delete(id);
+          if (firstString(current["toolName"], current["name"]) === undefined) {
+            current = { ...current, toolName: pending.name };
+          }
+        }
+      } else if (current.type.startsWith("tool-")) {
+        yield* flush(toolIdOf(current, factory.peekSequence()));
+      } else if (
+        current.type === "finish" ||
+        current.type === "error" ||
+        current.type === "abort"
+      ) {
+        yield* flush();
+      }
+      const events = mapAiSdkPart(current, factory, options.target, onIssue);
       if (events.length > 0) yield events;
       if (events.some(isTerminalEvent)) return;
     }
+    yield* flush();
   }
 
   let iterator: AsyncGenerator<AiuxEvent[]> | undefined;

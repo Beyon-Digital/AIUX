@@ -101,6 +101,10 @@ class SseLineParser {
     let idx;
     // Split on \n, \r\n, or \r per the SSE spec.
     while ((idx = this.buffer.search(/\r\n|\r|\n/)) >= 0) {
+      // A `\r` at the very end of the buffer may be the first half of a CRLF
+      // split across chunks — keep it until the next chunk (or `end()`)
+      // disambiguates instead of dispatching an early line break.
+      if (this.buffer[idx] === "\r" && idx === this.buffer.length - 1) break;
       const line = this.buffer.slice(0, idx);
       const sep = this.buffer[idx] === "\r" && this.buffer[idx + 1] === "\n" ? 2 : 1;
       this.buffer = this.buffer.slice(idx + sep);
@@ -114,8 +118,15 @@ class SseLineParser {
   end(): SseMessage[] {
     const out: SseMessage[] = [];
     if (this.buffer.length > 0) {
-      const msg = this.line(this.buffer);
-      if (msg) out.push(msg);
+      // A trailing `\r` is a line ending, not content (may be the held-back
+      // half of a CRLF that never completed).
+      const trailing = this.buffer.endsWith("\r")
+        ? this.buffer.slice(0, -1)
+        : this.buffer;
+      if (trailing.length > 0) {
+        const msg = this.line(trailing);
+        if (msg) out.push(msg);
+      }
     }
     this.buffer = "";
     const msg = this.dispatch();
@@ -240,13 +251,16 @@ export function createSseAdapter(options: SseAdapterOptions): SseAdapter {
             const messages = done
               ? parser.end()
               : parser.feed(decoder.decode(value, { stream: true }));
+            // `id:`/`retry:` fields are valid without `data:` — sync them per
+            // chunk, not per dispatched message, or data-less field blocks
+            // never take effect.
+            if (parser.lastEventId !== undefined) {
+              state.lastEventId = parser.lastEventId;
+            }
+            if (parser.serverRetryMs !== undefined) {
+              serverRetryMs = parser.serverRetryMs;
+            }
             for (const msg of messages) {
-              if (parser.lastEventId !== undefined) {
-                state.lastEventId = parser.lastEventId;
-              }
-              if (parser.serverRetryMs !== undefined) {
-                serverRetryMs = parser.serverRetryMs;
-              }
               let parsed: unknown;
               try {
                 parsed = JSON.parse(msg.data);
@@ -317,7 +331,12 @@ export function createSseAdapter(options: SseAdapterOptions): SseAdapter {
         : reconnect.initialDelayMs * 2 ** attempt;
       const delayMs = Math.min(base, reconnect.maxDelayMs);
       onIssue({ kind: "transport", reason: "reconnecting", raw: { attempt, delayMs } });
-      await sleep(delayMs, control.signal);
+      try {
+        await sleep(delayMs, control.signal);
+      } catch {
+        // Abort during backoff ends the stream like an in-fetch abort.
+        return;
+      }
       attempt += 1;
     }
   }

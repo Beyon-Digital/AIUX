@@ -76,10 +76,26 @@ describe("createWireNormalizer", () => {
     expect(normalize({ type: "cancelled", reason: "bye" })[0]!.type).toBe(
       "run.cancelled",
     );
-    const failed = normalize({ type: "error", error: { code: "x", message: "m" } });
+    const { normalize: normalizeFailed } = make();
+    const failed = normalizeFailed({
+      type: "error",
+      error: { code: "x", message: "m" },
+    });
     expect(failed[0]!.type).toBe("run.failed");
     validator.assertValid(failed[0]!);
-    expect(normalize("[DONE]")[0]!.type).toBe("run.completed");
+    const { normalize: normalizeDone } = make();
+    expect(normalizeDone("[DONE]")[0]!.type).toBe("run.completed");
+  });
+
+  it("emits at most one terminal run event per stream", () => {
+    const { normalize } = make();
+    expect(
+      normalize({ choices: [{ delta: {}, finish_reason: "stop" }] })[0]!.type,
+    ).toBe("run.completed");
+    // `finish_reason` followed by `[DONE]` must not emit run.completed twice —
+    // the reducer rejects the duplicate.
+    expect(normalize("[DONE]")).toEqual([]);
+    expect(normalize({ type: "finish" })).toEqual([]);
   });
 
   it("never throws on unrecognizable items — reports instead", () => {

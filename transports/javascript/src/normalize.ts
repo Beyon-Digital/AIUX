@@ -85,6 +85,28 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
     return [];
   };
 
+  // A run emits exactly one terminal event — `finish_reason` chunks and
+  // `[DONE]` sentinels (or provider-specific terminal types) often arrive
+  // back to back, and the reducer rejects the second `run.completed`.
+  let terminalEmitted = false;
+  const terminalOnce = (events: AiuxEvent[]): AiuxEvent[] => {
+    if (terminalEmitted) return skip("duplicate-terminal");
+    terminalEmitted = true;
+    return events;
+  };
+
+  // OpenAI streams `tool_calls` as fragments keyed by `index`: the first
+  // carries `id`+`name`, later chunks only append `arguments` string pieces
+  // (name omitted). The named fragment emits `tool.started` immediately;
+  // argument fragments accumulate per (choice, tool-call) index and stream
+  // out as `tool.progress` so the input isn't lost.
+  interface PendingToolCall {
+    id: string;
+    name: string;
+    args: string;
+  }
+  const pendingToolCalls = new Map<string, PendingToolCall>();
+
   const runId = (item: Record<string, unknown>): string =>
     firstString(item["runId"], item["run_id"]) ?? target.runId;
 
@@ -133,22 +155,24 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
       case "finish":
       case "done":
       case "message_stop":
-        return [factory.runCompleted(runId(item), item["result"])];
+        return terminalOnce([
+          factory.runCompleted(runId(item), item["result"]),
+        ]);
       case "run.failed":
       case "error":
-        return [
+        return terminalOnce([
           factory.runFailed(
             runId(item),
             asError(item["error"] ?? item["message"] ?? item, "stream error"),
           ),
-        ];
+        ]);
       case "run.cancelled":
       case "cancelled":
       case "aborted":
       case "abort":
-        return [
+        return terminalOnce([
           factory.runCancelled(runId(item), firstString(item["reason"])),
-        ];
+        ]);
       case "message.created": {
         if (!isRecord(item["message"])) return skip("missing-message", item);
         return [factory.messageCreated(item["message"] as unknown as Message)];
@@ -221,39 +245,82 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
         }
         const toolCalls = delta["tool_calls"];
         if (Array.isArray(toolCalls)) {
-          for (const tc of toolCalls) {
+          for (let i = 0; i < toolCalls.length; i += 1) {
+            const tc = toolCalls[i];
             if (!isRecord(tc)) continue;
             const fn = isRecord(tc["function"]) ? (tc["function"] as Record<string, unknown>) : {};
+            const key = `${typeof raw["index"] === "number" ? raw["index"] : i}:${
+              typeof tc["index"] === "number" ? tc["index"] : i
+            }`;
             const name = firstString(fn["name"], tc["name"]);
-            if (!name) {
-              onIssue?.({ kind: "malformed", reason: "missing-tool-name", raw: tc });
+            const argFragment =
+              typeof fn["arguments"] === "string" ? fn["arguments"] : "";
+            if (name) {
+              // A named fragment begins (or restarts) a call at this slot.
+              const pending: PendingToolCall = {
+                id:
+                  firstString(tc["id"], tc["toolCallId"]) ??
+                  `tool-${factory.peekSequence()}`,
+                name,
+                args: argFragment,
+              };
+              pendingToolCalls.set(key, pending);
+              const tool: Tool = {
+                id: pending.id,
+                name,
+                status: "running",
+                ...(argFragment !== "" && {
+                  input: { arguments: argFragment },
+                }),
+              };
+              out.push(factory.toolStarted(tool));
               continue;
             }
-            const tool: Tool = {
-              id: firstString(tc["id"], tc["toolCallId"]) ?? `tool-${factory.peekSequence()}`,
-              name,
-              status: "running",
-              ...(fn["arguments"] !== undefined && { input: { arguments: fn["arguments"] } }),
-            };
-            out.push(factory.toolStarted(tool));
+            const pending = pendingToolCalls.get(key);
+            if (pending) {
+              pending.args += argFragment;
+              if (typeof tc["id"] === "string") pending.id = tc["id"];
+              if (argFragment !== "") {
+                out.push(
+                  factory.toolProgress(pending.id, {
+                    label: "arguments",
+                    arguments: pending.args,
+                  }),
+                );
+              }
+              continue;
+            }
+            onIssue?.({ kind: "malformed", reason: "missing-tool-name", raw: tc });
           }
         }
       }
       const finish = firstString(raw["finish_reason"], raw["finishReason"]);
-      if (finish) out.push(factory.runCompleted(runId(item), { finishReason: finish }));
+      if (finish)
+        out.push(
+          ...terminalOnce([
+            factory.runCompleted(runId(item), { finishReason: finish }),
+          ]),
+        );
     }
-    if (out.length === 0) return skip("unhandled-choices", item);
+    if (out.length === 0 && pendingToolCalls.size === 0)
+      return skip("unhandled-choices", item);
     return out;
   };
 
   return (item: unknown): AiuxEvent[] => {
     // Raw non-JSON values (e.g. `[DONE]` sentinels) get a tiny mapping too.
     if (typeof item === "string") {
-      if (item.trim() === "[DONE]") return [factory.runCompleted(target.runId)];
+      if (item.trim() === "[DONE]")
+        return terminalOnce([factory.runCompleted(target.runId)]);
       return skip("unparseable-string", item);
     }
     if (!isRecord(item)) return skip("not-an-object", item);
-    if (looksCanonical(item)) return [item as unknown as AiuxEventOf<Record<string, unknown>>];
+    if (looksCanonical(item)) {
+      // Canonical envelopes keep their own sequence — advance the factory
+      // past it so a later bare item can't mint a duplicate sequence.
+      factory.observeSequence(item["sequence"] as number);
+      return [item as unknown as AiuxEventOf<Record<string, unknown>>];
+    }
     const type = item["type"];
     if (typeof type === "string") return normalizeType(item, type);
     if ("choices" in item || "delta" in item) return normalizeChoices(item);
