@@ -244,7 +244,6 @@ struct AIImagePart: View {
     let attachment: AIUXAttachment
 
     var body: some View {
-        let colors = theme.colors(for: colorScheme)
         if let uri = attachment.uri, let url = URL(string: uri) {
             AsyncImage(url: url) { phase in
                 switch phase {

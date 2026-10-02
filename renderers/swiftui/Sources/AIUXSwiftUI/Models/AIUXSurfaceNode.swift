@@ -255,7 +255,7 @@ extension AIUXSurfaceNode: Decodable {
         case children, direction, columns, text, level, variant, markdown, code
         case language, name, size, src, alt, tone, items, ordered, headers, rows
         case caption, label, action, disabled, value, max, inputType, required
-        case placeholder, checked, title
+        case placeholder, checked, title, options
     }
 
     /// Tolerant decode: semantic errors degrade to `.unknown` / renderer

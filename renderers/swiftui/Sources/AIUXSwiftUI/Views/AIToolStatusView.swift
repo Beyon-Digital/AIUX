@@ -93,7 +93,6 @@ public struct AIToolStatus: View {
 
     @ViewBuilder
     private var statusBadge: some View {
-        let colors = theme.colors(for: colorScheme)
         Text(tool.status.rawValue)
             .font(theme.typography.caption)
             .foregroundStyle(statusColor)
