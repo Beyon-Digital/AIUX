@@ -160,7 +160,8 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
   // Id-less fallbacks must be unique per invocation, not per slot — a
   // named fragment can legitimately replace a truncated call in the same
   // slot, and reusing `tool-${key}` makes the reducer reject the second
-  // start as a duplicate.
+  // start as a duplicate. The `tool-call-` prefix keeps this namespace
+  // disjoint from `toolId`'s `tool-${sequence}` fallbacks below.
   let fallbackToolCallCounter = 0;
 
   const runId = (item: Record<string, unknown>): string =>
@@ -328,7 +329,7 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
               const pending: PendingToolCall = {
                 id:
                   firstString(tc["id"], tc["toolCallId"]) ??
-                  `tool-${fallbackToolCallCounter++}`,
+                  `tool-call-${fallbackToolCallCounter++}`,
                 name,
                 args: argFragment,
                 emitted: false,

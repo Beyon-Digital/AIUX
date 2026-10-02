@@ -264,19 +264,30 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
       }
       const queueIt = queue as unknown as AsyncIterator<AiuxEvent[]>;
       let finished = false;
+      const drain = (): AiuxEvent[] => {
+        finished = true;
+        return normalize.finish?.() ?? [];
+      };
       // `for await..of` breaking early calls `return()` — route it to
       // `close()` so the socket (and reconnect loop) tears down too.
       return {
         next: async () => {
-          const result = await queueIt.next();
-          // Queue drained — seal buffered tool calls so a truncated call
-          // still emits `tool.started` before the stream reports done.
-          if (result.done && !finished) {
-            finished = true;
-            const finishing = normalize.finish?.() ?? [];
+          try {
+            const result = await queueIt.next();
+            if (!result.done || finished) return result;
+            // Queue drained — seal buffered tool calls so a truncated call
+            // still emits `tool.started` before the stream reports done.
+            const finishing = drain();
             if (finishing.length > 0) return { value: finishing, done: false };
+            return result;
+          } catch (error) {
+            // A terminal socket failure must still surface buffered starts
+            // first — consumers stop iterating on the rejection.
+            if (finished) throw error;
+            const finishing = drain();
+            if (finishing.length > 0) return { value: finishing, done: false };
+            throw error;
           }
-          return result;
         },
         return: async () => {
           adapter.close?.();
