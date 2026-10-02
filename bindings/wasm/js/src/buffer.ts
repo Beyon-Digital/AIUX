@@ -77,7 +77,26 @@ function resolvePolicy(policy: EventBufferPolicy): ResolvedEventBufferPolicy {
   return { flushIntervalMs, maxEvents, maxBytes, onFlushError: policy.onFlushError };
 }
 
-const utf8 = new TextEncoder();
+// UTF-8 byte length without TextEncoder — this module also runs in
+// non-DOM engines (RN Hermes), so it can't rely on DOM-lib globals.
+function utf8Length(s: string): number {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length) {
+      const c2 = s.charCodeAt(i + 1);
+      if (c2 >= 0xdc00 && c2 <= 0xdfff) {
+        n += 4;
+        i++;
+      } else {
+        n += 3;
+      }
+    } else n += 3;
+  }
+  return n;
+}
 
 /**
  * Streaming event buffer (docs/PLAN.md §10/§22): accumulates protocol events
@@ -130,7 +149,7 @@ export class EventBuffer<T = void> {
     }
     const json = typeof event === "string" ? event : JSON.stringify(event);
     this.#pending.push(json);
-    this.#bytes += utf8.encode(json).byteLength;
+    this.#bytes += utf8Length(json);
     if (
       this.#pending.length >= this.#policy.maxEvents ||
       this.#bytes >= this.#policy.maxBytes
@@ -186,7 +205,8 @@ export class EventBuffer<T = void> {
         if (onFlushError) {
           onFlushError(error);
         } else {
-          queueMicrotask(() => {
+          // rethrow on a microtask — no queueMicrotask (DOM-only global)
+          Promise.resolve().then(() => {
             throw error;
           });
         }
