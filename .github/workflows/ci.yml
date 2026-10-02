@@ -165,6 +165,41 @@ jobs:
             echo "No ios project in examples/expo yet — Phase 4 deliverable."
           fi
 
+  flutter:
+    name: Dart FFI + Flutter tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build aiux-capi for dart:ffi
+        run: bash bindings/dart/generate.sh
+      - name: Dart bindings tests (conformance via C ABI)
+        run: |
+          set -e
+          cd bindings/dart
+          dart pub get
+          dart analyze
+          dart test
+      - name: Flutter renderer analyze + test
+        run: |
+          set -e
+          cd renderers/flutter
+          flutter pub get
+          dart analyze
+          flutter test
+      - name: Example app analyze + test
+        run: |
+          set -e
+          cd examples/flutter
+          flutter pub get
+          dart analyze
+          flutter test
+
   conformance:
     name: Fixture conformance
     runs-on: ubuntu-latest

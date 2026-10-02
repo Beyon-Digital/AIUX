@@ -1,0 +1,14 @@
+[package]
+name = "aiux-capi"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+aiux-session = { workspace = true }
+aiux-protocol = { workspace = true }
+serde_json = { workspace = true }

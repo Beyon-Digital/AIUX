@@ -139,10 +139,16 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 7 — Flutter → PR 9
 
-- [ ] narrow C ABI over Rust core
-- [ ] Dart FFI wrapper (`beyond_aiux`)
-- [ ] Flutter renderer + fixture app
-- **Gate:** conformance scenario passes without platform-view dependency.
+- [x] narrow C ABI over Rust core (`aiux-capi` staticlib/cdylib —
+  `bindings/dart/capi`, opaque handle + JSON strings + explicit free fns)
+- [x] Dart FFI wrapper (`aiux_ffi` — `bindings/dart`; handwritten `dart:ffi`
+  per ADR 0005, decision documented in `bindings/dart/README.md`)
+- [x] Flutter renderer + fixture app (`beyond_aiux` — `renderers/flutter`;
+  `examples/flutter` mocked-agent demo + fixture gallery)
+- **Gate:** conformance scenario passes without platform-view dependency —
+  all 22 fixtures replay through the C ABI byte-identical to
+  `conformance/expected/` (`bindings/dart` `dart test`); widget tests render
+  via the real FFI backend (`renderers/flutter` `flutter test`).
 
 ## Phase 8 — Production/release hardening → PR 10
 
