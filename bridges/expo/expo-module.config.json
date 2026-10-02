@@ -1,0 +1,16 @@
+{
+  "platforms": [
+    "apple",
+    "android"
+  ],
+  "apple": {
+    "modules": [
+      "AIUXExpoModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "aiux.expo.AIUXExpoModule"
+    ]
+  }
+}

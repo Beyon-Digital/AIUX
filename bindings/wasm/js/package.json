@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./buffer": {
+      "types": "./src/buffer.ts",
+      "default": "./src/buffer.ts"
     }
   },
   "files": [

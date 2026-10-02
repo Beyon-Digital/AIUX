@@ -47,6 +47,10 @@ cargo run -q -p aiux-uniffi --features cli --bin uniffi-bindgen -- \
     --language swift --config bindings/uniffi/uniffi.toml \
     --out-dir "$OUT/gen" --no-format
 cp "$OUT/gen/AIUXCoreFFI.h" "$OUT/include/AIUXCoreFFI.h"
+# Consumers importing the clang module (pods, plain Xcode targets) need the
+# FFI modulemap inside the xcframework headers dir.
+cp "$OUT/gen/AIUXCoreFFI.modulemap" "$OUT/include/module.modulemap" 2>/dev/null || \
+    cp "$HERE/Sources/AIUXCoreFFI/include/module.modulemap" "$OUT/include/module.modulemap"
 
 xcodebuild -create-xcframework \
     -library "$ROOT/target/aarch64-apple-ios/release/libaiux_uniffi.a" -headers "$OUT/include" \
