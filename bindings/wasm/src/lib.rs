@@ -92,23 +92,41 @@ pub fn reset(session: &mut WasmSession) {
 mod tests {
     use super::*;
 
+    // `JsError` is wasm32-only (js_sys import): native tests cover success
+    // paths + error-JSON serialization; the Err path is covered end-to-end by
+    // the JS package tests against the real `pkg/` artifact.
     #[test]
     fn facade_round_trip() {
+        // A valid `session.created` envelope — also accepted by the scaffold
+        // stub facade, and required once the real reducer lands (dispatching
+        // `"{}"` would error and constructing `JsError` panics off wasm32).
+        let event = r#"{
+            "eventId": "e0",
+            "sessionId": "s1",
+            "sequence": 0,
+            "timestamp": "2026-01-01T00:00:00Z",
+            "type": "session.created",
+            "protocolVersion": "0.1",
+            "payload": {
+                "protocolVersion": "0.1",
+                "session": {"id": "s1", "createdAt": "2026-01-01T00:00:00Z"}
+            }
+        }"#;
         let mut s = create_session("{}").unwrap();
-        let report = dispatch(&mut s, "{}").unwrap();
+        let report = dispatch(&mut s, event).unwrap();
         assert!(report.contains("applied"));
         let report = dispatch_batch(&mut s, "[]").unwrap();
         assert!(report.contains("applied"));
         let _ = snapshot(&s).unwrap();
         let serialized = serialize(&s).unwrap();
+        let restored = restore_session(&serialized).unwrap();
         reset(&mut s);
-        let _ = restore_session(&serialized).unwrap();
+        let _ = restored;
     }
 
     #[test]
     fn errors_cross_as_json() {
-        // The stub facade never fails today; once the Phase 1 reducer lands,
-        // ProtocolError must serialize through JsError as {"kind": ...}.
+        // The `JsError` wrapper is wasm32-only; assert the JSON it carries.
         let json = protocol_error_json(&ProtocolError::SequenceGap {
             expected: 3,
             received: 9,
