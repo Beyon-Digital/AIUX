@@ -264,6 +264,10 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
       }
       const queueIt = queue as unknown as AsyncIterator<AiuxEvent[]>;
       let finished = false;
+      // A consumed queue failure held while buffered starts drain — thrown
+      // on the read after they are delivered so the transport error
+      // surfaces exactly once (EventQueue clears `failure` as it throws).
+      let heldFailure: { error: unknown } | undefined;
       const drain = (): AiuxEvent[] => {
         finished = true;
         return normalize.finish?.() ?? [];
@@ -272,6 +276,11 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
       // `close()` so the socket (and reconnect loop) tears down too.
       return {
         next: async () => {
+          if (heldFailure !== undefined) {
+            const { error } = heldFailure;
+            heldFailure = undefined;
+            throw error;
+          }
           try {
             const result = await queueIt.next();
             if (!result.done || finished) return result;
@@ -285,7 +294,10 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
             // first — consumers stop iterating on the rejection.
             if (finished) throw error;
             const finishing = drain();
-            if (finishing.length > 0) return { value: finishing, done: false };
+            if (finishing.length > 0) {
+              heldFailure = { error };
+              return { value: finishing, done: false };
+            }
             throw error;
           }
         },

@@ -118,6 +118,34 @@ describe("createWebSocketAdapter", () => {
     expect(adapter.connections).toBe(2);
   });
 
+  it("delivers sealed tool starts before surfacing a terminal failure", async () => {
+    FakeSocket.instances = [];
+    const adapter = createWebSocketAdapter(baseOpts({ reconnect: false }));
+    const it = adapter[Symbol.asyncIterator]();
+    const sock = FakeSocket.instances[0]!;
+    sock.emitOpen();
+    sock.emitMessage(
+      JSON.stringify({
+        choices: [
+          {
+            delta: {
+              tool_calls: [
+                { id: "call_1", function: { name: "f", arguments: '{"q":' } },
+              ],
+            },
+          },
+        ],
+      }),
+    );
+    sock.emitClose(1006); // abnormal, no retries → terminal failure
+
+    // The truncated call's sealed start arrives first, then the failure.
+    const first = await it.next();
+    expect(first.done).toBe(false);
+    expect(first.value?.map((e: AiuxEvent) => e.type)).toEqual(["tool.started"]);
+    await expect(it.next()).rejects.toThrow(/closed abnormally/);
+  });
+
   it("exhausts the retry budget and fails the iterator", async () => {
     FakeSocket.instances = [];
     const adapter = createWebSocketAdapter(
