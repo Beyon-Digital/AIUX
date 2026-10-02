@@ -49,6 +49,15 @@ export function createAIUXTransport(
   options: {
     policy?: AIUXTransportPolicy;
     onDispatch?: (report: AIUXDispatchReport) => void;
+    /**
+     * Consecutive permanent rejections of the same head batch before it
+     * is dropped. A permanently-rejected batch (semantic `InvalidEvent`,
+     * `SequenceGap`, replayed ids after a remount, ...) can never be
+     * accepted — without a bound it would block the FIFO forever and
+     * freeze the conversation. Transient failures never drop the head.
+     * Default 8.
+     */
+    maxBatchRetries?: number;
   } = {},
 ): AIUXTransport {
   const native = getNativeModule();
@@ -59,9 +68,29 @@ export function createAIUXTransport(
     );
   }
 
-  const { policy = {}, onDispatch } = options;
+  const { policy = {}, onDispatch, maxBatchRetries = 8 } = options;
   const queue: string[] = [];
   let activeDrain: Promise<void> | undefined;
+  // Consecutive permanent rejections of the current head batch; reset
+  // when the head advances.
+  let headAttempts = 0;
+
+  /**
+   * `AiuxError` Display strings that mean the batch itself can never be
+   * accepted — malformed envelopes or out-of-sequence events. Anything
+   * else (module down, store failure, serialization fault) is treated as
+   * transient: the head stays queued indefinitely because dropping it
+   * would leave every later batch's sequence numbers permanently
+   * buffered on the missing slots.
+   */
+  const isPermanentRejection = (error: unknown): boolean => {
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.startsWith("invalid event:") ||
+      message.startsWith("sequence gap:") ||
+      message.startsWith("unsupported semantics:")
+    );
+  };
 
   const drain = (): Promise<void> => {
     if (activeDrain) return activeDrain;
@@ -76,11 +105,29 @@ export function createAIUXTransport(
           try {
             const report = await native.dispatchBatch(sessionId, batch);
             queue.shift();
+            headAttempts = 0;
             onDispatch?.(report);
           } catch (error) {
-            // Keep the batch queued; a later push()/flush() resumes the drain.
             policy.onFlushError?.(error);
-            break;
+            if (!isPermanentRejection(error)) {
+              // Transient — keep the head queued; a later push()/flush()
+              // resumes the drain without losing sequence slots.
+              break;
+            }
+            headAttempts += 1;
+            if (headAttempts < maxBatchRetries) break;
+            // Permanently-rejected head: drop it so later batches still
+            // deliver. The rejection already surfaced per attempt; surface
+            // the drop itself once.
+            queue.shift();
+            headAttempts = 0;
+            policy.onFlushError?.(
+              new Error(
+                `@beyondigital/aiux-expo: dropped permanently-rejected batch after ${maxBatchRetries} attempts (last: ${
+                  error instanceof Error ? error.message : String(error)
+                })`,
+              ),
+            );
           }
         }
       } finally {

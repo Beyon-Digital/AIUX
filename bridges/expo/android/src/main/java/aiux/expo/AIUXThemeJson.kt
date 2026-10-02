@@ -82,6 +82,9 @@ internal object AIUXThemeJson {
             success = source.colorOr("success") ?: base.success,
             warning = source.colorOr("warning") ?: base.warning,
             foreground = source.colorOr("foreground") ?: base.foreground,
+            inputSurface = source.colorOr("inputSurface") ?: base.inputSurface,
+            codeSurface = source.colorOr("codeSurface") ?: base.codeSurface,
+            codeForeground = source.colorOr("codeForeground") ?: base.codeForeground,
         )
     }
 

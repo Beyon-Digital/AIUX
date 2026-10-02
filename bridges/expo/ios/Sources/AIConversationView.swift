@@ -17,6 +17,7 @@ public final class AIConversationView: ExpoView {
     private var themeJson: String?
     private var mode: AIUXConversationMode = .fullscreen
     private var showComposer = true
+    private var composerToolbarJson: String?
 
     private var hostingController: UIHostingController<AnyView>?
     private var cancellables = Set<AnyCancellable>()
@@ -25,6 +26,48 @@ public final class AIConversationView: ExpoView {
 
     /// Native-side coalescing for `onSnapshot` (plan §10, §22).
     private static let snapshotThrottle: DispatchQueue.SchedulerTimeType.Stride = .milliseconds(150)
+
+    /// `AIUXComposerToolbarSpec` (JSON) → `AIUXComposerToolbar`. Unknown
+    /// glyph names map to a default SF Symbol; malformed input → defaults.
+    private static func parseComposerToolbar(_ json: String?) -> AIUXComposerToolbar {
+        guard let json, let data = json.data(using: .utf8),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return .default }
+
+        func flag(_ name: String, default fallback: Bool) -> Bool {
+            (root[name] as? Bool) ?? fallback
+        }
+        let extra: [AIUXComposerTool] = (root["extra"] as? [[String: Any]] ?? [])
+            .compactMap { o in
+                guard let id = o["id"] as? String else { return nil }
+                return AIUXComposerTool(
+                    id: id,
+                    accessibilityLabel: (o["label"] as? String) ?? id,
+                    systemImage: symbol(for: o["glyph"] as? String)
+                )
+            }
+        return AIUXComposerToolbar(
+            attach: flag("attach", default: true),
+            tools: flag("tools", default: false),
+            dictate: flag("dictate", default: true),
+            extra: extra
+        )
+    }
+
+    /// The shared glyph vocabulary → SF Symbols.
+    private static func symbol(for name: String?) -> String {
+        switch name {
+        case "doc": return "doc.text"
+        case "photo": return "photo"
+        case "gear": return "gearshape"
+        case "globe": return "globe"
+        case "mic": return "mic"
+        case "search": return "magnifyingglass"
+        case "plus": return "plus"
+        case "star": return "star"
+        default: return "sparkles"
+        }
+    }
 
     required init(appContext: AppContext? = nil) {
         super.init(appContext: appContext)
@@ -48,6 +91,11 @@ public final class AIConversationView: ExpoView {
 
     func setShowComposer(_ value: Bool) {
         showComposer = value
+        Task { @MainActor [weak self] in self?.rebuild() }
+    }
+
+    func setComposerToolbarJson(_ value: String) {
+        composerToolbarJson = value
         Task { @MainActor [weak self] in self?.rebuild() }
     }
 
@@ -107,7 +155,8 @@ public final class AIConversationView: ExpoView {
                 store: store,
                 mode: mode,
                 composerPlaceholder: "Message…",
-                showsComposer: showComposer
+                showsComposer: showComposer,
+                composerToolbar: Self.parseComposerToolbar(composerToolbarJson)
             )
                 .onAIUXAction { [weak self] action in
                     let payload = (try? String(

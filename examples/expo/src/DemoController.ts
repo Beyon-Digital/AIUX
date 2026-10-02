@@ -1,9 +1,42 @@
 import type { AIUXAction, AIUXTransport } from "@beyondigital/aiux-expo";
-import { createAIUXTransport } from "@beyondigital/aiux-expo";
+import {
+  createAIUXTransport,
+  serializeAIUXSession,
+} from "@beyondigital/aiux-expo";
 
 import { MockAgent, type AiuxEventObject } from "./mockAgent";
+import {
+  streamChatCompletion,
+  type ChatMessage,
+  type StreamHandle,
+  type ToolCall,
+} from "./openrouter";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+const LIVE_SYSTEM_PROMPT =
+  "You are the demo agent inside the AIUX protocol examples. Answer " +
+  "concisely in markdown. When the user asks to publish, send, or charge " +
+  "an invoice, call the publish_invoice tool — never claim to have " +
+  "published without calling it.";
+
+const PUBLISH_INVOICE_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "publish_invoice",
+    description:
+      "Publish an invoice to the customer — charges the amount and marks " +
+      "it sent. Requires user approval before it executes.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "e.g. inv-9" },
+      },
+      required: ["invoiceId"],
+      additionalProperties: false,
+    },
+  },
+};
 
 /**
  * Host-side driver for the mocked agent interaction (Phase 4 gate) — a port
@@ -14,24 +47,106 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * coalesces into `dispatchBatch` calls (16–50 ms flush), so streaming deltas
  * never cross the boundary per token.
  */
+type ActiveRun = {
+  runId: string;
+  cancelRequested: boolean;
+  // toolTurnPending: a live run whose stream ended in a tool_call — the
+  // tool turn owns run completion (the first stream's onDone must not
+  // complete it). messageId lets cancel close the streaming message.
+  toolTurnPending?: boolean;
+  messageId?: string;
+  // The approval currently gating this run — set while `pendingApproval`
+  // holds its resolver so cancel/supersede can emit a terminal
+  // `approval.resolved` instead of leaving the card `requested`.
+  approvalId?: string;
+  // A tool that emitted `tool.started` but no terminal event — cancel/
+  // supersede must fail it or it renders `running` forever.
+  pendingToolId?: string;
+  // The run already reached a terminal state (completed/failed) — kept in
+  // `activeRun` only for `error.retry`. Cancel/supersede must not re-emit
+  // terminal events for it: `run.cancelled` on a non-running run and a
+  // replayed `message.complete` are InvalidEvent rejections.
+  settled?: boolean;
+};
+
 export class DemoController {
   readonly sessionId: string;
   private readonly transport: AIUXTransport;
   private readonly agent: MockAgent;
   private pendingApproval: ((approved: boolean) => void) | null = null;
-  private activeRun: { runId: string; cancelRequested: boolean } | null = null;
+  private activeRun: ActiveRun | null = null;
   private messageN = 0;
   private closed = false;
+  // Live mode: real OpenRouter inference. `liveHistory` is the chat
+  // transcript the model sees (system + prior turns); `liveHandle` is the
+  // in-flight stream so cancel can abort it.
+  private live = false;
+  private liveKey: string | undefined;
+  private liveModel = "openrouter/free";
+  private liveHistory: ChatMessage[] = [];
+  private liveHandle: StreamHandle | undefined;
+  private lastPrompt = "";
+  /**
+   * Per-controller id epoch. A JS remount spawns a fresh controller while
+   * the native session persists — entity ids (`m`,`r`,`t`,`a`,`sf`,`u`,`e`)
+   * must not collide with ones already committed, or the replayed batch
+   * gets rejected and poisons the transport queue.
+   */
+  private readonly idEpoch: string;
 
-  constructor(sessionId: string) {
+  private constructor(
+    sessionId: string,
+    idEpoch: string,
+    startSequence: number,
+    fresh: boolean,
+  ) {
     this.sessionId = sessionId;
-    this.agent = new MockAgent(sessionId);
+    this.idEpoch = idEpoch;
+    this.agent = new MockAgent(sessionId, `${idEpoch}:`, startSequence);
     this.transport = createAIUXTransport(sessionId, {
       policy: {
         onFlushError: (error) => console.warn("[aiux] dispatchBatch failed", error),
       },
     });
-    this.transport.push(this.agent.sessionCreated("AIUX Expo demo"));
+    // Only a brand-new session gets the seed — re-emitting session.created
+    // into a persisted session is an InvalidEvent replay.
+    if (fresh) {
+      this.transport.push(this.agent.sessionCreated("AIUX Expo demo"));
+    }
+  }
+
+  /**
+   * Build a controller that resumes against the persisted native session:
+   * sequences continue from `nextExpectedSequence`, entity ids carry a
+   * fresh epoch, and the session seed is skipped when one already exists.
+   * Reads the *serialized* state — the render snapshot intentionally omits
+   * ordering bookkeeping (persistence.rs).
+   */
+  static async create(sessionId: string): Promise<DemoController> {
+    const persisted = await serializeAIUXSession(sessionId)
+      .then((json) => JSON.parse(json) as Record<string, unknown>)
+      .catch(() => ({}) as Record<string, unknown>);
+    const nextSeq =
+      typeof persisted.nextExpectedSequence === "number"
+        ? persisted.nextExpectedSequence
+        : 0;
+    const state = persisted.state as Record<string, unknown> | undefined;
+    const fresh = state?.session == null;
+    const idEpoch = `${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 5)}`;
+    return new DemoController(sessionId, idEpoch, nextSeq, fresh);
+  }
+
+  private id(prefix: string, n: number): string {
+    return `${prefix}${this.idEpoch}-${n}`;
+  }
+
+  /** Toggle real-LLM mode; `key`/`model` apply on the next prompt. */
+  setLive(enabled: boolean, key?: string, model?: string): void {
+    this.live = enabled;
+    if (key !== undefined) this.liveKey = key;
+    if (model) this.liveModel = model;
   }
 
   /** Router for semantic actions emitted by the native surface. */
@@ -44,9 +159,36 @@ export class DemoController {
       }
       case "aiux.composer.cancel": {
         const run = this.activeRun;
-        if (run) {
+        // A settled run is kept only for `error.retry` — its terminal
+        // events already landed; re-emitting `run.cancelled` or
+        // `message.complete` would be an InvalidEvent replay.
+        if (run && !run.settled) {
           run.cancelRequested = true;
+          this.liveHandle?.abort();
+          this.liveHandle = undefined;
           this.transport.push(this.agent.runCancelled(run.runId));
+          if (run.pendingToolId) {
+            // Fail the open tool — otherwise its row spins forever.
+            this.transport.push(
+              this.agent.toolFailed(run.pendingToolId, "CANCELLED", "run cancelled"),
+            );
+          }
+          if (run.approvalId) {
+            // Terminate the parked approval — otherwise its card keeps
+            // showing live buttons nobody handles.
+            this.transport.push(
+              this.agent.approvalResolved(run.approvalId, "rejected", "user"),
+            );
+          }
+          if (run.messageId) {
+            this.transport.push(this.agent.messageComplete(run.messageId));
+          }
+          this.activeRun = null;
+          // Unblock a run parked on the approval gate so its continuation
+          // can observe cancelRequested and bail instead of pushing
+          // resolution/completion events after runCancelled.
+          this.pendingApproval?.(false);
+          this.pendingApproval = null;
         }
         break;
       }
@@ -63,7 +205,33 @@ export class DemoController {
       }
       case "aiux.error.retry": {
         const run = this.activeRun;
-        if (run) void this.track(this.retryRun(run.runId));
+        if (run) {
+          void this.track(
+            this.live && this.liveKey
+              ? this.liveRetry(run.runId)
+              : this.retryRun(run.runId),
+          );
+        }
+        break;
+      }
+      case "aiux.composer.attach":
+      case "aiux.composer.tools":
+      case "aiux.composer.dictate":
+      case "aiux.composer.voice":
+      case "aiux.composer.docs": {
+        // Toolbar affordances are host policy — the demo acknowledges the
+        // tap so the customization contract is visibly exercised.
+        const n = ++this.messageN;
+        const mid = this.id("m", n);
+        this.send(
+          this.agent.assistantMessage(mid),
+          this.agent.textPart(
+            mid,
+            `${mid}:p`,
+            `Host received \`"${action.id}"\` — composer toolbar tools arrive as actions, including custom ones.`,
+          ),
+          this.agent.messageComplete(mid),
+        );
         break;
       }
       default:
@@ -85,18 +253,325 @@ export class DemoController {
     });
   }
 
-  /** user prompt → stream → tool → approval → resolve → surface result. */
+  /** Routes to the live model or the scripted scenario. */
   async sendPrompt(text: string): Promise<void> {
+    if (this.live && this.liveKey) {
+      this.lastPrompt = text;
+      return this.livePrompt(text);
+    }
+    return this.scriptedPrompt(text);
+  }
+
+  /**
+   * Real OpenRouter inference: prompt → streamed markdown answer → optional
+   * real tool_call → approval → executed + follow-up summary → done.
+   * Errors surface as the protocol's retryable error part + failed run.
+   */
+  private async livePrompt(text: string): Promise<void> {
+    // A new prompt supersedes a still-active live run — abort its request
+    // and close it so the older stream can never clear this run's handle.
+    this.supersedeActiveRun();
     const n = ++this.messageN;
-    const messageId = `m${n}`;
-    const runId = `r${n}`;
-    const toolId = `t${n}`;
-    const approvalId = `a${n}`;
-    const surfaceId = `sf${n}`;
-    const run = { runId, cancelRequested: false };
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
     this.activeRun = run;
 
-    this.send(...this.agent.userMessage(`u${n}`, text));
+    this.send(...this.agent.userMessage(this.id("u", n), text));
+    this.send(this.agent.runStarted(runId));
+    this.send(this.agent.assistantMessage(messageId));
+    this.send(this.agent.textPart(messageId, "p1"));
+
+    if (this.liveHistory.length === 0) {
+      this.liveHistory.push({ role: "system", content: LIVE_SYSTEM_PROMPT });
+    }
+    this.liveHistory.push({ role: "user", content: text });
+    let answer = "";
+    const handle = streamChatCompletion(
+      this.liveKey!,
+      this.liveModel,
+      this.liveHistory.slice(-20),
+      [PUBLISH_INVOICE_TOOL],
+      {
+        onDelta: (delta) => {
+          if (run.cancelRequested || this.closed) return;
+          answer += delta;
+          this.send(this.agent.textDelta(messageId, "p1", delta));
+        },
+        onToolCalls: (calls) => {
+          if (run.cancelRequested || this.closed) return;
+          // The stream is done; the tool turn completes the run — clear
+          // the handle and mark it so this stream's onDone stays out.
+          if (this.liveHandle === handle) this.liveHandle = undefined;
+          run.toolTurnPending = true;
+          void this.track(this.liveToolTurn(run, messageId, calls));
+        },
+        onDone: () => {
+          if (run.cancelRequested || run.toolTurnPending || this.closed) return;
+          // Identity-guarded: a superseded request can never complete the
+          // newer run that replaced its handle slot.
+          if (this.liveHandle !== handle) return;
+          this.liveHandle = undefined;
+          this.liveHistory.push({ role: "assistant", content: answer });
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runCompleted(runId));
+          run.settled = true;
+          if (this.activeRun === run) this.activeRun = null;
+        },
+        onError: (code, message) => {
+          if (run.cancelRequested || this.closed) return;
+          if (this.liveHandle === handle) this.liveHandle = undefined;
+          this.send(this.agent.errorPart(messageId, "p2", code, message, true));
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runFailed(runId, code, message));
+          run.settled = true;
+          this.activeRun = run;
+        },
+      },
+    );
+    this.liveHandle = handle;
+  }
+
+  /**
+   * Close out a still-active run when a newer prompt supersedes it: abort
+   * the in-flight request, resolve any parked approval, and emit the
+   * terminal events so nothing is left `requested` or streaming.
+   */
+  private supersedeActiveRun(): void {
+    const previous = this.activeRun;
+    this.liveHandle?.abort();
+    this.liveHandle = undefined;
+    if (!previous) return;
+    previous.cancelRequested = true;
+    // Settled runs (failed, kept for retry) take no terminal events —
+    // `run.cancelled` on a non-running run is rejected.
+    if (!previous.settled) {
+      if (previous.pendingToolId) {
+        this.send(
+          this.agent.toolFailed(previous.pendingToolId, "CANCELLED", "run superseded"),
+        );
+      }
+      if (previous.approvalId) {
+        this.send(
+          this.agent.approvalResolved(previous.approvalId, "rejected", "user"),
+        );
+      }
+      if (previous.messageId) {
+        this.send(this.agent.messageComplete(previous.messageId));
+      }
+      this.send(this.agent.runCancelled(previous.runId));
+    }
+    this.activeRun = null;
+    this.pendingApproval?.(false);
+    this.pendingApproval = null;
+  }
+
+  /**
+   * The model called `publish_invoice`: real tool card → approval gate →
+   * executed/denied → result fed back to the model for the final answer.
+   */
+  private async liveToolTurn(
+    run: ActiveRun,
+    messageId: string,
+    calls: ToolCall[],
+  ): Promise<void> {
+    const toolId = this.id("t", this.messageN);
+    const approvalId = this.id("a", this.messageN);
+    const call = calls[0]!;
+    let args: Record<string, unknown> = {};
+    try {
+      const parsed: unknown = JSON.parse(call.function.arguments || "{}");
+      if (typeof parsed === "object" && parsed !== null) {
+        args = parsed as Record<string, unknown>;
+      }
+    } catch {
+      /* malformed args — surface empty input */
+    }
+    this.send(this.agent.toolStarted(toolId, call.function.name || "tool", args));
+    this.send(this.agent.toolPart(messageId, "p2", toolId));
+    run.pendingToolId = toolId;
+
+    // Only `publish_invoice` is wired — a different tool name or malformed
+    // args must not be presented as an executed publish.
+    const invoiceId = args["invoiceId"];
+    if (
+      call.function.name !== "publish_invoice" ||
+      typeof invoiceId !== "string" ||
+      invoiceId === ""
+    ) {
+      this.send(
+        this.agent.toolFailed(
+          toolId,
+          "UNSUPPORTED",
+          `unsupported call ${call.function.name || "tool"}(${JSON.stringify(args)})`,
+        ),
+      );
+      run.pendingToolId = undefined;
+      this.send(
+        this.agent.errorPart(
+          messageId,
+          "p3",
+          "UNSUPPORTED_TOOL",
+          `model requested "${call.function.name || "tool"}" — only publish_invoice(invoiceId) is supported`,
+          true,
+        ),
+      );
+      this.send(this.agent.messageComplete(messageId));
+      this.send(
+        this.agent.runFailed(run.runId, "UNSUPPORTED_TOOL", "unsupported tool call"),
+      );
+      run.settled = true;
+      this.activeRun = run;
+      return;
+    }
+    this.send(
+      this.agent.approvalRequested(
+        approvalId,
+        `Run ${call.function.name}?`,
+        `Model requested publish of ${invoiceId}.`,
+      ),
+    );
+    this.send(this.agent.approvalPart(messageId, "p3", approvalId));
+
+    run.approvalId = approvalId;
+    const approved = await new Promise<boolean>((resolve) => {
+      this.pendingApproval = resolve;
+    });
+    this.pendingApproval = null;
+    run.approvalId = undefined;
+    if (this.closed || run.cancelRequested) return;
+    this.send(
+      this.agent.approvalResolved(approvalId, approved ? "approved" : "rejected", "user"),
+    );
+
+    if (approved) {
+      this.send(this.agent.approvalResolved(approvalId, "executed", "host"));
+      this.send(this.agent.toolCompleted(toolId, { invoiceId, status: "sent" }));
+      run.pendingToolId = undefined;
+      this.liveHistory.push(
+        { role: "assistant", content: null, tool_calls: [call] },
+        {
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify({ invoiceId, status: "sent" }),
+        },
+      );
+      let tail = "";
+      const handle = streamChatCompletion(
+        this.liveKey!,
+        this.liveModel,
+        this.liveHistory.slice(-20),
+        undefined,
+        {
+          onDelta: (delta) => {
+            if (run.cancelRequested || this.closed) return;
+            tail += delta;
+            this.send(this.agent.textDelta(messageId, "p1", delta));
+          },
+          onToolCalls: () => {},
+          onDone: () => {
+            if (run.cancelRequested || this.closed) return;
+            if (this.liveHandle !== handle) return;
+            this.liveHandle = undefined;
+            this.liveHistory.push({ role: "assistant", content: tail });
+            this.send(this.agent.messageComplete(messageId));
+            this.send(this.agent.runCompleted(run.runId));
+            run.settled = true;
+            if (this.activeRun === run) this.activeRun = null;
+          },
+          onError: (code, message) => {
+            if (run.cancelRequested || this.closed) return;
+            if (this.liveHandle === handle) this.liveHandle = undefined;
+            this.send(this.agent.errorPart(messageId, "p4", code, message, true));
+            this.send(this.agent.messageComplete(messageId));
+            this.send(this.agent.runFailed(run.runId, code, message));
+            run.settled = true;
+            this.activeRun = run;
+          },
+        },
+      );
+      this.liveHandle = handle;
+    } else {
+      this.send(this.agent.toolFailed(toolId, "DENIED", "user rejected the action"));
+      run.pendingToolId = undefined;
+      this.send(
+        this.agent.textPart(messageId, "p4", "Cancelled — invoice was not published."),
+      );
+      this.send(this.agent.messageComplete(messageId));
+      this.send(this.agent.runCompleted(run.runId));
+      run.settled = true;
+      if (this.activeRun === run) this.activeRun = null;
+    }
+  }
+
+  /** Live retry: new run re-asking the last prompt against the same history. */
+  private async liveRetry(previousRunId: string): Promise<void> {
+    this.supersedeActiveRun();
+    const n = ++this.messageN;
+    const runId = this.id("r", n);
+    const text = this.lastPrompt;
+    this.send(this.agent.runStarted(runId, previousRunId));
+    // Splice the new run's ids into livePrompt bookkeeping, then run it —
+    // the user message was already pushed; just re-stream the answer.
+    const messageId = this.id("m", n);
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
+    this.activeRun = run;
+    this.send(this.agent.assistantMessage(messageId));
+    this.send(this.agent.textPart(messageId, "p1"));
+    let answer = "";
+    const handle = streamChatCompletion(
+      this.liveKey!,
+      this.liveModel,
+      this.liveHistory.slice(-20),
+      [PUBLISH_INVOICE_TOOL],
+      {
+        onDelta: (delta) => {
+          if (run.cancelRequested || this.closed) return;
+          answer += delta;
+          this.send(this.agent.textDelta(messageId, "p1", delta));
+        },
+        onToolCalls: (calls) => {
+          if (run.cancelRequested || this.closed) return;
+          if (this.liveHandle === handle) this.liveHandle = undefined;
+          run.toolTurnPending = true;
+          void this.track(this.liveToolTurn(run, messageId, calls));
+        },
+        onDone: () => {
+          if (run.cancelRequested || run.toolTurnPending || this.closed) return;
+          if (this.liveHandle !== handle) return;
+          this.liveHandle = undefined;
+          this.liveHistory.push({ role: "assistant", content: answer });
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runCompleted(runId));
+          run.settled = true;
+          if (this.activeRun === run) this.activeRun = null;
+        },
+        onError: (code, message) => {
+          if (run.cancelRequested || this.closed) return;
+          if (this.liveHandle === handle) this.liveHandle = undefined;
+          this.send(this.agent.errorPart(messageId, "p2", code, message, true));
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runFailed(runId, code, message));
+          run.settled = true;
+          this.activeRun = run;
+        },
+      },
+    );
+    this.liveHandle = handle;
+  }
+
+  /** user prompt → stream → tool → approval → resolve → surface result. */
+  async scriptedPrompt(text: string): Promise<void> {
+    const n = ++this.messageN;
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
+    const toolId = this.id("t", n);
+    const approvalId = this.id("a", n);
+    const surfaceId = this.id("sf", n);
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
+    this.activeRun = run;
+
+    this.send(...this.agent.userMessage(this.id("u", n), text));
     this.send(this.agent.runStarted(runId));
     this.send(this.agent.assistantMessage(messageId));
 
@@ -117,6 +592,7 @@ export class DemoController {
     );
 
     this.send(this.agent.toolStarted(toolId, "search", { q: "invoice inv-9" }));
+    run.pendingToolId = toolId;
     await sleep(400);
     if (run.cancelRequested || this.closed) return;
     this.send(this.agent.toolProgress(toolId, 1, 3, "querying"));
@@ -129,13 +605,16 @@ export class DemoController {
       // Error+retry branch: tool + run fail retryable; `aiux.error.retry`
       // replays the run via retryRun().
       this.send(this.agent.toolFailed(toolId, "TIMEOUT", "search backend timed out after 30s"));
+      run.pendingToolId = undefined;
       this.send(this.agent.errorPart(messageId, "p3", "UPSTREAM_503", "backend unavailable", true));
       this.send(this.agent.messageComplete(messageId));
       this.send(this.agent.runFailed(runId, "UPSTREAM_503", "backend unavailable"));
+      run.settled = true;
       return;
     }
 
     this.send(this.agent.toolCompleted(toolId, { hits: 2, top: "inv-9" }));
+    run.pendingToolId = undefined;
     this.send(this.agent.toolPart(messageId, "p3", toolId));
 
     this.send(
@@ -147,11 +626,13 @@ export class DemoController {
     );
     this.send(this.agent.approvalPart(messageId, "p4", approvalId));
 
+    run.approvalId = approvalId;
     const approved = await new Promise<boolean>((resolve) => {
       this.pendingApproval = resolve;
     });
-    if (this.closed) return;
     this.pendingApproval = null;
+    run.approvalId = undefined;
+    if (this.closed || run.cancelRequested) return;
 
     this.send(
       this.agent.approvalResolved(approvalId, approved ? "approved" : "rejected", "user"),
@@ -169,15 +650,16 @@ export class DemoController {
     }
     this.send(this.agent.messageComplete(messageId));
     this.send(this.agent.runCompleted(runId));
+    run.settled = true;
     if (this.activeRun === run) this.activeRun = null;
   }
 
   /** Retry branch: same message, a `retryOf` run that succeeds. */
   private async retryRun(previousRunId: string): Promise<void> {
     const n = ++this.messageN;
-    const messageId = `m${n}`;
-    const runId = `r${n}`;
-    const run = { runId, cancelRequested: false };
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
     this.activeRun = run;
 
     this.send(this.agent.runStarted(runId, previousRunId));
@@ -187,11 +669,16 @@ export class DemoController {
     if (this.closed) return;
     this.send(this.agent.messageComplete(messageId));
     this.send(this.agent.runCompleted(runId));
+    run.settled = true;
     if (this.activeRun === run) this.activeRun = null;
   }
 
   close(): void {
     this.closed = true;
+    // Sever the in-flight request — its callbacks already bail on
+    // `closed`, but the XHR itself must not keep streaming.
+    this.liveHandle?.abort();
+    this.liveHandle = undefined;
     // Unblock runs waiting on the approval gate; their trailing sends
     // no-op via `send()` instead of throwing into the closed transport.
     this.pendingApproval?.(false);

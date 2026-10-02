@@ -18,6 +18,7 @@ import type {
   AIConversationMode,
   AIUXAction,
   AIUXCapability,
+  AIUXComposerToolbarSpec,
   AIUXContextEntity,
   AIUXErrorInfo,
   AIUXSnapshot,
@@ -47,6 +48,13 @@ export interface AIConversationProps {
   mode?: AIConversationMode;
   /** Whether the composer row is visible. */
   showComposer?: boolean;
+  /**
+   * Composer toolbar customization (plan §23): hide built-in controls
+   * and/or append custom tools that emit their declared action id.
+   * Accepts the spec object — serialized to JSON at the boundary — or a
+   * pre-serialized JSON string.
+   */
+  composerToolbar?: AIUXComposerToolbarSpec | string;
   /**
    * Semantic `AIUXAction`s emitted by the native surface. The library never
    * executes them — it routes them to the host application (plan §10).
@@ -94,6 +102,7 @@ export function AIConversation(props: AIConversationProps) {
     title,
     mode = "fullscreen",
     showComposer = true,
+    composerToolbar,
     onAction,
     onError,
     onSnapshot,
@@ -141,6 +150,16 @@ export function AIConversation(props: AIConversationProps) {
     [theme],
   );
 
+  const composerToolbarJson = useMemo(
+    () =>
+      composerToolbar === undefined
+        ? undefined
+        : typeof composerToolbar === "string"
+          ? composerToolbar
+          : JSON.stringify(composerToolbar),
+    [composerToolbar],
+  );
+
   const NativeView = getNativeView();
   if (!NativeView) return <RNView style={style}>{fallback}</RNView>;
 
@@ -150,6 +169,7 @@ export function AIConversation(props: AIConversationProps) {
       theme={themeJson}
       mode={mode}
       showComposer={showComposer}
+      composerToolbar={composerToolbarJson}
       style={style}
       onAction={(event: NativeSyntheticEvent<NativeActionEvent>) =>
         onAction?.(parseAction(event))

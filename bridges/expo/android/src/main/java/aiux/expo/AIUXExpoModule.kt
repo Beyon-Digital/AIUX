@@ -60,6 +60,9 @@ class AIUXExpoModule : Module() {
             Prop("showComposer") { view: AIConversationView, show: Boolean ->
                 view.applyShowComposer(show)
             }
+            Prop("composerToolbar") { view: AIConversationView, toolbar: String ->
+                view.applyComposerToolbarJson(toolbar)
+            }
             Events("onAction", "onError", "onSnapshot")
         }
     }

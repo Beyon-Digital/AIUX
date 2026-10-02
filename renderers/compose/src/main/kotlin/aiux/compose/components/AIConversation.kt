@@ -46,12 +46,13 @@ fun AIConversation(
     mode: AIConversationMode = AIConversationMode.Fullscreen,
     showComposer: Boolean = true,
     showContextBar: Boolean = true,
+    composerToolbar: AIComposerToolbar = AIComposerToolbar.Default,
     onAction: (AIUXAction) -> Unit = {},
 ) {
     val running = snapshot.activeRun?.status == AIRunStatus.Running
     when (mode) {
-        AIConversationMode.Fullscreen -> FullscreenConversation(snapshot, running, showComposer, showContextBar, modifier, onAction)
-        AIConversationMode.Embedded -> EmbeddedConversation(snapshot, running, showComposer, showContextBar, modifier, onAction)
+        AIConversationMode.Fullscreen -> FullscreenConversation(snapshot, running, showComposer, showContextBar, composerToolbar, modifier, onAction)
+        AIConversationMode.Embedded -> EmbeddedConversation(snapshot, running, showComposer, showContextBar, composerToolbar, modifier, onAction)
     }
 }
 
@@ -62,6 +63,7 @@ private fun FullscreenConversation(
     running: Boolean,
     showComposer: Boolean,
     showContextBar: Boolean,
+    composerToolbar: AIComposerToolbar,
     modifier: Modifier,
     onAction: (AIUXAction) -> Unit,
 ) {
@@ -87,7 +89,7 @@ private fun FullscreenConversation(
         bottomBar = {
             Column(modifier = Modifier.imePadding().navigationBarsPadding()) {
                 if (showComposer) {
-                    AIComposer(running = running, onAction = onAction)
+                    AIComposer(running = running, toolbar = composerToolbar, onAction = onAction)
                 }
             }
         },
@@ -107,6 +109,7 @@ private fun EmbeddedConversation(
     running: Boolean,
     showComposer: Boolean,
     showContextBar: Boolean,
+    composerToolbar: AIComposerToolbar,
     modifier: Modifier,
     onAction: (AIUXAction) -> Unit,
 ) {
@@ -116,7 +119,7 @@ private fun EmbeddedConversation(
         }
         MessageList(snapshot, Modifier.weight(1f), onAction)
         if (showComposer) {
-            AIComposer(running = running, onAction = onAction)
+            AIComposer(running = running, toolbar = composerToolbar, onAction = onAction)
         }
     }
 }

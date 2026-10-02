@@ -56,6 +56,9 @@ public class AIUXExpoModule: Module {
             Prop("showComposer") { (view: AIConversationView, show: Bool) in
                 view.setShowComposer(show)
             }
+            Prop("composerToolbar") { (view: AIConversationView, toolbar: String) in
+                view.setComposerToolbarJson(toolbar)
+            }
             Events("onAction", "onError", "onSnapshot")
         }
     }

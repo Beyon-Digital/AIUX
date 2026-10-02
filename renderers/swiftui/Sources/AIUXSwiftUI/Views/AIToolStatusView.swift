@@ -25,6 +25,7 @@ public struct AIToolStatus: View {
                     .foregroundStyle(statusColor)
                 Text(tool.name)
                     .font(theme.typography.label)
+                    .foregroundStyle(colors.muted)
                 statusBadge
                 Spacer()
             }
@@ -50,21 +51,20 @@ public struct AIToolStatus: View {
                 Text(error.message)
                     .font(theme.typography.caption)
                     .foregroundStyle(colors.destructive)
+                    .padding(.leading, theme.space(.lg))
             } else if let result = aiuxJSONDescription(tool.result) {
                 Text(result)
                     .font(theme.typography.caption)
                     .foregroundStyle(colors.muted)
                     .lineLimit(4)
                     .textSelection(.enabled)
+                    .padding(.horizontal, theme.space(.sm))
+                    .padding(.vertical, theme.space(.xs))
+                    .background(colors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.sm)))
+                    .padding(.leading, theme.space(.lg))
             }
         }
-        .padding(theme.space(.sm))
-        .background(colors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
-        .overlay(
-            RoundedRectangle(cornerRadius: theme.radius.radius(.md))
-                .strokeBorder(colors.border, lineWidth: 1)
-        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Tool \(tool.name): \(tool.status.rawValue)")
     }
@@ -85,8 +85,8 @@ public struct AIToolStatus: View {
     private var statusColor: Color {
         let colors = theme.colors(for: colorScheme)
         switch tool.status {
-        case .running: return colors.accent
-        case .completed: return colors.success
+        case .running: return colors.muted
+        case .completed: return colors.muted
         case .failed: return colors.destructive
         }
     }
@@ -96,9 +96,5 @@ public struct AIToolStatus: View {
         Text(tool.status.rawValue)
             .font(theme.typography.caption)
             .foregroundStyle(statusColor)
-            .padding(.horizontal, theme.space(.xs))
-            .padding(.vertical, 2)
-            .background(statusColor.opacity(0.12))
-            .clipShape(Capsule())
     }
 }

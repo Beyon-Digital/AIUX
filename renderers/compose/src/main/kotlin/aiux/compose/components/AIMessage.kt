@@ -62,10 +62,11 @@ fun AIMessage(
     val isUser = message.role == AIRole.User
     val isSystem = message.role == AIRole.System
 
-    val bubbleColor = when {
-        isUser -> theme.colors.userSurface
-        isSystem -> theme.colors.muted
-        else -> theme.colors.assistantSurface
+    val messageSemantics = Modifier.semantics {
+        contentDescription = buildString {
+            append(message.role.name.lowercase()).append(" message")
+            if (message.streaming) append(", streaming")
+        }
     }
 
     Column(
@@ -78,19 +79,28 @@ fun AIMessage(
             else -> Alignment.Start
         },
     ) {
-        Surface(
-            color = bubbleColor,
-            shape = RoundedCornerShape(theme.radii.lg),
-            modifier = Modifier
-                .widthIn(max = 560.dp)
-                .semantics {
-                    contentDescription = buildString {
-                        append(message.role.name.lowercase()).append(" message")
-                        if (message.streaming) append(", streaming")
+        if (isUser || isSystem) {
+            // Bubbles are reserved for user/system — the assistant speaks flat.
+            Surface(
+                color = if (isUser) theme.colors.userSurface else theme.colors.muted,
+                shape = RoundedCornerShape(theme.radii.lg),
+                modifier = Modifier
+                    .widthIn(max = 560.dp)
+                    .then(messageSemantics),
+            ) {
+                Column(modifier = Modifier.padding(theme.spacing.md)) {
+                    message.parts.forEach { part ->
+                        AIPart(part = part, message = message, snapshot = snapshot, onAction = onAction)
                     }
-                },
-        ) {
-            Column(modifier = Modifier.padding(theme.spacing.md)) {
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 560.dp)
+                    .then(messageSemantics)
+                    .padding(vertical = theme.spacing.xs),
+            ) {
                 message.parts.forEach { part ->
                     AIPart(part = part, message = message, snapshot = snapshot, onAction = onAction)
                 }
@@ -100,7 +110,7 @@ fun AIMessage(
                             .size(14.dp)
                             .padding(top = theme.spacing.xs),
                         strokeWidth = 2.dp,
-                        color = theme.colors.accent,
+                        color = theme.colors.mutedForeground,
                     )
                 }
             }
@@ -175,8 +185,8 @@ fun AICodeBlock(code: String, language: String?, modifier: Modifier = Modifier) 
     val theme = AIUX.theme
     val clipboard = LocalClipboardManager.current
     Surface(
-        color = theme.colors.muted,
-        shape = RoundedCornerShape(theme.radii.sm),
+        color = theme.colors.codeSurface,
+        shape = RoundedCornerShape(theme.radii.md),
         modifier = modifier.fillMaxWidth().padding(vertical = theme.spacing.xs),
     ) {
         Column {
@@ -190,16 +200,16 @@ fun AICodeBlock(code: String, language: String?, modifier: Modifier = Modifier) 
                 Text(
                     text = language?.ifEmpty { "code" } ?: "code",
                     style = theme.typography.caption,
-                    color = theme.colors.mutedForeground,
+                    color = theme.colors.codeForeground.copy(alpha = 0.7f),
                 )
                 TextButton(
                     onClick = { clipboard.setText(AnnotatedString(code)) },
-                ) { Text("Copy", style = theme.typography.caption) }
+                ) { Text("Copy", style = theme.typography.caption, color = theme.colors.codeForeground.copy(alpha = 0.7f)) }
             }
             Text(
                 text = code,
                 style = theme.typography.code,
-                color = theme.colors.foreground,
+                color = theme.colors.codeForeground,
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())

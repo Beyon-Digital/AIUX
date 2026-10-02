@@ -18,15 +18,27 @@ export type AiuxEventObject = {
 };
 
 export class MockAgent {
-  private sequence = 0;
+  private sequence: number;
   private eventN = 0;
 
-  constructor(private readonly sessionId: string = "s1") {}
+  /**
+   * `idNamespace` prefixes every generated `eventId`; `startSequence`
+   * resumes the sequence counter — both matter after a JS remount against
+   * a persisted native session (fresh counters would replay colliding
+   * ids/sequences and get rejected as InvalidEvent).
+   */
+  constructor(
+    private readonly sessionId: string = "s1",
+    private readonly idNamespace: string = "",
+    startSequence = 0,
+  ) {
+    this.sequence = startSequence;
+  }
 
   private event(type: string, payload: JsonObject): AiuxEventObject {
     const sequence = this.sequence++;
     return {
-      eventId: `e${++this.eventN}`,
+      eventId: `${this.idNamespace}e${++this.eventN}`,
       sessionId: this.sessionId,
       sequence,
       timestamp: `2026-01-01T00:00:${String(sequence).padStart(2, "0")}Z`,
@@ -36,7 +48,7 @@ export class MockAgent {
   }
 
   sessionCreated(title: string): AiuxEventObject {
-    return this.event("session.created", {
+    const e = this.event("session.created", {
       protocolVersion: "0.1",
       session: {
         id: this.sessionId,
@@ -58,6 +70,11 @@ export class MockAgent {
         ],
       },
     });
+    // Deterministic eventId: a second controller racing before the first
+    // flush can re-seed the same session — core dedup must treat the replay
+    // as a no-op, not a new event at a consumed sequence.
+    e.eventId = `evt:${this.sessionId}:created`;
+    return e;
   }
 
   userMessage(id: string, text: string): AiuxEventObject[] {

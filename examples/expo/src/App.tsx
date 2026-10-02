@@ -26,6 +26,20 @@ export default function App() {
   );
   const [error, setError] = useState<AIUXErrorInfo | null>(null);
   const controller = useRef<DemoController | null>(null);
+  // Live mode streams real OpenRouter completions; the key is inline-bundled
+  // by expo at build time (EXPO_PUBLIC_*), never committed.
+  const liveKey = process.env.EXPO_PUBLIC_OPEN_ROUTER;
+  const liveModel = process.env.EXPO_PUBLIC_OPENROUTER_MODEL ?? "openrouter/free";
+  const [live, setLive] = useState(false);
+  // Mirror the selection in a ref — a toggle before `create` resolves has
+  // no controller yet; creation applies the latest selection after.
+  const liveRef = useRef(live);
+  liveRef.current = live;
+
+  const toggleLive = (value: boolean) => {
+    setLive(value);
+    controller.current?.setLive(value, liveKey, liveModel);
+  };
 
   const theme = useMemo(
     () => ({
@@ -38,9 +52,10 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     void createAIUXSession({ sessionId: SESSION_ID })
-      .then(() => {
+      .then(async () => {
         if (cancelled) return;
-        controller.current = new DemoController(SESSION_ID);
+        controller.current = await DemoController.create(SESSION_ID);
+        controller.current.setLive(liveRef.current, liveKey, liveModel);
         setReady(true);
       })
       .catch((cause: unknown) => {
@@ -64,6 +79,18 @@ export default function App() {
     >
       <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
       <View style={[styles.header, dark && styles.headerDark]}>
+        {liveKey ? (
+          <View style={styles.toggle}>
+            <Text style={[styles.toggleLabel, dark && styles.titleDark]}>
+              Live
+            </Text>
+            <Switch
+              value={live}
+              onValueChange={toggleLive}
+              accessibilityLabel="toggle live mode"
+            />
+          </View>
+        ) : null}
         <View style={styles.toggle}>
           <Text style={[styles.toggleLabel, dark && styles.titleDark]}>
             Dark
@@ -90,6 +117,13 @@ export default function App() {
             sessionId={SESSION_ID}
             theme={theme}
             mode="fullscreen"
+            composerToolbar={{
+              // Composer customization contract: hide built-ins by passing
+              // false, append host-owned tools that emit their action id.
+              extra: [
+                { id: "aiux.composer.docs", label: "Docs", glyph: "doc" },
+              ],
+            }}
             onAction={(action) => controller.current?.onAction(action)}
             onError={setError}
             style={styles.conversation}

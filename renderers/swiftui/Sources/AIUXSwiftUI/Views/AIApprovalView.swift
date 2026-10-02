@@ -21,6 +21,15 @@ public struct AIApproval: View {
 
     public var body: some View {
         let colors = theme.colors(for: colorScheme)
+        if approval.status == .requested {
+            requestedCard(colors)
+        } else {
+            resolvedRow(colors)
+        }
+    }
+
+    /// Requested state: a thin-outlined confirmation card (ChatGPT pattern).
+    private func requestedCard(_ colors: AIUXResolvedColors) -> some View {
         VStack(alignment: .leading, spacing: theme.space(.sm)) {
             HStack(spacing: theme.space(.sm)) {
                 Image(systemName: statusIcon)
@@ -66,11 +75,41 @@ public struct AIApproval: View {
         }
         .padding(theme.space(.md))
         .background(colors.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.lg)))
+        .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
         .overlay(
-            RoundedRectangle(cornerRadius: theme.radius.radius(.lg))
-                .strokeBorder(statusColor.opacity(0.5), lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.radius.radius(.md))
+                .strokeBorder(colors.border, lineWidth: 1)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Approval request: \(approval.prompt), status \(approval.status.rawValue)")
+    }
+
+    /// Terminal states: a flat inline row, no card chrome.
+    private func resolvedRow(_ colors: AIUXResolvedColors) -> some View {
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            HStack(spacing: theme.space(.sm)) {
+                Image(systemName: statusIcon)
+                    .foregroundStyle(statusColor)
+                Text(approval.prompt)
+                    .font(theme.typography.label)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                badge
+            }
+            if let description = approval.description {
+                Text(description)
+                    .font(theme.typography.caption)
+                    .foregroundStyle(colors.muted)
+                    .padding(.leading, theme.space(.lg))
+            }
+            if let note = approval.resolution?.note {
+                Text(note)
+                    .font(theme.typography.caption)
+                    .foregroundStyle(colors.muted)
+                    .padding(.leading, theme.space(.lg))
+            }
+            controls
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Approval request: \(approval.prompt), status \(approval.status.rawValue)")
     }
@@ -134,7 +173,7 @@ public struct AIApproval: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .tint(theme.colors(for: colorScheme).destructive)
+                .tint(theme.colors(for: colorScheme).muted)
             }
         case .approved:
             Label("Approved — awaiting execution", systemImage: "hourglass")

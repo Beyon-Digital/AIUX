@@ -34,17 +34,21 @@ public struct AIConversation: View {
     public var composerPlaceholder: String
     /// Whether the composer renders in fullscreen mode (default true).
     public var showsComposer: Bool
+    /// Composer toolbar customization (built-ins + custom tools).
+    public var composerToolbar: AIUXComposerToolbar
 
     public init(
         store: AIUXSessionStore,
         mode: AIUXConversationMode = .fullscreen,
         composerPlaceholder: String = "Message…",
-        showsComposer: Bool = true
+        showsComposer: Bool = true,
+        composerToolbar: AIUXComposerToolbar = .default
     ) {
         self.store = store
         self.mode = mode
         self.composerPlaceholder = composerPlaceholder
         self.showsComposer = showsComposer
+        self.composerToolbar = composerToolbar
     }
 
     public var body: some View {
@@ -60,7 +64,8 @@ public struct AIConversation: View {
             if mode == .fullscreen && showsComposer {
                 AIComposer(
                     runActive: store.snapshot.activeRunId != nil,
-                    placeholder: composerPlaceholder
+                    placeholder: composerPlaceholder,
+                    toolbar: composerToolbar
                 )
             }
         }

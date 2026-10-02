@@ -25,7 +25,10 @@ export type AIUXColorRole =
   | "destructiveForeground"
   | "success"
   | "warning"
-  | "foreground";
+  | "foreground"
+  | "inputSurface"
+  | "codeSurface"
+  | "codeForeground";
 
 /**
  * A CSS-style color string the native side parses: `#rgb`, `#rrggbb`,
@@ -90,6 +93,47 @@ export type AIUXSnapshot = Record<string, unknown>;
 
 /** A protocol event (opaque JSON envelope) or its JSON string form. */
 export type AIUXEventLike = Record<string, unknown> | string;
+
+/** Stock glyph names for custom composer tools (cross-boundary vocabulary). */
+export type AIUXComposerGlyphName =
+  | "sparkle"
+  | "doc"
+  | "photo"
+  | "gear"
+  | "globe"
+  | "mic"
+  | "search"
+  | "plus"
+  | "star";
+
+/**
+ * One custom control in the composer toolbar. Tapping it emits an
+ * `AIUXAction` with `id` — the host owns the behavior (`aiux.composer.`
+ * prefix by convention).
+ */
+export interface AIUXComposerToolSpec {
+  /** Action id emitted on tap. */
+  id: string;
+  /** Accessibility label. */
+  label: string;
+  /** Stock glyph (defaults to `"sparkle"`). */
+  glyph?: AIUXComposerGlyphName;
+}
+
+/**
+ * Composer toolbar customization: hide built-in controls and/or append
+ * custom tools. Serialized to JSON at the native boundary (like `theme`).
+ */
+export interface AIUXComposerToolbarSpec {
+  /** Show the `+` attach control (default true). */
+  attach?: boolean;
+  /** Show the accent-ringed tools toggle (default false — opt-in). */
+  tools?: boolean;
+  /** Show the outline mic (default true). */
+  dictate?: boolean;
+  /** Custom tools appended between the built-ins and the action circle. */
+  extra?: AIUXComposerToolSpec[];
+}
 
 /** Dispatch report returned by `dispatchBatch` (protocol `dispatchReport`). */
 export interface AIUXDispatchReport {

@@ -152,6 +152,10 @@ jobs:
       # Expo autolinking resolves the workspace module via Node during
       # settings evaluation — the JS deps must exist before Gradle runs.
       - run: pnpm install --frozen-lockfile=false
+      # AGP's on-demand SDK install is flaky on fresh runners — install the
+      # components expo-modules-core needs explicitly first.
+      - name: Install Android SDK components (cmake + NDK)
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmake;3.22.1" "ndk;27.1.12297006"
       - name: Compile Android
         run: cd examples/expo/android && ./gradlew assembleDebug --no-daemon
 
