@@ -67,12 +67,68 @@ public enum AIUXInputType: String, Decodable, Sendable {
 public struct AIUXKeyValueItem: Equatable, Decodable, Sendable {
     public var key: String
     public var value: String
+    /// Semantic tone applied to the value (ADR 0007).
+    public var tone: AIUXTone?
 }
 
 /// A selectable option for `select` nodes.
 public struct AIUXSelectOption: Equatable, Decodable, Sendable {
     public var value: String
     public var label: String
+}
+
+/// Table column alignment (ADR 0007).
+public enum AIUXColumnAlign: String, Decodable, Sendable {
+    case start, center, end
+}
+
+/// A `table` column descriptor (ADR 0007).
+public struct AIUXTableColumn: Equatable, Decodable, Sendable {
+    public var key: String
+    public var title: String
+    public var align: AIUXColumnAlign?
+}
+
+/// A typed `table` cell — `{"type": ...}` on the wire; a bare string decodes
+/// as `.text` (ADR 0007).
+public enum AIUXTableCell: Equatable, Sendable {
+    case text(String)
+    case number(Double)
+    case badge(text: String, tone: AIUXTone?)
+    case action(label: String, action: AIUXAction)
+}
+
+extension AIUXTableCell: Decodable {
+    private enum CodingKeys: String, CodingKey {
+        case type, text, value, tone, label, action
+    }
+
+    public init(from decoder: Decoder) throws {
+        if let s = try? decoder.singleValueContainer().decode(String.self) {
+            self = .text(s)
+            return
+        }
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        switch try c.decodeIfPresent(String.self, forKey: .type) ?? "text" {
+        case "text":
+            self = .text(try c.decodeIfPresent(String.self, forKey: .text) ?? "")
+        case "number":
+            self = .number(try c.decodeIfPresent(Double.self, forKey: .value) ?? 0)
+        case "badge":
+            self = .badge(
+                text: try c.decodeIfPresent(String.self, forKey: .text) ?? "",
+                tone: (try? c.decodeIfPresent(AIUXTone.self, forKey: .tone)) ?? nil
+            )
+        case "action":
+            self = .action(
+                label: try c.decodeIfPresent(String.self, forKey: .label) ?? "",
+                action: (try? c.decodeIfPresent(AIUXAction.self, forKey: .action))
+                    ?? AIUXAction(id: "aiux.unresolved")
+            )
+        default:
+            self = .text("")
+        }
+    }
 }
 
 /// A `menu` entry.
@@ -147,7 +203,7 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
     /// Image by URI.
     case image(src: String, alt: String?, layout: AIUXNodeLayout)
     /// Small labelled indicator.
-    case badge(text: String, tone: AIUXTone?, layout: AIUXNodeLayout)
+    case badge(text: String, tone: AIUXTone?, icon: String?, layout: AIUXNodeLayout)
     /// Visual separator.
     case divider(layout: AIUXNodeLayout)
     /// Flexible whitespace.
@@ -156,8 +212,10 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
     case keyValue(items: [AIUXKeyValueItem], layout: AIUXNodeLayout)
     /// Ordered or unordered list of nodes.
     case list(children: [AIUXSurfaceNode], ordered: Bool, layout: AIUXNodeLayout)
+    /// Structured list row — direct child of `list` only (ADR 0007).
+    case listItem(title: String, subtitle: String?, icon: String?, action: AIUXAction?, children: [AIUXSurfaceNode], layout: AIUXNodeLayout)
     /// Semantic table.
-    case table(headers: [String], rows: [[String]], caption: String?, layout: AIUXNodeLayout)
+    case table(headers: [String], columns: [AIUXTableColumn], rows: [[AIUXTableCell]], caption: String?, layout: AIUXNodeLayout)
     /// Action button.
     case button(label: String, action: AIUXAction, variant: AIUXButtonVariant?, disabled: Bool, layout: AIUXNodeLayout)
     /// Overflow/dropdown menu of actions.
@@ -167,15 +225,24 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
     /// Inline status line.
     case status(text: String, tone: AIUXTone?, layout: AIUXNodeLayout)
     /// Single-line input field.
-    case input(name: String, label: String?, placeholder: String?, value: String?, inputType: AIUXInputType?, required: Bool, disabled: Bool, layout: AIUXNodeLayout)
+    case input(name: String, label: String?, placeholder: String?, value: String?, inputType: AIUXInputType?, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
     /// Multi-line input field.
-    case textarea(name: String, label: String?, placeholder: String?, value: String?, rows: Int?, disabled: Bool, layout: AIUXNodeLayout)
+    case textarea(name: String, label: String?, placeholder: String?, value: String?, rows: Int?, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
     /// Single-choice dropdown.
-    case select(name: String, label: String?, options: [AIUXSelectOption], value: String?, placeholder: String?, disabled: Bool, layout: AIUXNodeLayout)
+    case select(name: String, label: String?, options: [AIUXSelectOption], value: String?, placeholder: String?, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
     /// Boolean checkbox.
-    case checkbox(name: String, label: String, checked: Bool, disabled: Bool, layout: AIUXNodeLayout)
+    case checkbox(name: String, label: String, checked: Bool, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
+    /// Single-choice option group (ADR 0007).
+    case radio(name: String, label: String?, options: [AIUXSelectOption], value: String?, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
+    /// Labelled field wrapper — label/helper/error around children (ADR 0007).
+    case field(children: [AIUXSurfaceNode], label: String?, helperText: String?, required: Bool, disabled: Bool, errorText: String?, layout: AIUXNodeLayout)
+    /// Form scope — submit emits its `AIUXAction` with collected `fields`
+    /// folded into the payload (ADR 0007).
+    case form(children: [AIUXSurfaceNode], submit: AIUXAction, submitLabel: String?, disabled: Bool, layout: AIUXNodeLayout)
     /// Action row/container; children are `button`/`menu` nodes.
     case actions(children: [AIUXSurfaceNode], layout: AIUXNodeLayout)
+    /// Host-registered custom node kind (ADR 0007).
+    case custom(kind: String, props: [String: AIUXJSONValue], children: [AIUXSurfaceNode], layout: AIUXNodeLayout)
     /// A node kind this renderer doesn't know — rendered as a placeholder.
     case unknown(type: String)
 
@@ -207,6 +274,11 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
         case .textarea: return "textarea"
         case .select: return "select"
         case .checkbox: return "checkbox"
+        case .radio: return "radio"
+        case .field: return "field"
+        case .form: return "form"
+        case .listItem: return "listItem"
+        case .custom: return "custom"
         case .actions: return "actions"
         case .unknown(let type): return type
         }
@@ -221,6 +293,10 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
              .row(let children, _),
              .grid(let children, _, _),
              .list(let children, _, _),
+             .field(let children, _, _, _, _, _, _),
+             .form(let children, _, _, _, _),
+             .listItem(_, _, _, _, let children, _),
+             .custom(_, _, let children, _),
              .actions(let children, _):
             return children
         default:
@@ -237,11 +313,14 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
              .card(_, _, let l), .stack(_, _, let l), .grid(_, _, let l),
              .heading(_, _, let l), .text(_, _, let l), .code(_, _, let l),
              .icon(_, _, let l), .image(_, _, let l), .badge(_, _, let l),
-             .list(_, _, let l), .table(_, _, _, let l),
+             .list(_, _, let l), .table(_, _, _, _, let l),
              .progress(_, _, _, let l), .status(_, _, let l),
-             .button(_, _, _, _, let l), .checkbox(_, _, _, _, let l),
-             .input(_, _, _, _, _, _, _, let l), .select(_, _, _, _, _, _, let l),
-             .textarea(_, _, _, _, _, _, let l):
+             .button(_, _, _, _, let l), .checkbox(_, _, _, _, _, _, let l),
+             .input(_, _, _, _, _, _, _, _, let l), .select(_, _, _, _, _, _, _, _, let l),
+             .textarea(_, _, _, _, _, _, _, _, let l),
+             .radio(_, _, _, _, _, _, _, let l),
+             .field(_, _, _, _, _, _, let l), .form(_, _, _, _, let l),
+             .listItem(_, _, _, _, _, let l), .custom(_, _, _, let l):
             return l
         case .unknown:
             return AIUXNodeLayout()
@@ -256,6 +335,8 @@ extension AIUXSurfaceNode: Decodable {
         case language, name, size, src, alt, tone, items, ordered, headers, rows
         case caption, label, action, disabled, value, max, inputType, required
         case placeholder, checked, title, options
+        case errorText, helperText, submit, submitLabel, kind, props, subtitle
+        case icon
     }
 
     /// Tolerant decode: semantic errors degrade to `.unknown` / renderer
@@ -328,6 +409,7 @@ extension AIUXSurfaceNode: Decodable {
             self = .badge(
                 text: try c.decodeIfPresent(String.self, forKey: .text) ?? "",
                 tone: (try? c.decodeIfPresent(AIUXTone.self, forKey: .tone)) ?? nil,
+                icon: try c.decodeIfPresent(String.self, forKey: .icon),
                 layout: layout
             )
         case "divider":
@@ -350,9 +432,13 @@ extension AIUXSurfaceNode: Decodable {
             )
         case "table":
             let headers = (try? c.decodeIfPresent([String].self, forKey: .headers)) ?? []
-            let rows = (try? c.decodeIfPresent([[String]].self, forKey: .rows)) ?? []
+            let columns = (try? c.decodeIfPresent([AIUXTableColumn].self, forKey: .columns)) ?? []
+            let rows = (try? c.decodeIfPresent([[AIUXTableCell]].self, forKey: .rows)) ?? []
             let caption = try c.decodeIfPresent(String.self, forKey: .caption)
-            self = .table(headers: headers, rows: rows, caption: caption, layout: layout)
+            self = .table(
+                headers: headers, columns: columns, rows: rows,
+                caption: caption, layout: layout
+            )
         case "button":
             let label = try c.decodeIfPresent(String.self, forKey: .label) ?? ""
             let action = (try? c.decodeIfPresent(AIUXAction.self, forKey: .action))
@@ -387,6 +473,7 @@ extension AIUXSurfaceNode: Decodable {
             self = .input(
                 name: name, label: label, placeholder: placeholder, value: value,
                 inputType: inputType, required: required, disabled: disabled,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
                 layout: layout
             )
         case "textarea":
@@ -395,10 +482,13 @@ extension AIUXSurfaceNode: Decodable {
             let placeholder = try c.decodeIfPresent(String.self, forKey: .placeholder)
             let value = try c.decodeIfPresent(String.self, forKey: .value)
             let rows = (try? c.decodeIfPresent(Int.self, forKey: .rows)) ?? nil
+            let required = (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false
             let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .textarea(
                 name: name, label: label, placeholder: placeholder, value: value,
-                rows: rows, disabled: disabled, layout: layout
+                rows: rows, required: required, disabled: disabled,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
+                layout: layout
             )
         case "select":
             let name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
@@ -406,17 +496,68 @@ extension AIUXSurfaceNode: Decodable {
             let options = (try? c.decodeIfPresent([AIUXSelectOption].self, forKey: .options)) ?? []
             let value = try c.decodeIfPresent(String.self, forKey: .value)
             let placeholder = try c.decodeIfPresent(String.self, forKey: .placeholder)
+            let required = (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false
             let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .select(
                 name: name, label: label, options: options, value: value,
-                placeholder: placeholder, disabled: disabled, layout: layout
+                placeholder: placeholder, required: required, disabled: disabled,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
+                layout: layout
             )
         case "checkbox":
             self = .checkbox(
                 name: try c.decodeIfPresent(String.self, forKey: .name) ?? "",
                 label: try c.decodeIfPresent(String.self, forKey: .label) ?? "",
                 checked: (try? c.decodeIfPresent(Bool.self, forKey: .checked)) ?? false,
+                required: (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false,
                 disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
+                layout: layout
+            )
+        case "radio":
+            self = .radio(
+                name: try c.decodeIfPresent(String.self, forKey: .name) ?? "",
+                label: try c.decodeIfPresent(String.self, forKey: .label),
+                options: (try? c.decodeIfPresent([AIUXSelectOption].self, forKey: .options)) ?? [],
+                value: try c.decodeIfPresent(String.self, forKey: .value),
+                required: (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false,
+                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
+                layout: layout
+            )
+        case "field":
+            self = .field(
+                children: try children(),
+                label: try c.decodeIfPresent(String.self, forKey: .label),
+                helperText: try c.decodeIfPresent(String.self, forKey: .helperText),
+                required: (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false,
+                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
+                errorText: try c.decodeIfPresent(String.self, forKey: .errorText),
+                layout: layout
+            )
+        case "form":
+            self = .form(
+                children: try children(),
+                submit: (try? c.decodeIfPresent(AIUXAction.self, forKey: .submit))
+                    ?? AIUXAction(id: "aiux.unresolved"),
+                submitLabel: try c.decodeIfPresent(String.self, forKey: .submitLabel),
+                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
+                layout: layout
+            )
+        case "listItem":
+            self = .listItem(
+                title: try c.decodeIfPresent(String.self, forKey: .title) ?? "",
+                subtitle: try c.decodeIfPresent(String.self, forKey: .subtitle),
+                icon: try c.decodeIfPresent(String.self, forKey: .icon),
+                action: try c.decodeIfPresent(AIUXAction.self, forKey: .action),
+                children: try children(),
+                layout: layout
+            )
+        case "custom":
+            self = .custom(
+                kind: try c.decodeIfPresent(String.self, forKey: .kind) ?? "",
+                props: (try? c.decodeIfPresent([String: AIUXJSONValue].self, forKey: .props)) ?? [:],
+                children: try children(),
                 layout: layout
             )
         case "actions":
@@ -453,4 +594,37 @@ public struct AIUXSurfaceTree: Equatable, Decodable, Identifiable, Sendable {
         revision = try c.decodeIfPresent(UInt64.self, forKey: .revision) ?? 0
         root = try c.decode(AIUXSurfaceNode.self, forKey: .root)
     }
+}
+
+// MARK: - Inline surface descriptors + artifact contracts (ADR 0007)
+
+/// An inline surface descriptor: a self-contained semantic node tree carried
+/// inside another entity (`artifact.preview` / `artifact.workspace`) rather
+/// than registered as a session surface.
+public struct AIUXSurfaceDescriptor: Equatable, Decodable, Identifiable, Sendable {
+    /// Stable descriptor identifier (lazy-mount key).
+    public var id: String
+    /// Root node — a `surface` node per the schema.
+    public var root: AIUXSurfaceNode
+}
+
+/// How an opened artifact workspace presents.
+public enum AIUXWorkspaceMode: String, Decodable, Sendable {
+    case fullscreen, detail, sheet
+}
+
+/// `artifact.workspace` — the contract a host honors when the user opens an
+/// artifact: a presentation mode, an optional detail surface descriptor, and
+/// a lazy render hint.
+public struct AIUXArtifactWorkspace: Equatable, Decodable, Sendable {
+    public var mode: AIUXWorkspaceMode?
+    public var surface: AIUXSurfaceDescriptor?
+    public var lazy: Bool = false
+}
+
+/// `artifact.preview` — what an artifact card shows inline: a short summary
+/// and/or an inline surface descriptor.
+public struct AIUXArtifactPreview: Equatable, Decodable, Sendable {
+    public var summary: String?
+    public var surface: AIUXSurfaceDescriptor?
 }

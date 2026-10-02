@@ -24,7 +24,12 @@ import aiux.compose.model.AIUXActions
 import aiux.compose.model.AIUXArtifact
 import kotlinx.serialization.json.JsonPrimitive
 
-/** Artifact card: kind + title + revision, content preview (code monospace). */
+/**
+ * Artifact card: kind + title + revision, preview contract (`summary` /
+ * inline `surface`, ADR 0007) then content preview (code monospace). Opening
+ * emits `aiux.artifact.open` with `artifactId`/`kind`/`uri?`/`mode?` — the
+ * host honors the workspace contract (fullscreen/detail/sheet).
+ */
 @Composable
 fun AIArtifactPreview(
     artifact: AIUXArtifact,
@@ -46,6 +51,7 @@ fun AIArtifactPreview(
                             put("artifactId", JsonPrimitive(artifact.id))
                             put("kind", JsonPrimitive(artifact.kind))
                             artifact.uri?.let { put("uri", JsonPrimitive(it)) }
+                            artifact.workspace?.mode?.let { put("mode", JsonPrimitive(it.name.lowercase())) }
                         },
                     ),
                 )
@@ -67,10 +73,33 @@ fun AIArtifactPreview(
                     color = theme.colors.foreground,
                     modifier = Modifier.padding(start = theme.spacing.sm).weight(1f),
                 )
+                artifact.workspace?.mode?.let { mode ->
+                    Text(
+                        mode.name.lowercase(),
+                        style = theme.typography.caption,
+                        color = theme.colors.accent,
+                        modifier = Modifier.padding(end = theme.spacing.xs),
+                    )
+                }
                 Text(
                     "r${artifact.revision}",
                     style = theme.typography.caption,
                     color = theme.colors.mutedForeground,
+                )
+            }
+            artifact.preview?.summary?.let {
+                Text(
+                    it,
+                    style = theme.typography.caption,
+                    color = theme.colors.mutedForeground,
+                    modifier = Modifier.padding(top = theme.spacing.xs),
+                )
+            }
+            artifact.preview?.surface?.let { descriptor ->
+                AISurface(
+                    surface = aiux.compose.model.AIUXSurface(id = descriptor.id, root = descriptor.root),
+                    modifier = Modifier.padding(top = theme.spacing.xs),
+                    onAction = onAction,
                 )
             }
             artifact.content?.let { content ->

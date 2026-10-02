@@ -24,24 +24,38 @@ public struct AIArtifactPreview: View {
         let colors = theme.colors(for: colorScheme)
         Button {
             detailPresented = true
-            emit(AIUXAction(id: AIUXAction.artifactOpen, payload: [
+            var payload: [String: AIUXJSONValue] = [
                 "artifactId": .string(artifact.id),
-            ]))
+            ]
+            if let mode = artifact.workspace?.mode {
+                payload["mode"] = .string(mode.rawValue)
+            }
+            emit(AIUXAction(id: AIUXAction.artifactOpen, payload: payload))
         } label: {
-            HStack(spacing: theme.space(.sm)) {
-                Image(systemName: icon)
-                    .foregroundStyle(colors.accent)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(artifact.title ?? artifact.kind)
-                        .font(theme.typography.label)
-                        .lineLimit(1)
-                    Text("\(artifact.kind) · rev \(artifact.revision)")
+            VStack(alignment: .leading, spacing: theme.space(.xs)) {
+                HStack(spacing: theme.space(.sm)) {
+                    Image(systemName: icon)
+                        .foregroundStyle(colors.accent)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(artifact.title ?? artifact.kind)
+                            .font(theme.typography.label)
+                            .lineLimit(1)
+                        Text("\(artifact.kind) · rev \(artifact.revision)")
+                            .font(theme.typography.caption)
+                            .foregroundStyle(colors.muted)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(colors.muted)
+                }
+                if let summary = artifact.preview?.summary {
+                    Text(summary)
                         .font(theme.typography.caption)
                         .foregroundStyle(colors.muted)
                 }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(colors.muted)
+                if let descriptor = artifact.preview?.surface {
+                    AISurface(tree: AIUXSurfaceTree(id: descriptor.id, root: descriptor.root))
+                }
             }
             .padding(theme.space(.sm))
             .background(colors.surface)
@@ -87,6 +101,10 @@ struct AIArtifactDetail: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: theme.space(.md)) {
+                    if let workspace = artifact.workspace,
+                       let descriptor = workspace.surface {
+                        AISurface(tree: AIUXSurfaceTree(id: descriptor.id, root: descriptor.root))
+                    }
                     if let content = artifact.content {
                         Group {
                             if artifact.kind == "markdown" || artifact.kind == "document" {

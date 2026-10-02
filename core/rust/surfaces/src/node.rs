@@ -168,6 +168,9 @@ pub struct KeyValueItem {
     pub key: String,
     /// Item value (rendered as text).
     pub value: String,
+    /// Semantic tone for the value (e.g. status-ish rows).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tone: Option<Tone>,
 }
 
 /// A selectable option for `select` nodes.
@@ -177,6 +180,72 @@ pub struct SelectOption {
     pub value: String,
     /// Option display label.
     pub label: String,
+}
+
+/// Semantic cell alignment within a `table` column.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ColumnAlign {
+    Start,
+    Center,
+    End,
+}
+
+/// A `table` column descriptor.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct TableColumn {
+    /// Stable column key (used for alignment/cell mapping).
+    pub key: String,
+    /// Column header title.
+    pub title: String,
+    /// Semantic cell alignment for the column.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub align: Option<ColumnAlign>,
+}
+
+/// A `table` cell: a bare string renders as text; an object is a typed cell.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(untagged)]
+pub enum TableCell {
+    /// Typed cell object (`{"type": "text"|"number"|"badge"|"action", ...}`).
+    Typed(TypedTableCell),
+    /// Plain text cell.
+    Text(String),
+}
+
+/// A typed `table` cell.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum TypedTableCell {
+    /// Text cell.
+    #[serde(rename = "text")]
+    Text {
+        /// Cell text.
+        text: String,
+    },
+    /// Numeric cell (rendered with column alignment semantics).
+    #[serde(rename = "number")]
+    Number {
+        /// Cell value.
+        value: f64,
+    },
+    /// Badge cell.
+    #[serde(rename = "badge")]
+    Badge {
+        /// Badge text.
+        text: String,
+        /// Semantic tone.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tone: Option<Tone>,
+    },
+    /// Action cell (activating emits the action).
+    #[serde(rename = "action")]
+    Action {
+        /// Affordance label.
+        label: String,
+        /// Action emitted on activation.
+        action: Action,
+    },
 }
 
 /// A `menu` entry.
@@ -198,8 +267,9 @@ pub struct MenuItem {
 ///
 /// The primitive set is closed: `surface`, `card`, `stack`, `row`, `grid`,
 /// `heading`, `text`, `markdown`, `code`, `icon`, `image`, `badge`, `divider`,
-/// `spacer`, `keyValue`, `list`, `table`, `button`, `menu`, `progress`,
-/// `status`, `input`, `textarea`, `select`, `checkbox`, `actions`.
+/// `spacer`, `keyValue`, `list`, `listItem`, `table`, `button`, `menu`,
+/// `progress`, `status`, `input`, `textarea`, `select`, `checkbox`, `radio`,
+/// `field`, `form`, `actions`, `custom`.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum SurfaceNode {
@@ -338,6 +408,9 @@ pub enum SurfaceNode {
         /// Semantic tone.
         #[serde(skip_serializing_if = "Option::is_none")]
         tone: Option<Tone>,
+        /// Optional leading icon.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        icon: Option<String>,
         /// Layout properties.
         #[serde(flatten)]
         layout: Layout,
@@ -384,10 +457,15 @@ pub enum SurfaceNode {
     /// Semantic table.
     #[serde(rename = "table")]
     Table {
-        /// Column headers.
+        /// Column headers (shorthand; `headers` or `columns` required).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         headers: Vec<String>,
-        /// Rows; each row must match `headers` length.
-        rows: Vec<Vec<String>>,
+        /// Column descriptors (richer alternative to `headers`).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        columns: Vec<TableColumn>,
+        /// Rows; each row must match the effective column count. Cells may
+        /// be bare strings (text cells) or typed cell objects.
+        rows: Vec<Vec<TableCell>>,
         /// Optional caption.
         #[serde(skip_serializing_if = "Option::is_none")]
         caption: Option<String>,
@@ -468,6 +546,7 @@ pub enum SurfaceNode {
         value: Option<String>,
         /// Semantic input type.
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "inputType")]
         input_type: Option<InputType>,
         /// Whether input is required.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -475,6 +554,11 @@ pub enum SurfaceNode {
         /// Whether input is disabled.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
         /// Layout properties.
         #[serde(flatten)]
         layout: Layout,
@@ -496,9 +580,17 @@ pub enum SurfaceNode {
         /// Visible row hint.
         #[serde(skip_serializing_if = "Option::is_none")]
         rows: Option<u32>,
+        /// Whether input is required.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        required: bool,
         /// Whether input is disabled.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
         /// Layout properties.
         #[serde(flatten)]
         layout: Layout,
@@ -519,9 +611,17 @@ pub enum SurfaceNode {
         /// Placeholder when no value is selected.
         #[serde(skip_serializing_if = "Option::is_none")]
         placeholder: Option<String>,
+        /// Whether input is required.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        required: bool,
         /// Whether input is disabled.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
         /// Layout properties.
         #[serde(flatten)]
         layout: Layout,
@@ -536,9 +636,140 @@ pub enum SurfaceNode {
         /// Checked state.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         checked: bool,
+        /// Whether input is required (must be checked before submission).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        required: bool,
         /// Whether input is disabled.
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
+        /// Layout properties.
+        #[serde(flatten)]
+        layout: Layout,
+    },
+    /// Single-choice radio group (same option model as `select`).
+    #[serde(rename = "radio")]
+    Radio {
+        /// Field name submitted in action payloads.
+        name: String,
+        /// Field label.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        /// Options (must be non-empty; `value` must be one of them).
+        options: Vec<SelectOption>,
+        /// Selected value.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        value: Option<String>,
+        /// Whether input is required.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        required: bool,
+        /// Whether input is disabled.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
+        /// Layout properties.
+        #[serde(flatten)]
+        layout: Layout,
+    },
+    /// Labelled field group: one label/hint/error for its control children.
+    #[serde(rename = "field")]
+    Field {
+        /// Child nodes (typically one or more field controls).
+        #[serde(default)]
+        children: Vec<SurfaceNode>,
+        /// Field label.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        /// Helper text rendered under the controls.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "helperText")]
+        helper_text: Option<String>,
+
+        /// Whether the field is required (display semantics).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        required: bool,
+        /// Whether the field is disabled.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        disabled: bool,
+        /// Author-provided validation message rendered by the renderer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "errorText")]
+        error_text: Option<String>,
+
+        /// Layout properties.
+        #[serde(flatten)]
+        layout: Layout,
+    },
+    /// Interactive form: collects named field values on submit.
+    ///
+    /// Named field descendants contribute their current value to the nearest
+    /// enclosing `form`. Activating the submit affordance emits `submit` with
+    /// the collected `fields` object merged into its payload. Forms may not
+    /// nest.
+    #[serde(rename = "form")]
+    Form {
+        /// Child nodes.
+        #[serde(default)]
+        children: Vec<SurfaceNode>,
+        /// Action emitted on submit; `fields` is merged into its payload.
+        submit: Action,
+        /// Submit button label (renderer-chosen default when omitted).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "submitLabel")]
+        submit_label: Option<String>,
+
+        /// Whether the form is disabled.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        disabled: bool,
+        /// Layout properties.
+        #[serde(flatten)]
+        layout: Layout,
+    },
+    /// Structured list row; only valid as a direct child of `list`.
+    #[serde(rename = "listItem")]
+    ListItem {
+        /// Row title.
+        title: String,
+        /// Optional secondary text.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        subtitle: Option<String>,
+        /// Optional leading icon.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        icon: Option<String>,
+        /// Action emitted when the row is activated.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        action: Option<Action>,
+        /// Nested content rendered under the row.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        children: Vec<SurfaceNode>,
+        /// Layout properties.
+        #[serde(flatten)]
+        layout: Layout,
+    },
+    /// Host-registered custom node (ADR 0007).
+    ///
+    /// `kind` is a host-namespaced identifier (e.g. `acme.sparkline`); `props`
+    /// is free-form data, never code (§23). Hosts register `kind → renderer`;
+    /// an unregistered `kind` degrades to the renderer's unknown-node
+    /// placeholder (§21).
+    #[serde(rename = "custom")]
+    Custom {
+        /// Host-namespaced node kind (`aiux.*` reserved for built-ins).
+        kind: String,
+        /// Free-form props passed to the registered renderer.
+        #[serde(default, skip_serializing_if = "serde_json::Map::is_empty")]
+        props: serde_json::Map<String, Value>,
+        /// Child nodes.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        children: Vec<SurfaceNode>,
         /// Layout properties.
         #[serde(flatten)]
         layout: Layout,
@@ -584,6 +815,11 @@ impl SurfaceNode {
             Self::Textarea { .. } => "textarea",
             Self::Select { .. } => "select",
             Self::Checkbox { .. } => "checkbox",
+            Self::Radio { .. } => "radio",
+            Self::Field { .. } => "field",
+            Self::Form { .. } => "form",
+            Self::ListItem { .. } => "listItem",
+            Self::Custom { .. } => "custom",
             Self::Actions { .. } => "actions",
         }
     }
@@ -597,10 +833,69 @@ impl SurfaceNode {
             | Self::Row { children, .. }
             | Self::Grid { children, .. }
             | Self::List { children, .. }
+            | Self::Field { children, .. }
+            | Self::Form { children, .. }
+            | Self::ListItem { children, .. }
+            | Self::Custom { children, .. }
             | Self::Actions { children, .. } => children,
             _ => &[],
         }
     }
+}
+
+/// An inline surface descriptor: a self-contained semantic node tree carried
+/// inside another entity (e.g. `artifact.preview`/`artifact.workspace`)
+/// rather than registered as a session surface (ADR 0007).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct SurfaceDescriptor {
+    /// Stable descriptor identifier (lazy-mount key).
+    pub id: String,
+    /// Root node — must be a `surface` node.
+    pub root: SurfaceNode,
+    /// Unknown fields preserved for forward compatibility.
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, Value>,
+}
+
+/// How an opened artifact workspace presents (ADR 0007).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkspaceMode {
+    /// Fullscreen takeover.
+    Fullscreen,
+    /// Detail pane alongside the conversation.
+    Detail,
+    /// Modal sheet.
+    Sheet,
+}
+
+/// `artifact.workspace` — the contract a host honors when the user opens an
+/// artifact: a presentation mode, an optional detail surface descriptor, and
+/// a lazy render hint (ADR 0007).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct ArtifactWorkspace {
+    /// Presentation mode (default `fullscreen`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode: Option<WorkspaceMode>,
+    /// Detail surface descriptor rendered inside the workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub surface: Option<SurfaceDescriptor>,
+    /// Lazy render hint: the renderer may defer mounting the workspace until
+    /// it becomes visible.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub lazy: bool,
+}
+
+/// `artifact.preview` — what an artifact card shows inline: a short summary
+/// and/or an inline surface descriptor (ADR 0007).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub struct ArtifactPreview {
+    /// Short text summary.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub summary: Option<String>,
+    /// Inline surface descriptor rendered inside the preview.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub surface: Option<SurfaceDescriptor>,
 }
 
 /// A surface: a named, revisioned semantic node tree.

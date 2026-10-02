@@ -1,0 +1,140 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 9,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-list-0",
+    "surface-list-1",
+    "surface-list-2",
+    "surface-list-3",
+    "surface-list-4",
+    "surface-list-5",
+    "surface-list-6",
+    "surface-list-7",
+    "surface-list-8"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "surfaceId": "sf-1",
+            "type": "surface"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "surface-list"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "doc-list",
+        "revision": 0,
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "action": {
+                    "id": "doc.open",
+                    "payload": {
+                      "doc": "q3"
+                    }
+                  },
+                  "icon": "document",
+                  "subtitle": "Q3 revenue summary",
+                  "title": "Quarterly report",
+                  "type": "listItem"
+                },
+                {
+                  "icon": "checklist",
+                  "subtitle": "New hire checklist",
+                  "title": "Onboarding guide",
+                  "type": "listItem"
+                },
+                {
+                  "children": [
+                    {
+                      "text": "12 items",
+                      "tone": "muted",
+                      "type": "badge"
+                    }
+                  ],
+                  "icon": "folder",
+                  "title": "Archive",
+                  "type": "listItem"
+                }
+              ],
+              "type": "list"
+            },
+            {
+              "children": [
+                {
+                  "action": {
+                    "id": "doc.create"
+                  },
+                  "label": "New document",
+                  "type": "button",
+                  "variant": "primary"
+                },
+                {
+                  "items": [
+                    {
+                      "action": {
+                        "id": "doc.import"
+                      },
+                      "label": "Import"
+                    },
+                    {
+                      "action": {
+                        "id": "doc.export"
+                      },
+                      "label": "Export"
+                    }
+                  ],
+                  "label": "More",
+                  "type": "menu"
+                }
+              ],
+              "type": "actions"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ],
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "surface-list"
+        },
+        "name": "query",
+        "result": {
+          "documents": [
+            "quarterly-report",
+            "onboarding-guide",
+            "archive"
+          ]
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

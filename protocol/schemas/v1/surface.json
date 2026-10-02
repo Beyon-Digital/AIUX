@@ -40,6 +40,15 @@
       ],
       "type": "string"
     },
+    "ColumnAlign": {
+      "description": "Semantic cell alignment within a `table` column.",
+      "enum": [
+        "start",
+        "center",
+        "end"
+      ],
+      "type": "string"
+    },
     "Distribution": {
       "description": "Main-axis distribution of children within a container.",
       "enum": [
@@ -89,6 +98,17 @@
         "key": {
           "description": "Item label.",
           "type": "string"
+        },
+        "tone": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Tone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Semantic tone for the value (e.g. status-ish rows)."
         },
         "value": {
           "description": "Item value (rendered as text).",
@@ -182,7 +202,7 @@
       "type": "string"
     },
     "SurfaceNode": {
-      "description": "AIUX Surface Schema v1 node. Serialized as `{\"type\": \"<kind>\", ...}`.\n\nThe primitive set is closed: `surface`, `card`, `stack`, `row`, `grid`, `heading`, `text`, `markdown`, `code`, `icon`, `image`, `badge`, `divider`, `spacer`, `keyValue`, `list`, `table`, `button`, `menu`, `progress`, `status`, `input`, `textarea`, `select`, `checkbox`, `actions`.",
+      "description": "AIUX Surface Schema v1 node. Serialized as `{\"type\": \"<kind>\", ...}`.\n\nThe primitive set is closed: `surface`, `card`, `stack`, `row`, `grid`, `heading`, `text`, `markdown`, `code`, `icon`, `image`, `badge`, `divider`, `spacer`, `keyValue`, `list`, `listItem`, `table`, `button`, `menu`, `progress`, `status`, `input`, `textarea`, `select`, `checkbox`, `radio`, `field`, `form`, `actions`, `custom`.",
       "oneOf": [
         {
           "description": "Root surface container. Only valid as the tree root.",
@@ -1130,6 +1150,13 @@
               ],
               "description": "Gap between children."
             },
+            "icon": {
+              "description": "Optional leading icon.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "padding": {
               "anyOf": [
                 {
@@ -1512,6 +1539,13 @@
                 "null"
               ]
             },
+            "columns": {
+              "description": "Column descriptors (richer alternative to `headers`).",
+              "items": {
+                "$ref": "#/definitions/TableColumn"
+              },
+              "type": "array"
+            },
             "distribution": {
               "anyOf": [
                 {
@@ -1535,7 +1569,7 @@
               "description": "Gap between children."
             },
             "headers": {
-              "description": "Column headers.",
+              "description": "Column headers (shorthand; `headers` or `columns` required).",
               "items": {
                 "type": "string"
               },
@@ -1564,10 +1598,10 @@
               "description": "Corner radius."
             },
             "rows": {
-              "description": "Rows; each row must match `headers` length.",
+              "description": "Rows; each row must match the effective column count. Cells may be bare strings (text cells) or typed cell objects.",
               "items": {
                 "items": {
-                  "type": "string"
+                  "$ref": "#/definitions/TableCell"
                 },
                 "type": "array"
               },
@@ -1581,7 +1615,6 @@
             }
           },
           "required": [
-            "headers",
             "rows",
             "type"
           ],
@@ -1979,6 +2012,13 @@
               ],
               "description": "Main-axis distribution."
             },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "gap": {
               "anyOf": [
                 {
@@ -1990,7 +2030,7 @@
               ],
               "description": "Gap between children."
             },
-            "input_type": {
+            "inputType": {
               "anyOf": [
                 {
                   "$ref": "#/definitions/InputType"
@@ -2094,6 +2134,13 @@
               ],
               "description": "Main-axis distribution."
             },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "gap": {
               "anyOf": [
                 {
@@ -2144,6 +2191,10 @@
                 }
               ],
               "description": "Corner radius."
+            },
+            "required": {
+              "description": "Whether input is required.",
+              "type": "boolean"
             },
             "rows": {
               "description": "Visible row hint.",
@@ -2203,6 +2254,13 @@
               ],
               "description": "Main-axis distribution."
             },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "gap": {
               "anyOf": [
                 {
@@ -2261,6 +2319,10 @@
               ],
               "description": "Corner radius."
             },
+            "required": {
+              "description": "Whether input is required.",
+              "type": "boolean"
+            },
             "type": {
               "enum": [
                 "select"
@@ -2315,6 +2377,13 @@
               ],
               "description": "Main-axis distribution."
             },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "gap": {
               "anyOf": [
                 {
@@ -2356,6 +2425,10 @@
               ],
               "description": "Corner radius."
             },
+            "required": {
+              "description": "Whether input is required (must be checked before submission).",
+              "type": "boolean"
+            },
             "type": {
               "enum": [
                 "checkbox"
@@ -2366,6 +2439,517 @@
           "required": [
             "label",
             "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Single-choice radio group (same option model as `select`).",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "disabled": {
+              "description": "Whether input is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Field label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Field name submitted in action payloads.",
+              "type": "string"
+            },
+            "options": {
+              "description": "Options (must be non-empty; `value` must be one of them).",
+              "items": {
+                "$ref": "#/definitions/SelectOption"
+              },
+              "type": "array"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "required": {
+              "description": "Whether input is required.",
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "radio"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Selected value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "options",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Labelled field group: one label/hint/error for its control children.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes (typically one or more field controls).",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "disabled": {
+              "description": "Whether the field is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "errorText": {
+              "description": "Author-provided validation message rendered by the renderer.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "helperText": {
+              "description": "Helper text rendered under the controls.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "description": "Field label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "required": {
+              "description": "Whether the field is required (display semantics).",
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "field"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Interactive form: collects named field values on submit.\n\nNamed field descendants contribute their current value to the nearest enclosing `form`. Activating the submit affordance emits `submit` with the collected `fields` object merged into its payload. Forms may not nest.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "disabled": {
+              "description": "Whether the form is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "submit": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Action"
+                }
+              ],
+              "description": "Action emitted on submit; `fields` is merged into its payload."
+            },
+            "submitLabel": {
+              "description": "Submit button label (renderer-chosen default when omitted).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "enum": [
+                "form"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "submit",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Structured list row; only valid as a direct child of `list`.",
+          "properties": {
+            "action": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Action"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Action emitted when the row is activated."
+            },
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "description": "Nested content rendered under the row.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "icon": {
+              "description": "Optional leading icon.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "subtitle": {
+              "description": "Optional secondary text.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Row title.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "listItem"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Host-registered custom node (ADR 0007).\n\n`kind` is a host-namespaced identifier (e.g. `acme.sparkline`); `props` is free-form data, never code (§23). Hosts register `kind → renderer`; an unregistered `kind` degrades to the renderer's unknown-node placeholder (§21).",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "kind": {
+              "description": "Host-namespaced node kind (`aiux.*` reserved for built-ins).",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "props": {
+              "additionalProperties": true,
+              "description": "Free-form props passed to the registered renderer.",
+              "type": "object"
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "custom"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
             "type"
           ],
           "type": "object"
@@ -2450,6 +3034,52 @@
         }
       ]
     },
+    "TableCell": {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TypedTableCell"
+            }
+          ],
+          "description": "Typed cell object (`{\"type\": \"text\"|\"number\"|\"badge\"|\"action\", ...}`)."
+        },
+        {
+          "description": "Plain text cell.",
+          "type": "string"
+        }
+      ],
+      "description": "A `table` cell: a bare string renders as text; an object is a typed cell."
+    },
+    "TableColumn": {
+      "description": "A `table` column descriptor.",
+      "properties": {
+        "align": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ColumnAlign"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Semantic cell alignment for the column."
+        },
+        "key": {
+          "description": "Stable column key (used for alignment/cell mapping).",
+          "type": "string"
+        },
+        "title": {
+          "description": "Column header title.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "title"
+      ],
+      "type": "object"
+    },
     "TextVariant": {
       "description": "Semantic text variant.",
       "enum": [
@@ -2473,6 +3103,112 @@
         "destructive"
       ],
       "type": "string"
+    },
+    "TypedTableCell": {
+      "description": "A typed `table` cell.",
+      "oneOf": [
+        {
+          "description": "Text cell.",
+          "properties": {
+            "text": {
+              "description": "Cell text.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Numeric cell (rendered with column alignment semantics).",
+          "properties": {
+            "type": {
+              "enum": [
+                "number"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Cell value.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Badge cell.",
+          "properties": {
+            "text": {
+              "description": "Badge text.",
+              "type": "string"
+            },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic tone."
+            },
+            "type": {
+              "enum": [
+                "badge"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Action cell (activating emits the action).",
+          "properties": {
+            "action": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Action"
+                }
+              ],
+              "description": "Action emitted on activation."
+            },
+            "label": {
+              "description": "Affordance label.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "action"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "label",
+            "type"
+          ],
+          "type": "object"
+        }
+      ]
     }
   },
   "description": "A surface: a named, revisioned semantic node tree.",

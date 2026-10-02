@@ -18,6 +18,7 @@ import {
   buildEntityIndex,
   capabilityResolver,
   type AiuxActionHandler,
+  type AiuxCustomNodeComponent,
 } from "./context.js";
 import { useFileDrop, useSessionSnapshot } from "./hooks.js";
 import { useAiuxSession } from "./session.jsx";
@@ -45,6 +46,8 @@ export interface AIConversationProps {
   capabilities?: readonly Capability[] | undefined;
   /** Host action sink — every interaction emits a semantic action. */
   onAction?: AiuxActionHandler | undefined;
+  /** Host registry for `custom` surface nodes (ADR 0007). */
+  customNodes?: Readonly<Record<string, AiuxCustomNodeComponent>> | undefined;
   /** Presentation mode (plan §14): `fullscreen` fills its container. */
   mode?: AIConversationMode | undefined;
 }
@@ -90,6 +93,7 @@ export function AIConversation({
   context,
   capabilities,
   onAction,
+  customNodes,
   mode = "fullscreen",
 }: AIConversationProps): JSX.Element {
   // `useAiuxSession` must run unconditionally — it is a hook.
@@ -107,6 +111,7 @@ export function AIConversation({
       context={context}
       capabilities={capabilities}
       onAction={onAction}
+      customNodes={customNodes}
       mode={mode}
     />
   );
@@ -143,6 +148,7 @@ function AIConversationLive({
   context,
   capabilities,
   onAction,
+  customNodes,
   mode,
 }: {
   session: AiuxSessionLike;
@@ -155,12 +161,13 @@ function AIConversationLive({
       theme,
       onAction,
       entities,
+      customNodes: customNodes ?? {},
       capabilityEnabled: capabilityResolver([
         ...(snapshot.session?.capabilities ?? []),
         ...(capabilities ?? []),
       ]),
     }),
-    [theme, onAction, entities, capabilities, snapshot.session],
+    [theme, onAction, entities, customNodes, capabilities, snapshot.session],
   );
 
   const unreferenced = useMemo(() => collectUnreferenced(snapshot), [snapshot]);

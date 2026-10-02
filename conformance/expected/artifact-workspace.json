@@ -1,0 +1,129 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 10,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "artifact-workspace-0",
+    "artifact-workspace-1",
+    "artifact-workspace-2",
+    "artifact-workspace-3",
+    "artifact-workspace-4",
+    "artifact-workspace-5",
+    "artifact-workspace-6",
+    "artifact-workspace-7",
+    "artifact-workspace-8",
+    "artifact-workspace-9"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "artifacts": [
+      {
+        "id": "art-1",
+        "kind": "report",
+        "preview": {
+          "summary": "1,240 rows, clean run"
+        },
+        "revision": 1,
+        "title": "Ingest report Q3 (final)",
+        "workspace": {
+          "lazy": true,
+          "mode": "detail",
+          "surface": {
+            "id": "sd-workspace",
+            "root": {
+              "children": [
+                {
+                  "columns": [
+                    {
+                      "key": "row",
+                      "title": "Row"
+                    },
+                    {
+                      "align": "end",
+                      "key": "count",
+                      "title": "Count"
+                    }
+                  ],
+                  "rows": [
+                    [
+                      "eu-1",
+                      {
+                        "type": "number",
+                        "value": 620.0
+                      }
+                    ],
+                    [
+                      "us-1",
+                      {
+                        "type": "number",
+                        "value": 620.0
+                      }
+                    ]
+                  ],
+                  "type": "table"
+                },
+                {
+                  "children": [
+                    {
+                      "action": {
+                        "id": "report.export",
+                        "payload": {
+                          "fmt": "csv"
+                        }
+                      },
+                      "label": "Export CSV",
+                      "type": "button",
+                      "variant": "secondary"
+                    }
+                  ],
+                  "type": "actions"
+                }
+              ],
+              "type": "surface"
+            }
+          }
+        }
+      }
+    ],
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "artifactId": "art-1",
+            "id": "p1",
+            "type": "artifact"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "artifact-workspace"
+    },
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "artifact-workspace"
+        },
+        "name": "query",
+        "result": {
+          "report": "ingest-q3",
+          "rows": 1240
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

@@ -37,9 +37,14 @@ final class AIUXSurfaceNodeTests: XCTestCase {
             (#"{"type":"textarea","name":"n","label":"L","rows":4}"#, "textarea"),
             (#"{"type":"select","name":"n","options":[{"value":"v","label":"V"}],"value":"v"}"#, "select"),
             (#"{"type":"checkbox","name":"n","label":"L","checked":true}"#, "checkbox"),
+            (#"{"type":"radio","name":"n","options":[{"value":"a","label":"A"}]}"#, "radio"),
+            (#"{"type":"field","label":"L","children":[{"type":"input","name":"n"}]}"#, "field"),
+            (#"{"type":"form","submit":{"id":"f.submit"},"children":[]}"#, "form"),
+            (#"{"type":"listItem","title":"t","action":{"id":"open"}}"#, "listItem"),
+            (#"{"type":"custom","kind":"beyondigital.chart","props":{"y":1}}"#, "custom"),
             (#"{"type":"actions","children":[{"type":"button","label":"B","action":{"id":"a.d"}}]}"#, "actions"),
         ]
-        XCTAssertEqual(cases.count, 26, "Surface Schema v1 defines 26 primitives")
+        XCTAssertEqual(cases.count, 31, "Surface Schema v1 defines 31 primitives (ADR 0007)")
         for (json, kind) in cases {
             let node = try decoder.decode(AIUXSurfaceNode.self, from: Data(json.utf8))
             XCTAssertEqual(node.kind, kind, "kind mismatch for \(json)")

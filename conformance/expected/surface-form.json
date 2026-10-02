@@ -1,0 +1,178 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 9,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-form-0",
+    "surface-form-1",
+    "surface-form-2",
+    "surface-form-3",
+    "surface-form-4",
+    "surface-form-5",
+    "surface-form-6",
+    "surface-form-7",
+    "surface-form-8"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "surfaceId": "sf-1",
+            "type": "surface"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "surface-form"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "profile-form",
+        "revision": 0,
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "inputType": "text",
+                      "name": "fullName",
+                      "placeholder": "Ada Lovelace",
+                      "required": true,
+                      "type": "input"
+                    }
+                  ],
+                  "helperText": "As it appears on your ID",
+                  "label": "Full name",
+                  "required": true,
+                  "type": "field"
+                },
+                {
+                  "children": [
+                    {
+                      "inputType": "email",
+                      "name": "email",
+                      "required": true,
+                      "type": "input"
+                    }
+                  ],
+                  "errorText": "Email is required",
+                  "label": "Email",
+                  "type": "field"
+                },
+                {
+                  "children": [
+                    {
+                      "name": "bio",
+                      "placeholder": "Tell us about yourself",
+                      "rows": 3,
+                      "type": "textarea"
+                    }
+                  ],
+                  "label": "Bio",
+                  "type": "field"
+                },
+                {
+                  "children": [
+                    {
+                      "name": "role",
+                      "options": [
+                        {
+                          "label": "Engineer",
+                          "value": "engineer"
+                        },
+                        {
+                          "label": "Designer",
+                          "value": "designer"
+                        }
+                      ],
+                      "required": true,
+                      "type": "select",
+                      "value": "engineer"
+                    }
+                  ],
+                  "label": "Role",
+                  "type": "field"
+                },
+                {
+                  "children": [
+                    {
+                      "name": "contact",
+                      "options": [
+                        {
+                          "label": "Email",
+                          "value": "email"
+                        },
+                        {
+                          "label": "SMS",
+                          "value": "sms"
+                        }
+                      ],
+                      "type": "radio",
+                      "value": "email"
+                    }
+                  ],
+                  "label": "Contact preference",
+                  "type": "field"
+                },
+                {
+                  "label": "Subscribe to updates",
+                  "name": "newsletter",
+                  "type": "checkbox"
+                }
+              ],
+              "submit": {
+                "id": "profile.update"
+              },
+              "submitLabel": "Update profile",
+              "type": "form"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ],
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "surface-form"
+        },
+        "name": "query",
+        "result": {
+          "fields": [
+            "fullName",
+            "email",
+            "bio",
+            "role",
+            "contact"
+          ],
+          "required": [
+            "fullName",
+            "email",
+            "role"
+          ]
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

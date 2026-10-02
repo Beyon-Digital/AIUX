@@ -407,6 +407,191 @@ def build_all():
         ("run.completed", {"runId": "r1"}),
     ])])
 
+    # Phase 6 (ADR 0007): one structured tool result rendered per new
+    # construct — tool completes, the assistant surfaces the result
+    # semantically as a surface/artifact.
+
+    def tool_flow(name, result, events_tail):
+        kinds = [
+            session_created(name),
+            run_started(),
+            ("tool.started", {"tool": {"id": "t1", "name": "query",
+                                       "status": "running",
+                                       "input": {"q": name}}}),
+            ("tool.completed", {"toolId": "t1", "result": result}),
+            assistant_msg(),
+        ] + events_tail + [
+            ("message.updated", {"messageId": "m1", "status": "complete"}),
+            ("run.completed", {"runId": "r1"}),
+        ]
+        write(name, [ev(i, k, p, name) for i, (k, p) in enumerate(kinds)])
+
+    # form + field + input/textarea/select/checkbox/radio + validation states
+    form_root = {"type": "surface", "children": [
+        {"type": "form", "submitLabel": "Update profile",
+         "submit": {"id": "profile.update"},
+         "children": [
+             {"type": "field", "label": "Full name", "required": True,
+              "helperText": "As it appears on your ID",
+              "children": [
+                  {"type": "input", "name": "fullName",
+                   "inputType": "text", "required": True,
+                   "placeholder": "Ada Lovelace"}]},
+             {"type": "field", "label": "Email",
+              "errorText": "Email is required",
+              "children": [
+                  {"type": "input", "name": "email", "inputType": "email",
+                   "required": True}]},
+             {"type": "field", "label": "Bio",
+              "children": [
+                  {"type": "textarea", "name": "bio", "rows": 3,
+                   "placeholder": "Tell us about yourself"}]},
+             {"type": "field", "label": "Role",
+              "children": [
+                  {"type": "select", "name": "role", "required": True,
+                   "value": "engineer",
+                   "options": [
+                       {"value": "engineer", "label": "Engineer"},
+                       {"value": "designer", "label": "Designer"}]}]},
+             {"type": "field", "label": "Contact preference",
+              "children": [
+                  {"type": "radio", "name": "contact", "value": "email",
+                   "options": [
+                       {"value": "email", "label": "Email"},
+                       {"value": "sms", "label": "SMS"}]}]},
+             {"type": "checkbox", "name": "newsletter",
+              "label": "Subscribe to updates", "checked": False},
+         ]},
+    ]}
+    tool_flow("surface-form",
+              {"fields": ["fullName", "email", "bio", "role", "contact"],
+               "required": ["fullName", "email", "role"]},
+              [("surface.created", {"surface": {
+                  "id": "sf-1", "name": "profile-form",
+                  "revision": 0, "root": form_root}}),
+               ("part.added", {"messageId": "m1", "part": {
+                   "type": "surface", "id": "p1", "surfaceId": "sf-1"}})])
+
+    # table: columns + typed cells + row action, keyValue tone, badge icon
+    table_root = {"type": "surface", "children": [
+        {"type": "table", "caption": "Deploys",
+         "columns": [
+             {"key": "service", "title": "Service"},
+             {"key": "version", "title": "Version"},
+             {"key": "status", "title": "Status"},
+             {"key": "replicas", "title": "Replicas", "align": "end"},
+             {"key": "open", "title": ""}],
+         "rows": [
+             ["api", {"type": "text", "text": "1.4.2"},
+              {"type": "badge", "text": "healthy", "tone": "success"},
+              {"type": "number", "value": 3},
+              {"type": "action", "label": "Open",
+               "action": {"id": "deploy.open", "payload": {"svc": "api"}}}],
+             ["worker", {"type": "text", "text": "1.4.0"},
+              {"type": "badge", "text": "degraded", "tone": "warning"},
+              {"type": "number", "value": 1},
+              {"type": "action", "label": "Open",
+               "action": {"id": "deploy.open", "payload": {"svc": "worker"}}}],
+         ]},
+        {"type": "keyValue", "items": [
+            {"key": "Cluster", "value": "prod-eu", "tone": "accent"},
+            {"key": "Alerts", "value": "1 active", "tone": "warning"}]},
+        {"type": "badge", "text": "2 services", "tone": "accent",
+         "icon": "server"},
+    ]}
+    tool_flow("surface-table",
+              {"rows": 2, "degraded": ["worker"]},
+              [("surface.created", {"surface": {
+                  "id": "sf-1", "name": "deploy-table",
+                  "revision": 0, "root": table_root}}),
+               ("part.added", {"messageId": "m1", "part": {
+                   "type": "surface", "id": "p1", "surfaceId": "sf-1"}})])
+
+    # list + listItem (icon/subtitle/action) + menu
+    list_root = {"type": "surface", "children": [
+        {"type": "list", "children": [
+            {"type": "listItem", "title": "Quarterly report",
+             "subtitle": "Q3 revenue summary", "icon": "document",
+             "action": {"id": "doc.open", "payload": {"doc": "q3"}}},
+            {"type": "listItem", "title": "Onboarding guide",
+             "subtitle": "New hire checklist", "icon": "checklist"},
+            {"type": "listItem", "title": "Archive",
+             "icon": "folder",
+             "children": [
+                 {"type": "badge", "text": "12 items", "tone": "muted"}]},
+        ]},
+        {"type": "actions", "children": [
+            {"type": "button", "label": "New document",
+             "action": {"id": "doc.create"}, "variant": "primary"},
+            {"type": "menu", "label": "More", "items": [
+                {"label": "Import",
+                 "action": {"id": "doc.import"}},
+                {"label": "Export",
+                 "action": {"id": "doc.export"}}]},
+        ]},
+    ]}
+    tool_flow("surface-list",
+              {"documents": ["quarterly-report", "onboarding-guide",
+                             "archive"]},
+              [("surface.created", {"surface": {
+                  "id": "sf-1", "name": "doc-list",
+                  "revision": 0, "root": list_root}}),
+               ("part.added", {"messageId": "m1", "part": {
+                   "type": "surface", "id": "p1", "surfaceId": "sf-1"}})])
+
+    # custom node + graceful host-registry contract
+    custom_root = {"type": "surface", "children": [
+        {"type": "heading", "level": 2, "text": "Pipeline metrics"},
+        {"type": "custom", "kind": "beyondigital.throughput-chart",
+         "props": {"series": ["eu", "us"], "window": "24h"}},
+        {"type": "custom", "kind": "beyondigital.log-tail",
+         "props": {"lines": 20},
+         "children": [
+             {"type": "text", "text": "Streaming worker logs",
+              "variant": "muted"}]},
+    ]}
+    tool_flow("surface-custom",
+              {"chart": "throughput", "tail": "worker"},
+              [("surface.created", {"surface": {
+                  "id": "sf-1", "name": "metrics-custom",
+                  "revision": 0, "root": custom_root}}),
+               ("part.added", {"messageId": "m1", "part": {
+                   "type": "surface", "id": "p1", "surfaceId": "sf-1"}})])
+
+    # artifact.preview + artifact workspace contract (+ patch via updated)
+    preview_surface = {"id": "sd-preview", "root": {
+        "type": "surface", "children": [
+            {"type": "keyValue", "items": [
+                {"key": "Rows", "value": "1,240"},
+                {"key": "Errors", "value": "0", "tone": "success"}]}]}}
+    workspace_surface = {"id": "sd-workspace", "root": {
+        "type": "surface", "children": [
+            {"type": "table",
+             "columns": [{"key": "row", "title": "Row"},
+                         {"key": "count", "title": "Count", "align": "end"}],
+             "rows": [["eu-1", {"type": "number", "value": 620}],
+                      ["us-1", {"type": "number", "value": 620}]]},
+            {"type": "actions", "children": [
+                {"type": "button", "label": "Export CSV",
+                 "action": {"id": "report.export", "payload": {"fmt": "csv"}},
+                 "variant": "secondary"}]}]}}
+    tool_flow("artifact-workspace",
+              {"report": "ingest-q3", "rows": 1240},
+              [("artifact.created", {"artifact": {
+                  "id": "art-1", "kind": "report",
+                  "title": "Ingest report Q3", "revision": 0,
+                  "preview": {"summary": "1,240 rows ingested, 0 errors",
+                              "surface": preview_surface},
+                  "workspace": {"mode": "detail",
+                                "surface": workspace_surface,
+                                "lazy": True}}}),
+               ("part.added", {"messageId": "m1", "part": {
+                   "type": "artifact", "id": "p1", "artifactId": "art-1"}}),
+               ("artifact.updated", {"artifactId": "art-1",
+                                     "title": "Ingest report Q3 (final)",
+                                     "preview": {
+                                         "summary": "1,240 rows, clean run"}})])
+
 
 if __name__ == "__main__":
     os.makedirs(FIXTURES, exist_ok=True)

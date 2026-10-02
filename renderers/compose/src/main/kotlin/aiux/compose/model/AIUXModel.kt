@@ -52,6 +52,7 @@ object AIUXActions {
     const val SURFACE_INPUT_CHANGE = "aiux.surface.input.change"
     const val SURFACE_SELECT_CHANGE = "aiux.surface.select.change"
     const val SURFACE_CHECKBOX_CHANGE = "aiux.surface.checkbox.change"
+    const val SURFACE_RADIO_CHANGE = "aiux.surface.radio.change"
 }
 
 enum class AIRole { User, Assistant, System, Tool }
@@ -142,6 +143,10 @@ data class AIUXArtifact(
     val content: String? = null,
     val uri: String? = null,
     val metadata: JsonElement? = null,
+    /** Inline preview contract (ADR 0007). */
+    val preview: AIUXArtifactPreview? = null,
+    /** Opened-workspace contract (ADR 0007). */
+    val workspace: AIUXArtifactWorkspace? = null,
 )
 
 data class AIUXContextEntity(
@@ -385,6 +390,23 @@ object AIUXModelParser {
             content = obj["content"]?.str(),
             uri = obj["uri"]?.str(),
             metadata = obj["metadata"],
+            preview = (obj["preview"] as? JsonObject)?.let { p ->
+                AIUXArtifactPreview(
+                    summary = p["summary"]?.str(),
+                    surface = SurfaceNodeParser.parseDescriptor(p["surface"] as? JsonObject),
+                )
+            },
+            workspace = (obj["workspace"] as? JsonObject)?.let { w ->
+                AIUXArtifactWorkspace(
+                    mode = when (w["mode"]?.str()) {
+                        "fullscreen" -> AIWorkspaceMode.Fullscreen
+                        "sheet" -> AIWorkspaceMode.Sheet
+                        else -> AIWorkspaceMode.Detail
+                    },
+                    surface = SurfaceNodeParser.parseDescriptor(w["surface"] as? JsonObject),
+                    lazy = w["lazy"].bool() ?: false,
+                )
+            },
         )
     }
 

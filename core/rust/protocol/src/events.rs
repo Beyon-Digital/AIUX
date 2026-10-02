@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::entities::{
-    AiuxError, Approval, ApprovalResolution, Artifact, ContextEntity, Message, MessageRole,
-    MessageStatus, Part, Progress, Run, Session, Surface, Tool,
+    AiuxError, Approval, ApprovalResolution, Artifact, ArtifactPreview, ArtifactWorkspace,
+    ContextEntity, Message, MessageRole, MessageStatus, Part, Progress, Run, Session, Surface, Tool,
 };
 use crate::PROTOCOL_VERSION;
 
@@ -473,6 +473,12 @@ pub struct ArtifactUpdated {
     /// New metadata, if changing.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Value>,
+    /// New preview contract, if changing (ADR 0007).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<ArtifactPreview>,
+    /// New workspace contract, if changing (ADR 0007).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<ArtifactWorkspace>,
 }
 
 /// `surface.created`.

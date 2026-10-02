@@ -10,7 +10,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub use aiux_surfaces::{Action, SurfaceNode};
+pub use aiux_surfaces::{
+    Action, ArtifactPreview, ArtifactWorkspace, SurfaceDescriptor, SurfaceNode,
+};
 
 /// A semantic surface tree (re-exported from `aiux-surfaces`, the schema owner).
 pub type Surface = aiux_surfaces::SurfaceTree;
@@ -354,6 +356,13 @@ pub struct Artifact {
     /// Free-form host metadata.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Value>,
+    /// Inline preview contract — what an artifact card shows (ADR 0007).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<ArtifactPreview>,
+    /// Opened-workspace contract — how the artifact presents when opened
+    /// (ADR 0007).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<ArtifactWorkspace>,
     /// Unknown optional fields preserved for forward compatibility.
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,

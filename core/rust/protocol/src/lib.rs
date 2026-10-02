@@ -13,10 +13,11 @@ mod schemas;
 
 pub use entities::{
     Action, AiuxError, Approval, ApprovalDecision, ApprovalPart, ApprovalResolution,
-    ApprovalStatus, Artifact, ArtifactPart, Attachment, AttachmentPart, Capability, Citation,
-    CitationPart, CodePart, ContextEntity, ErrorPart, ImagePart, MarkdownPart, Message,
-    MessageRole, MessageStatus, Part, Progress, ProgressPart, Run, RunStatus, Session, StatusLevel,
-    StatusPart, Surface, SurfaceNode, SurfacePart, TextPart, Tool, ToolPart, ToolStatus,
+    ApprovalStatus, Artifact, ArtifactPart, ArtifactPreview, ArtifactWorkspace, Attachment,
+    AttachmentPart, Capability, Citation, CitationPart, CodePart, ContextEntity, ErrorPart,
+    ImagePart, MarkdownPart, Message, MessageRole, MessageStatus, Part, Progress, ProgressPart,
+    Run, RunStatus, Session, StatusLevel, StatusPart, Surface, SurfaceDescriptor, SurfaceNode,
+    SurfacePart, TextPart, Tool, ToolPart, ToolStatus,
 };
 pub use events::{
     AiuxEvent, ApprovalRequested, ApprovalResolved, ArtifactCreated, ArtifactUpdated, EventType,

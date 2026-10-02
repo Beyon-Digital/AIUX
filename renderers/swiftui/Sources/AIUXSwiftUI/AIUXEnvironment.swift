@@ -40,6 +40,30 @@ public struct AIUXRenderModel: Equatable, Sendable {
     }
 }
 
+// MARK: - Form scope + custom node registry (ADR 0007)
+
+/// Per-form field-value store. Fields inside a `form` publish their latest
+/// value here (in addition to emitting `aiux.field.change`); the form's
+/// submit action folds them into `payload.fields`.
+public final class AIUXFormStore: ObservableObject {
+    @Published public var values: [String: AIUXJSONValue] = [:]
+
+    public init() {}
+}
+
+/// Host renderer for a `custom` surface node kind (ADR 0007). Receives the
+/// decoded node (kind + data-only `props`); unregistered kinds degrade to a
+/// placeholder plus their core-schema children.
+public typealias AIUXCustomNodeRenderer = (AIUXSurfaceNode) -> AnyView
+
+private struct AIUXFormStoreKey: EnvironmentKey {
+    static let defaultValue: AIUXFormStore? = nil
+}
+
+private struct AIUXCustomNodesKey: EnvironmentKey {
+    static let defaultValue: [String: AIUXCustomNodeRenderer] = [:]
+}
+
 // MARK: - Environment keys
 
 /// The default action handler drops actions with nothing to call — safe for
@@ -65,11 +89,28 @@ extension EnvironmentValues {
         get { self[AIUXRenderModelKey.self] }
         set { self[AIUXRenderModelKey.self] = newValue }
     }
+
+    /// The nearest enclosing form's field-value store (ADR 0007).
+    public var aiuxFormStore: AIUXFormStore? {
+        get { self[AIUXFormStoreKey.self] }
+        set { self[AIUXFormStoreKey.self] = newValue }
+    }
+
+    /// Host registry for `custom` surface nodes (ADR 0007).
+    public var aiuxCustomNodes: [String: AIUXCustomNodeRenderer] {
+        get { self[AIUXCustomNodesKey.self] }
+        set { self[AIUXCustomNodesKey.self] = newValue }
+    }
 }
 
 extension View {
     /// Register the semantic-action handler for the AIUX subtree.
     public func onAIUXAction(_ handler: @escaping (AIUXAction) -> Void) -> some View {
         environment(\.aiuxAction, handler)
+    }
+
+    /// Register host renderers for `custom` surface node kinds (ADR 0007).
+    public func aiuxCustomNodes(_ registry: [String: AIUXCustomNodeRenderer]) -> some View {
+        environment(\.aiuxCustomNodes, registry)
     }
 }

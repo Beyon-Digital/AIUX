@@ -46,10 +46,15 @@ class SurfaceNodeTest {
             """{"type":"menu","label":"M","items":[{"label":"i","action":{"id":"i"}}]}""" to AISurfaceNode.Menu::class,
             """{"type":"progress","value":0.5,"max":1.0}""" to AISurfaceNode.Progress::class,
             """{"type":"status","text":"ok","tone":"warning"}""" to AISurfaceNode.Status::class,
-            """{"type":"input","name":"n","input_type":"email"}""" to AISurfaceNode.Input::class,
+            """{"type":"input","name":"n","inputType":"email"}""" to AISurfaceNode.Input::class,
             """{"type":"textarea","name":"n","rows":4}""" to AISurfaceNode.TextArea::class,
             """{"type":"select","name":"s","options":[{"label":"L","value":"v"}]}""" to AISurfaceNode.Select::class,
             """{"type":"checkbox","name":"c","label":"L","checked":true}""" to AISurfaceNode.Checkbox::class,
+            """{"type":"radio","name":"r","options":[{"value":"a","label":"A"}]}""" to AISurfaceNode.Radio::class,
+            """{"type":"field","label":"L","children":[{"type":"input","name":"n"}]}""" to AISurfaceNode.Field::class,
+            """{"type":"form","submit":{"id":"f.submit"},"children":[]}""" to AISurfaceNode.Form::class,
+            """{"type":"listItem","title":"t","action":{"id":"open"}}""" to AISurfaceNode.ListItem::class,
+            """{"type":"custom","kind":"beyondigital.chart","props":{"y":1}}""" to AISurfaceNode.Custom::class,
             """{"type":"actions","children":[]}""" to AISurfaceNode.Actions::class,
         )
         cases.forEach { (src, klass) ->
