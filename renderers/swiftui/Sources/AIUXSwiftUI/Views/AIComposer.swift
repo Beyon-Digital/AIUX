@@ -36,7 +36,6 @@ public struct AIComposer: View {
             } label: {
                 Image(systemName: "plus")
                     .font(theme.typography.title)
-                    .foregroundStyle(colors.foreground)
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
