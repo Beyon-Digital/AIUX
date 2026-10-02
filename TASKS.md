@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 8 hardening in flight** — ALL implementation lanes landed
+- Current phase: **ALL PHASES LANDED** — 12 draft PRs open, all CI green; awaiting merges + v0.1 DoD signoff + `v0.1.0` tag
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
@@ -21,8 +21,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
   - PR 9 `devin/phase7-flutter` — Dart C-ABI + `beyond_aiux` renderer (green 10/10,
     22 fixtures byte-identical via C ABI, app verified on flutter run -d linux)
   - PR 11 `devin/phase4-expo` — Expo SDK 57 bridge + example (green 9/9, emulator-verified)
-  - Lane K `devin/phase8-hardening` — release hardening → v0.1.0 (sub-agent, off
-    `devin/integration` = all lane branches merged, conformance 27/27 verified)
+  - PR 12 `devin/phase8-hardening` — release hardening (green 11/11; benches+1k tests,
+    goldens, a11y, §24 docs, release.yml, audits, release-notes automation)
   - Integration branches (orchestrator-maintained): `devin/phase5-web-base`,
     `devin/phase4-expo-base`, `devin/phase6-dsl-base`, `devin/integration`
   - PR 10 `devin/phase6-dsl` — Surface Schema v1→31 nodes (ADR 0007) + renderer
