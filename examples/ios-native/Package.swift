@@ -33,8 +33,8 @@ let package = Package(
         .target(
             name: "AIUXExampleApp",
             dependencies: [
-                .product(name: "AIUXSwiftUI", package: "AIUXSwiftUI"),
-                .product(name: "AIUXCore", package: "AIUXCore"),
+                .product(name: "AIUXSwiftUI", package: "swiftui"),
+                .product(name: "AIUXCore", package: "swift"),
             ]
         ),
         .executableTarget(
