@@ -12,7 +12,11 @@
       "default": "./dist/index.js"
     },
     "./wasm": "./wasm/aiux_wasm.js",
-    "./wasm/aiux_wasm_bg.wasm": "./wasm/aiux_wasm_bg.wasm"
+    "./wasm/aiux_wasm_bg.wasm": "./wasm/aiux_wasm_bg.wasm",
+    "./buffer": {
+      "types": "./src/buffer.ts",
+      "default": "./src/buffer.ts"
+    }
   },
   "files": [
     "dist",

@@ -1,8 +1,22 @@
 {
   "expo": {
-    "name": "aiux-example",
+    "name": "AIUX Expo Example",
     "slug": "aiux-example",
     "version": "0.1.0",
-    "sdkVersion": "57.0.0"
+    "sdkVersion": "57.0.0",
+    "scheme": "aiux-example",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "in.beyondigital.aiux.example",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "in.beyondigital.aiux.example"
+    },
+    "plugins": [
+      "expo-dev-client"
+    ]
   }
 }

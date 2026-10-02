@@ -2,11 +2,29 @@
   "name": "aiux-example-expo",
   "version": "0.1.0",
   "private": true,
-  "description": "Example Expo SDK 57 app mounting AIConversation.",
-  "main": "src/index.ts",
+  "description": "Example Expo SDK 57 app mounting AIConversation — the Phase 4 gate.",
+  "main": "index.ts",
   "scripts": {
-    "build": "echo 'aiux-example-expo: build lands in a later phase (docs/PLAN.md)'",
-    "test": "echo 'aiux-example-expo: tests land in a later phase'",
-    "typecheck": "echo 'aiux-example-expo: typecheck lands in a later phase'"
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild --clean",
+    "build": "echo 'aiux-example-expo: native builds via expo prebuild + gradle/xcodebuild'",
+    "test": "echo 'aiux-example-expo: covered by @beyondigital/aiux-expo tests'",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@beyondigital/aiux-core": "workspace:*",
+    "@beyondigital/aiux-expo": "workspace:*",
+    "expo": "~57.0.26",
+    "expo-dev-client": "~57.0.19",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.18",
+    "typescript": "~6.0.3"
   }
 }
