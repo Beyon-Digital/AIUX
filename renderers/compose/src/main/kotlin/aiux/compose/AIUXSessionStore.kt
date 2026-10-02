@@ -82,16 +82,22 @@ class AIUXSessionStore private constructor(
 
     /**
      * Clear session state. Serialized behind any in-flight dispatch on
-     * [dispatchMutex] so a pending batch can neither publish a pre-reset
-     * snapshot nor apply after the reset.
+     * [dispatchMutex]; returns only after the reset has applied and the
+     * snapshot re-published, so an awaiting caller never observes
+     * pre-reset state.
      */
-    fun reset() {
-        scope.launch {
-            dispatchMutex.withLock {
-                withContext(ioDispatcher) { runCatching { session.reset() } }
+    suspend fun reset() {
+        dispatchMutex.withLock {
+            withContext(ioDispatcher) {
+                runCatching { session.reset() }
                 refresh()
             }
         }
+    }
+
+    /** Fire-and-forget variant of [reset] for non-suspend callers. */
+    fun resetAsync() {
+        scope.launch { reset() }
     }
 
     fun refresh() {

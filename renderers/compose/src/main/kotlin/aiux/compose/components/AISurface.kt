@@ -404,7 +404,9 @@ fun SurfaceNodeView(
                     Text(node.label)
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                // Collapse rather than leave actionable items if the form
+                // disables while the menu is open.
+                DropdownMenu(expanded = expanded && !formDisabled, onDismissRequest = { expanded = false }) {
                     node.items.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item.label) },
@@ -532,7 +534,7 @@ fun SurfaceNodeView(
                         Text(current?.label ?: node.placeholder ?: node.name)
                         Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                     }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    DropdownMenu(expanded = expanded && !formDisabled, onDismissRequest = { expanded = false }) {
                         node.options.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option.label) },
@@ -673,7 +675,7 @@ fun SurfaceNodeView(
                                 ),
                             )
                         },
-                        enabled = !node.disabled,
+                        enabled = !node.disabled && !formDisabled,
                         shape = RoundedCornerShape(theme.radii.radius(node.style.radius?.name?.lowercase() ?: "md")),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = theme.colors.accent,

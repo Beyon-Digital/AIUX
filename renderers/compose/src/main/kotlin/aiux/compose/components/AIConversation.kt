@@ -131,10 +131,11 @@ private fun MessageList(
     val listState = rememberLazyListState()
 
     // Auto-scroll to newest content while streaming/new messages arrive. The
-    // last part's content hash keeps text.delta growth scrolling the view —
-    // part count alone doesn't change while a delta mutates the final part.
+    // parts' content hash keeps text.delta growth scrolling the view —
+    // deltas target a part by id, not position, so every part's content is
+    // folded into the key, not just the tail.
     val lastMessageKey = snapshot.messages.lastOrNull()
-        ?.let { "${it.id}:${it.parts.size}:${it.streaming}:${it.parts.lastOrNull()?.hashCode() ?: 0}" }
+        ?.let { "${it.id}:${it.streaming}:${it.parts.hashCode()}" }
     LaunchedEffect(lastMessageKey, snapshot.messages.size) {
         if (snapshot.messages.isNotEmpty()) {
             listState.animateScrollToItem(snapshot.messages.size - 1)

@@ -50,7 +50,7 @@ internal object AIUXSessionRegistry {
         return sessionId
     }
 
-    fun reset(sessionId: String) {
+    suspend fun reset(sessionId: String) {
         getOrCreate(sessionId).reset()
     }
 

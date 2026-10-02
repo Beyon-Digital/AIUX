@@ -59,7 +59,12 @@ class DemoController {
                 sendPrompt(text)
             }
             AIUXActions.COMPOSER_CANCEL -> {
+                // Clear synchronously: a second tap before the run job's
+                // finally runs would enqueue a duplicate run.cancelled,
+                // which the reducer rejects — leaving a sequence gap that
+                // strands every later demo event.
                 val run = activeRun ?: return
+                activeRun = null
                 pendingApprovals.remove(run.approvalId)?.cancel()
                 runJob?.cancel()
                 scope.launch {
