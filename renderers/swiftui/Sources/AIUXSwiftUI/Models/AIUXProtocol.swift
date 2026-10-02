@@ -592,6 +592,15 @@ public struct AIUXAction: Codable, Equatable, Sendable {
         self.id = id
         self.payload = payload
     }
+
+    private enum CodingKeys: String, CodingKey { case id, payload }
+
+    /// `payload` is optional on the wire (Rust `#[serde(default)]`).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        payload = try c.decodeIfPresent([String: AIUXJSONValue].self, forKey: .payload) ?? [:]
+    }
 }
 
 // MARK: - Canonical action ids emitted by AIUXSwiftUI views
