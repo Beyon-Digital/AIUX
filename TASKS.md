@@ -141,10 +141,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 6 — Surface DSL + artifacts expansion → PR 8
 
-- [ ] forms, tables, keyValue, lists
-- [ ] artifact preview + artifact workspace contract
-- [ ] actions + validation
-- [ ] custom node registration contract
+- [x] forms, tables, keyValue, lists
+- [x] artifact preview + artifact workspace contract
+- [x] actions + validation
+- [x] custom node registration contract
 - **Gate:** one structured tool result renders semantically on every completed
   renderer from the same Surface payload.
 

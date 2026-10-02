@@ -44,6 +44,7 @@ export function renderWithContext(
     theme: resolveTheme(),
     onAction: options.onAction,
     entities: options.entities ?? EMPTY_ENTITIES,
+    customNodes: {},
     capabilityEnabled: (id) => options.capabilities?.[id] ?? true,
   };
   return render(

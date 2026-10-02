@@ -1,0 +1,101 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 9,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-custom-0",
+    "surface-custom-1",
+    "surface-custom-2",
+    "surface-custom-3",
+    "surface-custom-4",
+    "surface-custom-5",
+    "surface-custom-6",
+    "surface-custom-7",
+    "surface-custom-8"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "surfaceId": "sf-1",
+            "type": "surface"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "surface-custom"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "metrics-custom",
+        "revision": 0,
+        "root": {
+          "children": [
+            {
+              "level": 2,
+              "text": "Pipeline metrics",
+              "type": "heading"
+            },
+            {
+              "kind": "beyondigital.throughput-chart",
+              "props": {
+                "series": [
+                  "eu",
+                  "us"
+                ],
+                "window": "24h"
+              },
+              "type": "custom"
+            },
+            {
+              "children": [
+                {
+                  "text": "Streaming worker logs",
+                  "type": "text",
+                  "variant": "muted"
+                }
+              ],
+              "kind": "beyondigital.log-tail",
+              "props": {
+                "lines": 20
+              },
+              "type": "custom"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ],
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "surface-custom"
+        },
+        "name": "query",
+        "result": {
+          "chart": "throughput",
+          "tail": "worker"
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

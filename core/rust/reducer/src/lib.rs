@@ -274,13 +274,31 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
             aiux_approvals::resolved(&mut state.approvals, &p.approval_id, p.resolution)?;
         }
         EventType::ArtifactCreated => {
+            // Raw-key validation runs on embedded surface descriptor roots
+            // first so nothing outside the schema is silently dropped (§23).
+            let artifact_val = event
+                .payload
+                .get("artifact")
+                .ok_or_else(|| invalid("artifact.created: missing \"artifact\""))?;
+            validate_descriptor_roots_raw(artifact_val)?;
             let p: ArtifactCreated = payload(event)?;
             check_protocol_version(&p.protocol_version)?;
+            validate_artifact_descriptors(&p.artifact)?;
             aiux_artifacts::created(&mut state.artifacts, p.artifact)?;
         }
         EventType::ArtifactUpdated => {
+            validate_descriptor_roots_raw(&event.payload)?;
             let p: ArtifactUpdated = payload(event)?;
             check_protocol_version(&p.protocol_version)?;
+            for descriptor in [
+                p.preview.as_ref().and_then(|v| v.surface.as_ref()),
+                p.workspace.as_ref().and_then(|v| v.surface.as_ref()),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                aiux_surfaces::validate_descriptor(descriptor).map_err(|e| invalid(e.detail))?;
+            }
             aiux_artifacts::updated(&mut state.artifacts, &p)?;
         }
         EventType::SurfaceCreated => {
@@ -326,6 +344,36 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
             aiux_surfaces::validate(&candidate).map_err(|e| invalid(e.detail))?;
             state.surfaces.insert(candidate);
         }
+    }
+    Ok(())
+}
+
+/// Raw-validate embedded surface descriptor roots under `container`
+/// (`preview.surface.root`, `workspace.surface.root`) before typed parsing
+/// (ADR 0007).
+fn validate_descriptor_roots_raw(container: &Value) -> Result<(), ProtocolError> {
+    for key in ["preview", "workspace"] {
+        if let Some(root) = container
+            .get(key)
+            .and_then(|v| v.get("surface"))
+            .and_then(|v| v.get("root"))
+        {
+            aiux_surfaces::validate_raw(root).map_err(|e| invalid(e.detail))?;
+        }
+    }
+    Ok(())
+}
+
+/// Typed validation of an artifact's embedded surface descriptors.
+fn validate_artifact_descriptors(artifact: &Artifact) -> Result<(), ProtocolError> {
+    for descriptor in [
+        artifact.preview.as_ref().and_then(|v| v.surface.as_ref()),
+        artifact.workspace.as_ref().and_then(|v| v.surface.as_ref()),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        aiux_surfaces::validate_descriptor(descriptor).map_err(|e| invalid(e.detail))?;
     }
     Ok(())
 }

@@ -1,0 +1,175 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 9,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-table-0",
+    "surface-table-1",
+    "surface-table-2",
+    "surface-table-3",
+    "surface-table-4",
+    "surface-table-5",
+    "surface-table-6",
+    "surface-table-7",
+    "surface-table-8"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "surfaceId": "sf-1",
+            "type": "surface"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "surface-table"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "deploy-table",
+        "revision": 0,
+        "root": {
+          "children": [
+            {
+              "caption": "Deploys",
+              "columns": [
+                {
+                  "key": "service",
+                  "title": "Service"
+                },
+                {
+                  "key": "version",
+                  "title": "Version"
+                },
+                {
+                  "key": "status",
+                  "title": "Status"
+                },
+                {
+                  "align": "end",
+                  "key": "replicas",
+                  "title": "Replicas"
+                },
+                {
+                  "key": "open",
+                  "title": ""
+                }
+              ],
+              "rows": [
+                [
+                  "api",
+                  {
+                    "text": "1.4.2",
+                    "type": "text"
+                  },
+                  {
+                    "text": "healthy",
+                    "tone": "success",
+                    "type": "badge"
+                  },
+                  {
+                    "type": "number",
+                    "value": 3.0
+                  },
+                  {
+                    "action": {
+                      "id": "deploy.open",
+                      "payload": {
+                        "svc": "api"
+                      }
+                    },
+                    "label": "Open",
+                    "type": "action"
+                  }
+                ],
+                [
+                  "worker",
+                  {
+                    "text": "1.4.0",
+                    "type": "text"
+                  },
+                  {
+                    "text": "degraded",
+                    "tone": "warning",
+                    "type": "badge"
+                  },
+                  {
+                    "type": "number",
+                    "value": 1.0
+                  },
+                  {
+                    "action": {
+                      "id": "deploy.open",
+                      "payload": {
+                        "svc": "worker"
+                      }
+                    },
+                    "label": "Open",
+                    "type": "action"
+                  }
+                ]
+              ],
+              "type": "table"
+            },
+            {
+              "items": [
+                {
+                  "key": "Cluster",
+                  "tone": "accent",
+                  "value": "prod-eu"
+                },
+                {
+                  "key": "Alerts",
+                  "tone": "warning",
+                  "value": "1 active"
+                }
+              ],
+              "type": "keyValue"
+            },
+            {
+              "icon": "server",
+              "text": "2 services",
+              "tone": "accent",
+              "type": "badge"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ],
+    "tools": [
+      {
+        "id": "t1",
+        "input": {
+          "q": "surface-table"
+        },
+        "name": "query",
+        "result": {
+          "degraded": [
+            "worker"
+          ],
+          "rows": 2
+        },
+        "status": "completed"
+      }
+    ]
+  }
+}

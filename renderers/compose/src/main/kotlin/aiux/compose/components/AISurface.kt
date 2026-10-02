@@ -40,11 +40,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,6 +60,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import aiux.compose.AIUX
@@ -70,9 +76,13 @@ import aiux.compose.model.AIRadius
 import aiux.compose.model.AISurfaceNode
 import aiux.compose.model.AITextVariant
 import aiux.compose.model.AITone
+import aiux.compose.model.AIColumnAlign
+import aiux.compose.model.AITableCell
 import aiux.compose.model.AIUXAction
 import aiux.compose.model.AIUXActions
 import aiux.compose.model.AIUXSurface
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
@@ -81,6 +91,17 @@ import kotlinx.serialization.json.buildJsonObject
  * mapped onto Material3. Layout attrs are semantic values only (ADR 0006);
  * unknown node types degrade to a placeholder (plan §21).
  */
+/// The nearest enclosing `form` scope's field values (ADR 0007). Fields
+/// publish `{name: value}` here; the form's submit folds them into the
+/// action payload as `fields`.
+val LocalAIUXFormScope = compositionLocalOf<MutableMap<String, JsonElement>?> { null }
+
+/// Host registry for `custom` surface node kinds (ADR 0007). Unregistered
+/// kinds degrade to a labelled placeholder plus their children.
+val LocalAIUXCustomNodes = compositionLocalOf<Map<String, @Composable (AISurfaceNode.Custom) -> Unit>> {
+    emptyMap()
+}
+
 @Composable
 fun AISurface(
     surface: AIUXSurface,
@@ -89,6 +110,15 @@ fun AISurface(
 ) {
     SurfaceNodeView(node = surface.root, modifier = modifier, onAction = onAction)
 }
+
+private fun fieldChange(id: String, name: String, value: JsonPrimitive) =
+    AIUXAction(
+        id,
+        buildJsonObject {
+            put("name", JsonPrimitive(name))
+            put("value", value)
+        },
+    )
 
 @Composable
 fun SurfaceNodeView(
@@ -223,12 +253,25 @@ fun SurfaceNodeView(
             shape = RoundedCornerShape(theme.radii.radius("full")),
             modifier = m,
         ) {
-            Text(
-                node.text,
-                style = theme.typography.caption,
-                color = toneColor(theme, node.tone),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = theme.spacing.sm, vertical = 2.dp),
-            )
+            ) {
+                node.icon?.let {
+                    Icon(
+                        iconFor(it),
+                        contentDescription = null,
+                        tint = toneColor(theme, node.tone),
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                }
+                Text(
+                    node.text,
+                    style = theme.typography.caption,
+                    color = toneColor(theme, node.tone),
+                )
+            }
         }
 
         is AISurfaceNode.Divider -> HorizontalDivider(
@@ -245,7 +288,11 @@ fun SurfaceNodeView(
             node.items.forEach { item ->
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(item.key, style = theme.typography.caption, color = theme.colors.mutedForeground)
-                    Text(item.value, style = theme.typography.label, color = theme.colors.foreground)
+                    Text(
+                        item.value,
+                        style = theme.typography.label,
+                        color = item.tone?.let { toneColor(theme, it) } ?: theme.colors.foreground,
+                    )
                 }
             }
         }
@@ -271,19 +318,23 @@ fun SurfaceNodeView(
             node.caption?.let {
                 Text(it, style = theme.typography.caption, color = theme.colors.mutedForeground)
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(theme.colors.muted)
-                    .padding(vertical = theme.spacing.xs),
-            ) {
-                node.headers.forEach { h ->
-                    Text(
-                        h,
-                        style = theme.typography.label,
-                        color = theme.colors.foreground,
-                        modifier = Modifier.weight(1f).padding(horizontal = theme.spacing.xs),
-                    )
+            val headers = node.headers.ifEmpty { node.columns.map { it.title } }
+            if (headers.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(theme.colors.muted)
+                        .padding(vertical = theme.spacing.xs),
+                ) {
+                    headers.forEachIndexed { i, h ->
+                        Text(
+                            h,
+                            style = theme.typography.label,
+                            color = theme.colors.foreground,
+                            textAlign = columnAlign(node.columns, i),
+                            modifier = Modifier.weight(1f).padding(horizontal = theme.spacing.xs),
+                        )
+                    }
                 }
             }
             node.rows.forEach { row ->
@@ -293,13 +344,10 @@ fun SurfaceNodeView(
                         .border(width = Dp.Hairline, color = theme.colors.border)
                         .padding(vertical = theme.spacing.xs),
                 ) {
-                    row.forEach { c ->
-                        Text(
-                            c,
-                            style = theme.typography.caption,
-                            color = theme.colors.foreground,
-                            modifier = Modifier.weight(1f).padding(horizontal = theme.spacing.xs),
-                        )
+                    row.forEachIndexed { i, cell ->
+                        Box(Modifier.weight(1f).padding(horizontal = theme.spacing.xs)) {
+                            AITableCellView(cell, columnAlign(node.columns, i), onAction)
+                        }
                     }
                 }
             }
@@ -403,119 +451,280 @@ fun SurfaceNodeView(
 
         is AISurfaceNode.Input -> {
             var value by remember(node.value) { mutableStateOf(node.value ?: "") }
-            OutlinedTextField(
-                value = value,
-                onValueChange = {
-                    value = it
-                    onAction(
-                        AIUXAction(
-                            AIUXActions.SURFACE_INPUT_CHANGE,
-                            buildJsonObject {
-                                put("name", JsonPrimitive(node.name))
-                                put("value", JsonPrimitive(it))
-                            },
-                        ),
-                    )
-                },
-                modifier = m.fillMaxWidth(),
-                label = node.label?.let { { Text(it) } },
-                placeholder = node.placeholder?.let { { Text(it) } },
-                enabled = !node.disabled,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = when (node.inputType) {
-                        AIInputType.Email -> KeyboardType.Email
-                        AIInputType.Number -> KeyboardType.Number
-                        AIInputType.Password -> KeyboardType.Password
-                        AIInputType.Url -> KeyboardType.Uri
-                        else -> KeyboardType.Text
+            val formScope = LocalAIUXFormScope.current
+            LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(value)) }
+            Column(modifier = m.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {
+                        value = it
+                        formScope?.set(node.name, JsonPrimitive(it))
+                        onAction(fieldChange(AIUXActions.SURFACE_INPUT_CHANGE, node.name, JsonPrimitive(it)))
                     },
-                ),
-            )
+                    modifier = Modifier.fillMaxWidth(),
+                    label = node.label?.let { l -> { Text(l + if (node.required) " *" else "") } },
+                    placeholder = node.placeholder?.let { { Text(it) } },
+                    enabled = !node.disabled,
+                    singleLine = true,
+                    isError = !node.errorText.isNullOrEmpty(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = when (node.inputType) {
+                            AIInputType.Email -> KeyboardType.Email
+                            AIInputType.Number -> KeyboardType.Number
+                            AIInputType.Password -> KeyboardType.Password
+                            AIInputType.Url -> KeyboardType.Uri
+                            else -> KeyboardType.Text
+                        },
+                    ),
+                )
+                AIUXFieldError(node.errorText)
+            }
         }
 
         is AISurfaceNode.TextArea -> {
             var value by remember(node.value) { mutableStateOf(node.value ?: "") }
-            OutlinedTextField(
-                value = value,
-                onValueChange = {
-                    value = it
-                    onAction(
-                        AIUXAction(
-                            AIUXActions.SURFACE_INPUT_CHANGE,
-                            buildJsonObject {
-                                put("name", JsonPrimitive(node.name))
-                                put("value", JsonPrimitive(it))
-                            },
-                        ),
-                    )
-                },
-                modifier = m.fillMaxWidth(),
-                label = node.label?.let { { Text(it) } },
-                placeholder = node.placeholder?.let { { Text(it) } },
-                enabled = !node.disabled,
-                minLines = node.rows ?: 3,
-            )
+            val formScope = LocalAIUXFormScope.current
+            LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(value)) }
+            Column(modifier = m.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = {
+                        value = it
+                        formScope?.set(node.name, JsonPrimitive(it))
+                        onAction(fieldChange(AIUXActions.SURFACE_INPUT_CHANGE, node.name, JsonPrimitive(it)))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = node.label?.let { l -> { Text(l + if (node.required) " *" else "") } },
+                    placeholder = node.placeholder?.let { { Text(it) } },
+                    enabled = !node.disabled,
+                    minLines = node.rows ?: 3,
+                    isError = !node.errorText.isNullOrEmpty(),
+                )
+                AIUXFieldError(node.errorText)
+            }
         }
 
         is AISurfaceNode.Select -> {
             var expanded by remember { mutableStateOf(false) }
             var selected by remember(node.value) { mutableStateOf(node.value) }
+            val formScope = LocalAIUXFormScope.current
+            LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(selected ?: "")) }
             val current = node.options.firstOrNull { it.value == selected }
-            Box(m) {
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    enabled = !node.disabled,
-                ) {
-                    Text(current?.label ?: node.placeholder ?: node.label ?: node.name)
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            Column(modifier = m) {
+                node.label?.let {
+                    Text(
+                        it + if (node.required) " *" else "",
+                        style = theme.typography.caption,
+                        color = theme.colors.mutedForeground,
+                    )
                 }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    node.options.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option.label) },
-                            onClick = {
-                                expanded = false
-                                selected = option.value
-                                onAction(
-                                    AIUXAction(
-                                        AIUXActions.SURFACE_SELECT_CHANGE,
-                                        buildJsonObject {
-                                            put("name", JsonPrimitive(node.name))
-                                            put("value", JsonPrimitive(option.value))
-                                        },
-                                    ),
-                                )
-                            },
-                        )
+                Box {
+                    OutlinedButton(
+                        onClick = { expanded = true },
+                        enabled = !node.disabled,
+                    ) {
+                        Text(current?.label ?: node.placeholder ?: node.name)
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        node.options.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    expanded = false
+                                    selected = option.value
+                                    formScope?.set(node.name, JsonPrimitive(option.value))
+                                    onAction(
+                                        fieldChange(
+                                            AIUXActions.SURFACE_SELECT_CHANGE,
+                                            node.name,
+                                            JsonPrimitive(option.value),
+                                        ),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
+                AIUXFieldError(node.errorText)
             }
         }
 
         is AISurfaceNode.Checkbox -> {
             var checked by remember(node.checked) { mutableStateOf(node.checked) }
-            Row(
-                modifier = m.clickable(enabled = !node.disabled) {
-                    checked = !checked
-                    onAction(
-                        AIUXAction(
-                            AIUXActions.SURFACE_CHECKBOX_CHANGE,
-                            buildJsonObject {
-                                put("name", JsonPrimitive(node.name))
-                                put("checked", JsonPrimitive(checked))
-                            },
-                        ),
+            val formScope = LocalAIUXFormScope.current
+            LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(checked)) }
+            Column(modifier = m) {
+                Row(
+                    modifier = Modifier.clickable(enabled = !node.disabled) {
+                        checked = !checked
+                        formScope?.set(node.name, JsonPrimitive(checked))
+                        onAction(
+                            AIUXAction(
+                                AIUXActions.SURFACE_CHECKBOX_CHANGE,
+                                buildJsonObject {
+                                    put("name", JsonPrimitive(node.name))
+                                    put("checked", JsonPrimitive(checked))
+                                },
+                            ),
+                        )
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = checked,
+                        onCheckedChange = null,
+                        enabled = !node.disabled,
                     )
-                },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Checkbox(
-                    checked = checked,
-                    onCheckedChange = null,
-                    enabled = !node.disabled,
+                    Text(
+                        node.label + if (node.required) " *" else "",
+                        style = theme.typography.body,
+                        color = theme.colors.foreground,
+                    )
+                }
+                AIUXFieldError(node.errorText)
+            }
+        }
+
+        is AISurfaceNode.Radio -> {
+            var selected by remember(node.value) { mutableStateOf(node.value) }
+            val formScope = LocalAIUXFormScope.current
+            LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(selected ?: "")) }
+            Column(modifier = m) {
+                node.label?.let {
+                    Text(
+                        it + if (node.required) " *" else "",
+                        style = theme.typography.label,
+                        color = theme.colors.foreground,
+                    )
+                }
+                node.options.forEach { option ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable(enabled = !node.disabled) {
+                            selected = option.value
+                            formScope?.set(node.name, JsonPrimitive(option.value))
+                            onAction(
+                                fieldChange(
+                                    AIUXActions.SURFACE_RADIO_CHANGE,
+                                    node.name,
+                                    JsonPrimitive(option.value),
+                                ),
+                            )
+                        },
+                    ) {
+                        RadioButton(selected = selected == option.value, onClick = null, enabled = !node.disabled)
+                        Text(option.label, style = theme.typography.body, color = theme.colors.foreground)
+                    }
+                }
+                AIUXFieldError(node.errorText)
+            }
+        }
+
+        is AISurfaceNode.Field -> Column(
+            modifier = m.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
+        ) {
+            node.label?.let {
+                Text(
+                    it + if (node.required) " *" else "",
+                    style = theme.typography.label,
+                    color = theme.colors.foreground,
                 )
-                Text(node.label, style = theme.typography.body, color = theme.colors.foreground)
+            }
+            node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
+            if (node.errorText == null && node.helperText != null) {
+                Text(node.helperText, style = theme.typography.caption, color = theme.colors.mutedForeground)
+            }
+            AIUXFieldError(node.errorText)
+        }
+
+        is AISurfaceNode.Form -> {
+            val scope = remember { mutableStateMapOf<String, JsonElement>() }
+            CompositionLocalProvider(LocalAIUXFormScope provides scope) {
+                Column(
+                    modifier = m.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(theme.spacing.md),
+                ) {
+                    node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
+                    Button(
+                        onClick = {
+                            val fields = JsonObject(scope.toMap())
+                            onAction(
+                                AIUXAction(
+                                    node.submit.id,
+                                    if (fields.isEmpty()) node.submit.payload
+                                    else JsonObject(
+                                        node.submit.payload.toMutableMap().apply { put("fields", fields) },
+                                    ),
+                                ),
+                            )
+                        },
+                        enabled = !node.disabled,
+                        shape = RoundedCornerShape(theme.radii.radius(node.style.radius?.name?.lowercase() ?: "md")),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = theme.colors.accent,
+                            contentColor = theme.colors.accentForeground,
+                        ),
+                    ) { Text(node.submitLabel ?: "Submit") }
+                }
+            }
+        }
+
+        is AISurfaceNode.ListItem -> Column(modifier = m.fillMaxWidth()) {
+            val row: @Composable () -> Unit = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    node.icon?.let {
+                        Icon(
+                            iconFor(it),
+                            contentDescription = null,
+                            tint = theme.colors.mutedForeground,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(theme.spacing.sm))
+                    }
+                    Column {
+                        Text(node.title, style = theme.typography.label, color = theme.colors.foreground)
+                        node.subtitle?.let {
+                            Text(it, style = theme.typography.caption, color = theme.colors.mutedForeground)
+                        }
+                    }
+                }
+            }
+            if (node.action != null) {
+                Box(Modifier.fillMaxWidth().clickable { node.action?.let { onAction(it) } }) { row() }
+            } else {
+                row()
+            }
+            if (node.children.isNotEmpty()) {
+                Column(Modifier.padding(start = theme.spacing.md)) {
+                    node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
+                }
+            }
+        }
+
+        is AISurfaceNode.Custom -> {
+            val renderer = LocalAIUXCustomNodes.current[node.kind]
+            Column(modifier = m.fillMaxWidth()) {
+                if (renderer != null) {
+                    renderer(node)
+                } else {
+                    Surface(
+                        color = theme.colors.muted,
+                        shape = RoundedCornerShape(theme.radii.sm),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            "Custom node: ${node.kind}",
+                            style = theme.typography.caption,
+                            color = theme.colors.mutedForeground,
+                            modifier = Modifier
+                                .padding(theme.spacing.sm)
+                                .semantics { contentDescription = "unregistered custom node ${node.kind}" },
+                        )
+                    }
+                }
+                node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
             }
         }
 
@@ -539,6 +748,64 @@ fun SurfaceNodeView(
                     .semantics { contentDescription = "unsupported surface node ${node.type}" },
             )
         }
+    }
+}
+
+/** Column-index → TextAlign from `table.columns[].align` (ADR 0007). */
+private fun columnAlign(columns: List<aiux.compose.model.AIUXTableColumn>, index: Int): TextAlign =
+    when (columns.getOrNull(index)?.align) {
+        AIColumnAlign.Center -> TextAlign.Center
+        AIColumnAlign.End -> TextAlign.End
+        else -> TextAlign.Start
+    }
+
+/** A typed `table` cell (ADR 0007). */
+@Composable
+private fun AITableCellView(cell: AITableCell, align: TextAlign, onAction: (AIUXAction) -> Unit) {
+    val theme = AIUX.theme
+    when (cell) {
+        is AITableCell.Text -> Text(
+            cell.text,
+            style = theme.typography.caption,
+            color = theme.colors.foreground,
+            textAlign = align,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        is AITableCell.Number -> Text(
+            if (cell.value % 1.0 == 0.0) cell.value.toLong().toString() else cell.value.toString(),
+            style = theme.typography.caption,
+            color = theme.colors.foreground,
+            textAlign = align,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        is AITableCell.Badge -> Surface(
+            color = toneColor(theme, cell.tone ?: AITone.Default).copy(alpha = 0.15f),
+            shape = RoundedCornerShape(theme.radii.radius("full")),
+        ) {
+            Text(
+                cell.text,
+                style = theme.typography.caption,
+                color = toneColor(theme, cell.tone ?: AITone.Default),
+                modifier = Modifier.padding(horizontal = theme.spacing.sm, vertical = 2.dp),
+            )
+        }
+        is AITableCell.Action -> TextButton(
+            onClick = { onAction(cell.action) },
+        ) { Text(cell.label) }
+    }
+}
+
+/** Field validation message under a control (ADR 0007). */
+@Composable
+private fun AIUXFieldError(text: String?) {
+    if (!text.isNullOrEmpty()) {
+        val theme = AIUX.theme
+        Text(
+            text,
+            style = theme.typography.caption,
+            color = theme.colors.destructive,
+            modifier = Modifier.padding(top = theme.spacing.xs),
+        )
     }
 }
 
@@ -594,7 +861,8 @@ private fun AISurfaceNode.verticalAlignment(): Alignment.Vertical = when (style.
     else -> Alignment.Top
 }
 
-/** Semantic icon names → Material icons. Unknown names fall back to Info. */
+/** Semantic icon names → Material icons. Unknown names fall back to Info.
+ * Also used for `badge.icon` and `listItem.icon` (ADR 0007). */
 private fun iconFor(name: String) = when (name.lowercase()) {
     "check", "done", "success", "ok" -> Icons.Default.Check
     "checkcircle", "complete" -> Icons.Default.CheckCircle

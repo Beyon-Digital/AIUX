@@ -1,0 +1,182 @@
+{
+  "events": [
+    {
+      "eventId": "surface-custom-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "surface-custom"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "surface-custom-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "surface-custom-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "surface-custom"
+          },
+          "name": "query",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "surface-custom-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "chart": "throughput",
+          "tail": "worker"
+        },
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.completed"
+    },
+    {
+      "eventId": "surface-custom-4",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "surface-custom-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "surface": {
+          "id": "sf-1",
+          "name": "metrics-custom",
+          "revision": 0,
+          "root": {
+            "children": [
+              {
+                "level": 2,
+                "text": "Pipeline metrics",
+                "type": "heading"
+              },
+              {
+                "kind": "beyondigital.throughput-chart",
+                "props": {
+                  "series": [
+                    "eu",
+                    "us"
+                  ],
+                  "window": "24h"
+                },
+                "type": "custom"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Streaming worker logs",
+                    "type": "text",
+                    "variant": "muted"
+                  }
+                ],
+                "kind": "beyondigital.log-tail",
+                "props": {
+                  "lines": 20
+                },
+                "type": "custom"
+              }
+            ],
+            "type": "surface"
+          }
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "surface.created"
+    },
+    {
+      "eventId": "surface-custom-6",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "surfaceId": "sf-1",
+          "type": "surface"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "surface-custom-7",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "surface-custom-8",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "surface-custom",
+  "protocolVersion": "0.1"
+}

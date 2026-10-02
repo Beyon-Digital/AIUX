@@ -146,6 +146,32 @@ export interface Artifact {
   content?: string;
   uri?: string;
   metadata?: unknown;
+  /** Inline preview contract — what the artifact card shows (ADR 0007). */
+  preview?: ArtifactPreview;
+  /** Opened-workspace contract — how the artifact presents when opened. */
+  workspace?: ArtifactWorkspace;
+}
+
+/** An inline surface descriptor carried inside an artifact (ADR 0007). */
+export interface SurfaceDescriptor {
+  id: string;
+  root: SurfaceNode;
+}
+
+/** `artifact.preview` — summary and/or inline surface descriptor. */
+export interface ArtifactPreview {
+  summary?: string;
+  surface?: SurfaceDescriptor;
+}
+
+export type WorkspaceMode = "fullscreen" | "detail" | "sheet";
+
+/** `artifact.workspace` — presentation contract for an opened artifact. */
+export interface ArtifactWorkspace {
+  mode?: WorkspaceMode;
+  surface?: SurfaceDescriptor;
+  /** Lazy render hint — defer mounting until visible. */
+  lazy?: boolean;
 }
 
 export type RunStatus = "running" | "completed" | "failed" | "cancelled";
@@ -292,6 +318,7 @@ export interface Layout {
 export interface KeyValueItem {
   key: string;
   value: string;
+  tone?: Tone;
 }
 export interface SelectOption {
   value: string;
@@ -303,6 +330,22 @@ export interface MenuItem {
   icon?: string;
   disabled?: boolean;
 }
+
+export type ColumnAlign = "start" | "center" | "end";
+
+export interface TableColumn {
+  key: string;
+  title: string;
+  align?: ColumnAlign;
+}
+
+/** A typed table cell (`{"type": ...}`) or a bare string (text). */
+export type TableCell =
+  | string
+  | { type: "text"; text: string }
+  | { type: "number"; value: number }
+  | { type: "badge"; text: string; tone?: Tone }
+  | { type: "action"; label: string; action: AiuxAction };
 
 interface NodeBase extends Layout {
   children?: SurfaceNode[];
@@ -326,6 +369,7 @@ export type SurfaceNode = NodeBase & {
     | "spacer"
     | "keyValue"
     | "list"
+    | "listItem"
     | "table"
     | "button"
     | "menu"
@@ -335,11 +379,17 @@ export type SurfaceNode = NodeBase & {
     | "textarea"
     | "select"
     | "checkbox"
-    | "actions";
+    | "radio"
+    | "field"
+    | "form"
+    | "actions"
+    | "custom";
   // content fields (presence depends on type)
   title?: string;
+  subtitle?: string;
   direction?: StackDirection;
-  columns?: number;
+  /** `grid`: column count; `table`: column descriptors. */
+  columns?: number | TableColumn[];
   text?: string;
   level?: number;
   variant?: string;
@@ -351,10 +401,12 @@ export type SurfaceNode = NodeBase & {
   src?: string;
   alt?: string;
   tone?: Tone;
+  icon?: string;
   items?: KeyValueItem[] | SelectOption[] | MenuItem[];
   ordered?: boolean;
   headers?: string[];
-  rows?: string[][] | number;
+  /** `table`: cell matrix; `textarea`: row count. */
+  rows?: TableCell[][] | number;
   caption?: string;
   label?: string;
   action?: AiuxAction;
@@ -366,6 +418,14 @@ export type SurfaceNode = NodeBase & {
   required?: boolean;
   checked?: boolean;
   options?: SelectOption[];
+  errorText?: string;
+  helperText?: string;
+  /** `form`: submit action; collected `fields` merge into its payload. */
+  submit?: AiuxAction;
+  submitLabel?: string;
+  /** `custom`: host-registered kind + data-only props. */
+  kind?: string;
+  props?: JsonObject;
 };
 
 export interface SurfaceTree {

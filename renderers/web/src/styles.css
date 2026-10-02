@@ -789,8 +789,117 @@ a.aiux-attachment:hover {
   gap: var(--aiux-space-xs);
 }
 
+.aiux-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiux-space-xs);
+}
+
+.aiux-field__helper {
+  font: var(--aiux-font-caption);
+  color: var(--_muted);
+}
+
+.aiux-field__error {
+  font: var(--aiux-font-caption);
+  color: var(--_destructive);
+}
+
+.aiux-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiux-space-md);
+  align-items: flex-start;
+}
+
 .aiux-field__label {
   font: var(--aiux-font-label);
+}
+
+.aiux-radio {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiux-space-xs);
+}
+
+.aiux-radio__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aiux-space-sm);
+  font: var(--aiux-font-body);
+}
+
+.aiux-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiux-space-xs);
+}
+
+.aiux-list-item__main {
+  display: flex;
+  align-items: center;
+  gap: var(--aiux-space-sm);
+  font: var(--aiux-font-body);
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: start;
+}
+
+.aiux-list-item__main--action {
+  cursor: pointer;
+}
+
+.aiux-list-item__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.aiux-list-item__title {
+  font: var(--aiux-font-label);
+}
+
+.aiux-list-item__subtitle {
+  font: var(--aiux-font-caption);
+  color: var(--_muted);
+}
+
+.aiux-list-item__children {
+  padding-inline-start: var(--aiux-space-lg);
+}
+
+.aiux-table__num {
+  font-variant-numeric: tabular-nums;
+}
+
+.aiux-table--center {
+  text-align: center !important;
+}
+
+.aiux-table--end {
+  text-align: end !important;
+}
+
+.aiux-custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aiux-space-xs);
+}
+
+.aiux-artifact__summary {
+  margin: 0;
+  font: var(--aiux-font-body);
+  color: var(--_muted);
+}
+
+.aiux-artifact__surface {
+  border: 1px solid var(--_border);
+  border-radius: var(--aiux-radius-md);
+  padding: var(--aiux-space-sm);
 }
 
 .aiux-input {

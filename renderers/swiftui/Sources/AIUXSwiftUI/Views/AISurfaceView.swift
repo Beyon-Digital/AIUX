@@ -127,8 +127,8 @@ struct AIUXNodeView: View {
             AIUXSurfaceImage(src: src, alt: alt)
                 .padding(theme.padding(layout.padding))
 
-        case .badge(let text, let tone, let layout):
-            AIBadge(text: text, tone: tone)
+        case .badge(let text, let tone, let icon, let layout):
+            AIBadge(text: text, tone: tone, icon: icon)
                 .padding(theme.padding(layout.padding))
 
         case .divider(let layout):
@@ -156,8 +156,8 @@ struct AIUXNodeView: View {
             }
             .padding(theme.padding(layout.padding))
 
-        case .table(let headers, let rows, let caption, let layout):
-            AIUXTableView(headers: headers, rows: rows, caption: caption)
+        case .table(let headers, let columns, let rows, let caption, let layout):
+            AIUXTableView(headers: headers, columns: columns, rows: rows, caption: caption)
                 .padding(theme.padding(layout.padding))
 
         case .button(let label, let action, let variant, let disabled, let layout):
@@ -220,7 +220,7 @@ struct AIUXNodeView: View {
                 .foregroundStyle(colors.tone(tone))
                 .padding(theme.padding(layout.padding))
 
-        case .input(let name, let label, let placeholder, let value, let inputType, let required, let disabled, let layout):
+        case .input(let name, let label, let placeholder, let value, let inputType, let required, let disabled, let errorText, let layout):
             AIUXInputField(
                 name: name,
                 label: label,
@@ -228,34 +228,88 @@ struct AIUXNodeView: View {
                 initialValue: value,
                 inputType: inputType,
                 required: required,
-                disabled: disabled
+                disabled: disabled,
+                errorText: errorText
             )
             .padding(theme.padding(layout.padding))
 
-        case .textarea(let name, let label, let placeholder, let value, let rows, let disabled, let layout):
+        case .textarea(let name, let label, let placeholder, let value, let rows, let required, let disabled, let errorText, let layout):
             AIUXTextareaField(
                 name: name,
                 label: label,
                 placeholder: placeholder,
                 initialValue: value,
                 rows: rows,
-                disabled: disabled
+                required: required,
+                disabled: disabled,
+                errorText: errorText
             )
             .padding(theme.padding(layout.padding))
 
-        case .select(let name, let label, let options, let value, let placeholder, let disabled, let layout):
+        case .select(let name, let label, let options, let value, let placeholder, let required, let disabled, let errorText, let layout):
             AIUXSelectField(
                 name: name,
                 label: label,
                 options: options,
                 value: value,
                 placeholder: placeholder,
+                required: required,
+                disabled: disabled,
+                errorText: errorText
+            )
+            .padding(theme.padding(layout.padding))
+
+        case .checkbox(let name, let label, let checked, let required, let disabled, let errorText, let layout):
+            AIUXCheckboxField(
+                name: name, label: label, checked: checked,
+                required: required, disabled: disabled, errorText: errorText
+            )
+            .padding(theme.padding(layout.padding))
+
+        case .radio(let name, let label, let options, let value, let required, let disabled, let errorText, let layout):
+            AIUXRadioField(
+                name: name,
+                label: label,
+                options: options,
+                value: value,
+                required: required,
+                disabled: disabled,
+                errorText: errorText
+            )
+            .padding(theme.padding(layout.padding))
+
+        case .field(let children, let label, let helperText, let required, let disabled, let errorText, let layout):
+            AIUXFieldBlock(
+                children: children,
+                label: label,
+                helperText: helperText,
+                required: required,
+                disabled: disabled,
+                errorText: errorText
+            )
+            .padding(theme.padding(layout.padding))
+
+        case .form(let children, let submit, let submitLabel, let disabled, let layout):
+            AIUXFormView(
+                children: children,
+                submit: submit,
+                submitLabel: submitLabel,
                 disabled: disabled
             )
             .padding(theme.padding(layout.padding))
 
-        case .checkbox(let name, let label, let checked, let disabled, let layout):
-            AIUXCheckboxField(name: name, label: label, checked: checked, disabled: disabled)
+        case .listItem(let title, let subtitle, let icon, let action, let children, let layout):
+            AIUXListItemView(
+                title: title,
+                subtitle: subtitle,
+                icon: icon,
+                action: action,
+                children: children
+            )
+            .padding(theme.padding(layout.padding))
+
+        case .custom(let kind, let props, let children, let layout):
+            AIUXCustomNodeView(kind: kind, props: props, children: children)
                 .padding(theme.padding(layout.padding))
 
         case .actions(let children, let layout):
@@ -474,6 +528,7 @@ struct AIUXKeyValueView: View {
                     Spacer(minLength: theme.space(.sm))
                     Text(item.value)
                         .font(theme.typography.label)
+                        .foregroundStyle(item.tone != nil ? colors.tone(item.tone) : Color.primary)
                         .multilineTextAlignment(.trailing)
                 }
             }
@@ -482,24 +537,28 @@ struct AIUXKeyValueView: View {
     }
 }
 
-/// Semantic table: header row + body rows via `Grid`.
+/// Semantic table: header row (or `columns`) + typed body rows (ADR 0007).
 struct AIUXTableView: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxAction) private var emit
 
     let headers: [String]
-    let rows: [[String]]
+    let columns: [AIUXTableColumn]
+    let rows: [[AIUXTableCell]]
     let caption: String?
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
+        let effectiveHeaders = headers.isEmpty ? columns.map(\.title) : headers
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
             Grid(alignment: .leading, horizontalSpacing: theme.space(.md), verticalSpacing: theme.space(.xs)) {
-                if !headers.isEmpty {
+                if !effectiveHeaders.isEmpty {
                     GridRow {
-                        ForEach(Array(headers.enumerated()), id: \.offset) { _, header in
+                        ForEach(Array(effectiveHeaders.enumerated()), id: \.offset) { index, header in
                             Text(header)
                                 .font(theme.typography.label)
+                                .frame(maxWidth: .infinity, alignment: cellAlignment(index))
                         }
                     }
                     .foregroundStyle(colors.muted)
@@ -507,9 +566,9 @@ struct AIUXTableView: View {
                 }
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     GridRow {
-                        ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
-                            Text(cell)
-                                .font(theme.typography.body)
+                        ForEach(Array(row.enumerated()), id: \.offset) { index, cell in
+                            cellView(cell)
+                                .frame(maxWidth: .infinity, alignment: cellAlignment(index))
                         }
                     }
                 }
@@ -522,26 +581,60 @@ struct AIUXTableView: View {
         }
         .accessibilityElement(children: .contain)
     }
+
+    @ViewBuilder
+    private func cellView(_ cell: AIUXTableCell) -> some View {
+        switch cell {
+        case .text(let text):
+            Text(text)
+                .font(theme.typography.body)
+        case .number(let value):
+            Text(value.truncatingRemainder(dividingBy: 1) == 0
+                 ? String(Int(value)) : String(value))
+                .font(theme.typography.body.monospacedDigit())
+        case .badge(let text, let tone):
+            AIBadge(text: text, tone: tone, icon: nil)
+        case .action(let label, let action):
+            Button(label) { emit(action) }
+                .buttonStyle(.plain)
+                .font(theme.typography.label)
+                .foregroundStyle(theme.colors(for: colorScheme).accent)
+        }
+    }
+
+    private func cellAlignment(_ column: Int) -> Alignment {
+        switch columns.indices.contains(column) ? columns[column].align : nil {
+        case .center: return .center
+        case .end: return .trailing
+        default: return .leading
+        }
+    }
 }
 
-/// A `badge`: text capsule colored by tone.
+/// A `badge`: text capsule colored by tone (optional icon, ADR 0007).
 struct AIBadge: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
 
     let text: String
     let tone: AIUXTone?
+    var icon: String? = nil
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
-        Text(text)
-            .font(theme.typography.caption)
-            .foregroundStyle(colors.tone(tone))
-            .padding(.horizontal, theme.space(.xs))
-            .padding(.vertical, 2)
-            .background(colors.tone(tone).opacity(0.14))
-            .clipShape(Capsule())
-            .accessibilityLabel("Badge: \(text)")
+        HStack(spacing: 2) {
+            if let icon {
+                Image(systemName: aiuxIconName(icon))
+            }
+            Text(text)
+        }
+        .font(theme.typography.caption)
+        .foregroundStyle(colors.tone(tone))
+        .padding(.horizontal, theme.space(.xs))
+        .padding(.vertical, 2)
+        .background(colors.tone(tone).opacity(0.14))
+        .clipShape(Capsule())
+        .accessibilityLabel("Badge: \(text)")
     }
 }
 
@@ -582,6 +675,7 @@ struct AIUXInputField: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.aiuxAction) private var emit
+    @Environment(\.aiuxFormStore) private var formStore
 
     let name: String
     let label: String?
@@ -590,6 +684,7 @@ struct AIUXInputField: View {
     let inputType: AIUXInputType?
     let required: Bool
     let disabled: Bool
+    var errorText: String? = nil
 
     @State private var value: String = ""
 
@@ -602,8 +697,12 @@ struct AIUXInputField: View {
                     .foregroundStyle(colors.muted)
             }
             field
+            AIUXFieldError(errorText)
         }
-        .onAppear { value = initialValue ?? "" }
+        .onAppear {
+            value = initialValue ?? ""
+            publish()
+        }
     }
 
     @ViewBuilder
@@ -625,10 +724,34 @@ struct AIUXInputField: View {
     }
 
     private func commit() {
+        publish()
         emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
             "name": .string(name),
             "value": .string(value),
         ]))
+    }
+
+    private func publish() {
+        formStore?.values[name] = .string(value)
+    }
+}
+
+/// Field validation message under a control (ADR 0007).
+struct AIUXFieldError: View {
+    @Environment(\.aiuxTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+
+    let text: String?
+
+    init(_ text: String?) { self.text = text }
+
+    var body: some View {
+        if let text, !text.isEmpty {
+            Text(text)
+                .font(theme.typography.caption)
+                .foregroundStyle(theme.colors(for: colorScheme).destructive)
+                .accessibilityAddTraits(.isStaticText)
+        }
     }
 }
 
@@ -659,13 +782,16 @@ struct AIUXTextareaField: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.aiuxAction) private var emit
+    @Environment(\.aiuxFormStore) private var formStore
 
     let name: String
     let label: String?
     let placeholder: String?
     let initialValue: String?
     let rows: Int?
+    var required: Bool = false
     let disabled: Bool
+    var errorText: String? = nil
 
     @State private var value: String = ""
 
@@ -673,7 +799,7 @@ struct AIUXTextareaField: View {
         let colors = theme.colors(for: colorScheme)
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
             if let label {
-                Text(label)
+                Text(label + (required ? " *" : ""))
                     .font(theme.typography.caption)
                     .foregroundStyle(colors.muted)
             }
@@ -685,15 +811,24 @@ struct AIUXTextareaField: View {
                 .onSubmit { commit() }
                 .onChange(of: value) { _ in commit() }
                 .accessibilityLabel(label ?? name)
+            AIUXFieldError(errorText)
         }
-        .onAppear { value = initialValue ?? "" }
+        .onAppear {
+            value = initialValue ?? ""
+            publish()
+        }
     }
 
     private func commit() {
+        publish()
         emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
             "name": .string(name),
             "value": .string(value),
         ]))
+    }
+
+    private func publish() {
+        formStore?.values[name] = .string(value)
     }
 }
 
@@ -701,13 +836,16 @@ struct AIUXSelectField: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.aiuxAction) private var emit
+    @Environment(\.aiuxFormStore) private var formStore
 
     let name: String
     let label: String?
     let options: [AIUXSelectOption]
     let value: String?
     let placeholder: String?
+    var required: Bool = false
     let disabled: Bool
+    var errorText: String? = nil
 
     @State private var selected: String = ""
 
@@ -715,7 +853,7 @@ struct AIUXSelectField: View {
         let colors = theme.colors(for: colorScheme)
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
             if let label {
-                Text(label)
+                Text(label + (required ? " *" : ""))
                     .font(theme.typography.caption)
                     .foregroundStyle(colors.muted)
             }
@@ -723,10 +861,7 @@ struct AIUXSelectField: View {
                 ForEach(Array(options.enumerated()), id: \.offset) { _, option in
                     Button(option.label) {
                         selected = option.value
-                        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
-                            "name": .string(name),
-                            "value": .string(option.value),
-                        ]))
+                        commit(option.value)
                     }
                 }
             } label: {
@@ -748,8 +883,24 @@ struct AIUXSelectField: View {
             }
             .disabled(disabled)
             .accessibilityLabel(label ?? name)
+            AIUXFieldError(errorText)
         }
-        .onAppear { selected = value ?? "" }
+        .onAppear {
+            selected = value ?? ""
+            publish()
+        }
+    }
+
+    private func commit(_ newValue: String) {
+        publish(newValue)
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(newValue),
+        ]))
+    }
+
+    private func publish(_ v: String? = nil) {
+        formStore?.values[name] = .string(v ?? selected)
     }
 
     private var displayLabel: String {
@@ -761,28 +912,260 @@ struct AIUXSelectField: View {
 struct AIUXCheckboxField: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.aiuxAction) private var emit
+    @Environment(\.aiuxFormStore) private var formStore
 
     let name: String
     let label: String
     let checked: Bool
+    var required: Bool = false
     let disabled: Bool
+    var errorText: String? = nil
 
     @State private var isOn: Bool = false
 
     var body: some View {
-        Toggle(isOn: $isOn) {
-            Text(label)
-                .font(theme.typography.body)
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            Toggle(isOn: $isOn) {
+                Text(label + (required ? " *" : ""))
+                    .font(theme.typography.body)
+            }
+            .disabled(disabled)
+            .onAppear {
+                isOn = checked
+                publish()
+            }
+            .onChange(of: isOn) { newValue in
+                publish(newValue)
+                emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+                    "name": .string(name),
+                    "value": .bool(newValue),
+                ]))
+            }
+            .accessibilityLabel(label)
+            AIUXFieldError(errorText)
+        }
+    }
+
+    private func publish(_ v: Bool? = nil) {
+        formStore?.values[name] = .bool(v ?? isOn)
+    }
+}
+
+/// `radio` — single-choice option group (ADR 0007).
+struct AIUXRadioField: View {
+    @Environment(\.aiuxTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxAction) private var emit
+    @Environment(\.aiuxFormStore) private var formStore
+
+    let name: String
+    let label: String?
+    let options: [AIUXSelectOption]
+    let value: String?
+    let required: Bool
+    let disabled: Bool
+    let errorText: String?
+
+    @State private var selected: String = ""
+
+    var body: some View {
+        let colors = theme.colors(for: colorScheme)
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            if let label {
+                Text(label + (required ? " *" : ""))
+                    .font(theme.typography.label)
+            }
+            ForEach(Array(options.enumerated()), id: \.offset) { _, option in
+                Button {
+                    selected = option.value
+                    commit(option.value)
+                } label: {
+                    HStack(spacing: theme.space(.sm)) {
+                        Image(systemName: selected == option.value
+                              ? "circle.inset.filled" : "circle")
+                            .foregroundStyle(selected == option.value
+                                             ? colors.accent : colors.muted)
+                        Text(option.label)
+                            .font(theme.typography.body)
+                            .foregroundStyle(Color.primary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(disabled)
+                .accessibilityLabel(option.label)
+                .accessibilityAddTraits(selected == option.value ? .isSelected : [])
+            }
+            AIUXFieldError(errorText)
+        }
+        .onAppear {
+            selected = value ?? ""
+            publish()
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(label ?? name)
+    }
+
+    private func commit(_ newValue: String) {
+        publish(newValue)
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(newValue),
+        ]))
+    }
+
+    private func publish(_ v: String? = nil) {
+        formStore?.values[name] = .string(v ?? selected)
+    }
+}
+
+/// `field` — label/helper/error wrapper around one or more controls
+/// (ADR 0007).
+struct AIUXFieldBlock: View {
+    @Environment(\.aiuxTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+
+    let children: [AIUXSurfaceNode]
+    let label: String?
+    let helperText: String?
+    let required: Bool
+    let disabled: Bool
+    let errorText: String?
+
+    var body: some View {
+        let colors = theme.colors(for: colorScheme)
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            if let label {
+                Text(label + (required ? " *" : ""))
+                    .font(theme.typography.label)
+            }
+            ForEach(Array(children.enumerated()), id: \.offset) { _, child in
+                AIUXNodeView(node: child)
+            }
+            if let helperText, errorText == nil {
+                Text(helperText)
+                    .font(theme.typography.caption)
+                    .foregroundStyle(colors.muted)
+            }
+            AIUXFieldError(errorText)
         }
         .disabled(disabled)
-        .onAppear { isOn = checked }
-        .onChange(of: isOn) { newValue in
-            emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
-                "name": .string(name),
-                "value": .bool(newValue),
-            ]))
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// `form` — own field scope; submit folds collected `fields` into the action
+/// payload (ADR 0007).
+struct AIUXFormView: View {
+    @Environment(\.aiuxTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxAction) private var emit
+
+    let children: [AIUXSurfaceNode]
+    let submit: AIUXAction
+    let submitLabel: String?
+    let disabled: Bool
+
+    @StateObject private var store = AIUXFormStore()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: theme.space(.md)) {
+            ForEach(Array(children.enumerated()), id: \.offset) { _, child in
+                AIUXNodeView(node: child)
+            }
+            Button {
+                var payload = submit.payload
+                if !store.values.isEmpty {
+                    payload["fields"] = .object(store.values)
+                }
+                emit(AIUXAction(id: submit.id, payload: payload))
+            } label: {
+                Text(submitLabel ?? "Submit")
+            }
+            .modifier(AIUXButtonStyleModifier(variant: .primary, theme: theme, scheme: colorScheme))
+            .disabled(disabled)
         }
-        .accessibilityLabel(label)
+        .environment(\.aiuxFormStore, store)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// `listItem` — structured list row: icon, title, subtitle, optional action,
+/// nested children (ADR 0007).
+struct AIUXListItemView: View {
+    @Environment(\.aiuxTheme) private var theme
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxAction) private var emit
+
+    let title: String
+    let subtitle: String?
+    let icon: String?
+    let action: AIUXAction?
+    let children: [AIUXSurfaceNode]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: theme.space(.xs)) {
+            row
+            if !children.isEmpty {
+                VStack(alignment: .leading, spacing: theme.space(.xs)) {
+                    ForEach(Array(children.enumerated()), id: \.offset) { _, child in
+                        AIUXNodeView(node: child)
+                    }
+                }
+                .padding(.leading, theme.space(.lg))
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private var row: some View {
+        let colors = theme.colors(for: colorScheme)
+        let content = HStack(spacing: theme.space(.sm)) {
+            if let icon {
+                Image(systemName: aiuxIconName(icon))
+                    .foregroundStyle(colors.muted)
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(theme.typography.label)
+                    .foregroundStyle(Color.primary)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(theme.typography.caption)
+                        .foregroundStyle(colors.muted)
+                }
+            }
+        }
+        if let action {
+            Button { emit(action) } label: { content }
+                .buttonStyle(.plain)
+        } else {
+            content
+        }
+    }
+}
+
+/// `custom` — host-registered node kind; unregistered kinds degrade to a
+/// labelled placeholder plus their (core-schema) children (ADR 0007).
+struct AIUXCustomNodeView: View {
+    @Environment(\.aiuxCustomNodes) private var registry
+
+    let kind: String
+    let props: [String: AIUXJSONValue]
+    let children: [AIUXSurfaceNode]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let render = registry[kind] {
+                render(.custom(kind: kind, props: props, children: children,
+                               layout: AIUXNodeLayout()))
+            } else {
+                AIUXUnsupported(kind: "custom node", detail: kind)
+            }
+            ForEach(Array(children.enumerated()), id: \.offset) { _, child in
+                AIUXNodeView(node: child)
+            }
+        }
     }
 }
 

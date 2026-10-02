@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type FormEvent,
   type JSX,
 } from "react";
 import { AiuxIcon } from "./icons.jsx";
@@ -18,6 +19,8 @@ import {
   type SelectOption,
   type SurfaceNode,
   type SurfaceTree,
+  type TableCell,
+  type TableColumn,
 } from "./types.js";
 
 /**
@@ -172,7 +175,7 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
           className="aiux-grid"
           style={{
             ...style,
-            gridTemplateColumns: `repeat(${Math.max(1, node.columns ?? 1)}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${Math.max(1, typeof node.columns === "number" ? node.columns : 1)}, minmax(0, 1fr))`,
           }}
         >
           <SurfaceChildren children={node.children} />
@@ -242,6 +245,7 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
           className={toneClass("aiux-badge", node.tone)}
           style={style}
         >
+          {node.icon ? <AiuxIcon name={node.icon} size="sm" /> : null}
           {node.text}
         </span>
       );
@@ -265,7 +269,11 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
           {items.map((item, i) => (
             <div className="aiux-kv__row" key={i}>
               <dt className="aiux-kv__key">{item.key}</dt>
-              <dd className="aiux-kv__value">{item.value}</dd>
+              <dd
+                className={`aiux-kv__value${item.tone ? ` aiux-tone-${item.tone}` : ""}`}
+              >
+                {item.value}
+              </dd>
             </div>
           ))}
         </dl>
@@ -284,15 +292,24 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
       );
     }
     case "table": {
-      const headers = node.headers ?? [];
-      const rows = (node.rows ?? []) as string[][];
+      const columns = Array.isArray(node.columns)
+        ? (node.columns as TableColumn[])
+        : [];
+      const headers =
+        node.headers ?? columns.map((c) => c.title);
+      const rows = (Array.isArray(node.rows) ? node.rows : []) as TableCell[][];
+      const alignOf = (j: number) => columns[j]?.align;
       return (
         <table className="aiux-table" style={style}>
           {node.caption ? <caption>{node.caption}</caption> : null}
           <thead>
             <tr>
               {headers.map((h, i) => (
-                <th key={i} scope="col">
+                <th
+                  key={i}
+                  scope="col"
+                  className={alignOf(i) ? `aiux-table--${alignOf(i)}` : undefined}
+                >
                   {h}
                 </th>
               ))}
@@ -302,7 +319,12 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
             {rows.map((row, i) => (
               <tr key={i}>
                 {row.map((cell, j) => (
-                  <td key={j}>{cell}</td>
+                  <td
+                    key={j}
+                    className={alignOf(j) ? `aiux-table--${alignOf(j)}` : undefined}
+                  >
+                    <TableCellView cell={cell} />
+                  </td>
                 ))}
               </tr>
             ))}
@@ -373,6 +395,16 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
       return <SelectField node={node} style={style} />;
     case "checkbox":
       return <CheckboxField node={node} style={style} />;
+    case "radio":
+      return <RadioField node={node} style={style} />;
+    case "field":
+      return <FieldBlock node={node} style={style} />;
+    case "form":
+      return <FormNode node={node} style={style} />;
+    case "listItem":
+      return <ListItemNode node={node} style={style} />;
+    case "custom":
+      return <CustomNode node={node} style={style} />;
     case "actions":
       return (
         <div className="aiux-actions" role="group" style={style}>
@@ -386,6 +418,176 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
         </div>
       );
   }
+}
+
+/** A table cell: bare string or `{"type": text|number|badge|action}` (ADR 0007). */
+function TableCellView({ cell }: { cell: TableCell }) {
+  const { onAction } = useAiuxRenderContext();
+  if (typeof cell === "string") return <>{cell}</>;
+  switch (cell.type) {
+    case "text":
+      return <>{cell.text}</>;
+    case "number":
+      return <span className="aiux-table__num">{cell.value}</span>;
+    case "badge":
+      return (
+        <span className={toneClass("aiux-badge", cell.tone)}>{cell.text}</span>
+      );
+    case "action":
+      return (
+        <button
+          type="button"
+          className="aiux-btn aiux-btn--ghost"
+          disabled={!onAction}
+          onClick={() => onAction?.(cell.action)}
+        >
+          {cell.label}
+        </button>
+      );
+    default:
+      return null;
+  }
+}
+
+/** `field` — label/helper/error wrapper around one or more controls (ADR 0007). */
+function FieldBlock({
+  node,
+  style,
+}: {
+  node: SurfaceNode;
+  style: CSSProperties;
+}) {
+  return (
+    <div className="aiux-field-block" style={style}>
+      {node.label ? (
+        <span className="aiux-field__label">
+          {node.label}
+          {node.required ? <span aria-hidden> *</span> : null}
+        </span>
+      ) : null}
+      <SurfaceChildren children={node.children} />
+      {node.helperText && !node.errorText ? (
+        <span className="aiux-field__helper">{node.helperText}</span>
+      ) : null}
+      {node.errorText ? (
+        <span className="aiux-field__error" role="alert">
+          {node.errorText}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** `form` — its own field scope; submit folds `fields` into the action
+ * payload (ADR 0007). */
+function FormNode({ node, style }: { node: SurfaceNode; style: CSSProperties }) {
+  const { onAction } = useAiuxRenderContext();
+  const [values, setValues] = useState<Record<string, string>>({});
+  const fieldState = useMemo<SurfaceFieldState>(
+    () => ({
+      values,
+      setValue: (name, value) =>
+        setValues((prev) => ({ ...prev, [name]: value })),
+    }),
+    [values],
+  );
+  const submit = node.submit;
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!submit || !onAction || node.disabled) return;
+    const payload =
+      Object.keys(values).length > 0
+        ? { ...submit.payload, fields: values }
+        : submit.payload;
+    onAction({ id: submit.id, ...(payload ? { payload } : {}) });
+  };
+  return (
+    <FieldContext.Provider value={fieldState}>
+      <form className="aiux-form" style={style} onSubmit={onSubmit}>
+        <SurfaceChildren children={node.children} />
+        <button
+          type="submit"
+          className="aiux-btn aiux-btn--primary"
+          disabled={node.disabled || !submit || !onAction}
+        >
+          {node.submitLabel ?? "Submit"}
+        </button>
+      </form>
+    </FieldContext.Provider>
+  );
+}
+
+/** `listItem` — structured list row: icon, title, subtitle, optional action,
+ * nested children (ADR 0007). */
+function ListItemNode({
+  node,
+  style,
+}: {
+  node: SurfaceNode;
+  style: CSSProperties;
+}) {
+  const { onAction } = useAiuxRenderContext();
+  const body = (
+    <>
+      {node.icon ? <AiuxIcon name={node.icon} /> : null}
+      <span className="aiux-list-item__text">
+        <span className="aiux-list-item__title">{node.title}</span>
+        {node.subtitle ? (
+          <span className="aiux-list-item__subtitle">{node.subtitle}</span>
+        ) : null}
+      </span>
+    </>
+  );
+  return (
+    <div className="aiux-list-item" style={style}>
+      {node.action ? (
+        <button
+          type="button"
+          className="aiux-list-item__main aiux-list-item__main--action"
+          disabled={!onAction}
+          onClick={() => onAction?.(node.action as AiuxAction)}
+        >
+          {body}
+        </button>
+      ) : (
+        <div className="aiux-list-item__main">{body}</div>
+      )}
+      {node.children?.length ? (
+        <div className="aiux-list-item__children">
+          <SurfaceChildren children={node.children} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** `custom` — host-registered node kind; unregistered kinds degrade to a
+ * labelled placeholder plus their (core-schema) children (ADR 0007). */
+function CustomNode({
+  node,
+  style,
+}: {
+  node: SurfaceNode;
+  style: CSSProperties;
+}) {
+  const { customNodes } = useAiuxRenderContext();
+  const Component = node.kind ? customNodes[node.kind] : undefined;
+  if (Component) {
+    return (
+      <div className="aiux-custom" style={style}>
+        <Component node={node} />
+        <SurfaceChildren children={node.children} />
+      </div>
+    );
+  }
+  return (
+    <div className="aiux-custom" style={style}>
+      <div className="aiux-missing" role="note">
+        Unregistered custom node <code>{node.kind ?? "(no kind)"}</code>
+      </div>
+      <SurfaceChildren children={node.children} />
+    </div>
+  );
 }
 
 function FieldLabel({
@@ -409,6 +611,15 @@ function FieldLabel({
   );
 }
 
+function FieldError({ errorText }: { errorText?: string | undefined }) {
+  if (!errorText) return null;
+  return (
+    <span className="aiux-field__error" role="alert">
+      {errorText}
+    </span>
+  );
+}
+
 function InputField({
   node,
   style,
@@ -428,10 +639,12 @@ function InputField({
           value={value}
           required={node.required}
           disabled={node.disabled}
+          aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
         />
       </FieldLabel>
+      <FieldError errorText={node.errorText} />
     </span>
   );
 }
@@ -453,11 +666,14 @@ function TextareaField({
           placeholder={node.placeholder}
           value={value}
           rows={typeof node.rows === "number" ? node.rows : 3}
+          required={node.required}
           disabled={node.disabled}
+          aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
         />
       </FieldLabel>
+      <FieldError errorText={node.errorText} />
     </span>
   );
 }
@@ -478,7 +694,9 @@ function SelectField({
           className="aiux-input"
           name={node.name}
           value={value}
+          required={node.required}
           disabled={node.disabled}
+          aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
         >
@@ -494,6 +712,7 @@ function SelectField({
           ))}
         </select>
       </FieldLabel>
+      <FieldError errorText={node.errorText} />
     </span>
   );
 }
@@ -510,16 +729,58 @@ function CheckboxField({
     node.checked ? "true" : "",
   );
   return (
-    <label className="aiux-checkbox" style={style}>
-      <input
-        type="checkbox"
-        name={node.name}
-        checked={value === "true"}
-        disabled={node.disabled}
-        onChange={(e) => setValue(e.target.checked ? "true" : "")}
-      />
-      <span>{node.label}</span>
-    </label>
+    <span style={style}>
+      <label className="aiux-checkbox">
+        <input
+          type="checkbox"
+          name={node.name}
+          checked={value === "true"}
+          required={node.required}
+          disabled={node.disabled}
+          aria-invalid={node.errorText ? true : undefined}
+          onChange={(e) => setValue(e.target.checked ? "true" : "")}
+        />
+        <span>{node.label}</span>
+      </label>
+      <FieldError errorText={node.errorText} />
+    </span>
+  );
+}
+
+/** `radio` — named option group collecting a single value (ADR 0007). */
+function RadioField({
+  node,
+  style,
+}: {
+  node: SurfaceNode;
+  style: CSSProperties;
+}) {
+  const options = node.options ?? [];
+  const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
+  return (
+    <fieldset className="aiux-radio" style={style}>
+      {node.label ? (
+        <legend className="aiux-field__label">
+          {node.label}
+          {node.required ? <span aria-hidden> *</span> : null}
+        </legend>
+      ) : null}
+      {options.map((o) => (
+        <label className="aiux-radio__option" key={o.value}>
+          <input
+            type="radio"
+            name={node.name}
+            value={o.value}
+            checked={value === o.value}
+            required={node.required}
+            disabled={node.disabled}
+            onChange={() => setValue(o.value)}
+          />
+          <span>{o.label}</span>
+        </label>
+      ))}
+      <FieldError errorText={node.errorText} />
+    </fieldset>
   );
 }
 

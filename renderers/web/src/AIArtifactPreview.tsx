@@ -1,10 +1,19 @@
 import { AiuxIcon } from "./icons.jsx";
+import { AISurface } from "./AISurface.jsx";
 import { useAiuxRenderContext } from "./context.js";
 import { AIUX_ACTIONS, type Artifact } from "./types.js";
 
 const PREVIEW_LINES = 6;
 
-/** Artifact card — kind icon, title, revision badge, lazy content preview. */
+const WORKSPACE_LABEL: Record<string, string> = {
+  fullscreen: "Opens fullscreen",
+  detail: "Opens in detail pane",
+  sheet: "Opens as sheet",
+};
+
+/** Artifact card — kind icon, title, revision badge, lazy content preview.
+ * `artifact.preview` supplies a semantic summary / inline surface descriptor
+ * and `artifact.workspace` declares how the artifact opens (ADR 0007). */
 export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
   const { onAction } = useAiuxRenderContext();
   const title = artifact.title ?? artifact.id;
@@ -15,6 +24,7 @@ export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
   const truncated =
     artifact.content !== undefined &&
     artifact.content.split("\n").length > PREVIEW_LINES;
+  const workspaceMode = artifact.workspace?.mode ?? "fullscreen";
 
   return (
     <section className="aiux-artifact" aria-label={`Artifact: ${title}`}>
@@ -28,11 +38,24 @@ export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
           </span>
         ) : null}
       </header>
+      {artifact.preview?.summary ? (
+        <p className="aiux-artifact__summary">{artifact.preview.summary}</p>
+      ) : null}
+      {artifact.preview?.surface ? (
+        <div className="aiux-artifact__surface">
+          <AISurface surface={artifact.preview.surface} />
+        </div>
+      ) : null}
       {preview !== undefined ? (
         <pre className="aiux-artifact__preview" tabIndex={0}>
           {preview}
           {truncated ? "\n…" : ""}
         </pre>
+      ) : null}
+      {artifact.workspace ? (
+        <span className="aiux-badge aiux-badge--muted">
+          {WORKSPACE_LABEL[workspaceMode] ?? "Opens fullscreen"}
+        </span>
       ) : null}
       <div className="aiux-artifact__foot">
         {artifact.uri ? (
@@ -52,7 +75,12 @@ export function AIArtifactPreview({ artifact }: { artifact: Artifact }) {
             onClick={() =>
               onAction({
                 id: AIUX_ACTIONS.artifactOpen,
-                payload: { artifactId: artifact.id },
+                payload: {
+                  artifactId: artifact.id,
+                  ...(artifact.workspace
+                    ? { mode: workspaceMode }
+                    : {}),
+                },
               })
             }
           >

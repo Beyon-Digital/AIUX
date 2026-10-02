@@ -1,0 +1,256 @@
+{
+  "events": [
+    {
+      "eventId": "surface-table-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "surface-table"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "surface-table-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "surface-table-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "surface-table"
+          },
+          "name": "query",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "surface-table-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "degraded": [
+            "worker"
+          ],
+          "rows": 2
+        },
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.completed"
+    },
+    {
+      "eventId": "surface-table-4",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "surface-table-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "surface": {
+          "id": "sf-1",
+          "name": "deploy-table",
+          "revision": 0,
+          "root": {
+            "children": [
+              {
+                "caption": "Deploys",
+                "columns": [
+                  {
+                    "key": "service",
+                    "title": "Service"
+                  },
+                  {
+                    "key": "version",
+                    "title": "Version"
+                  },
+                  {
+                    "key": "status",
+                    "title": "Status"
+                  },
+                  {
+                    "align": "end",
+                    "key": "replicas",
+                    "title": "Replicas"
+                  },
+                  {
+                    "key": "open",
+                    "title": ""
+                  }
+                ],
+                "rows": [
+                  [
+                    "api",
+                    {
+                      "text": "1.4.2",
+                      "type": "text"
+                    },
+                    {
+                      "text": "healthy",
+                      "tone": "success",
+                      "type": "badge"
+                    },
+                    {
+                      "type": "number",
+                      "value": 3
+                    },
+                    {
+                      "action": {
+                        "id": "deploy.open",
+                        "payload": {
+                          "svc": "api"
+                        }
+                      },
+                      "label": "Open",
+                      "type": "action"
+                    }
+                  ],
+                  [
+                    "worker",
+                    {
+                      "text": "1.4.0",
+                      "type": "text"
+                    },
+                    {
+                      "text": "degraded",
+                      "tone": "warning",
+                      "type": "badge"
+                    },
+                    {
+                      "type": "number",
+                      "value": 1
+                    },
+                    {
+                      "action": {
+                        "id": "deploy.open",
+                        "payload": {
+                          "svc": "worker"
+                        }
+                      },
+                      "label": "Open",
+                      "type": "action"
+                    }
+                  ]
+                ],
+                "type": "table"
+              },
+              {
+                "items": [
+                  {
+                    "key": "Cluster",
+                    "tone": "accent",
+                    "value": "prod-eu"
+                  },
+                  {
+                    "key": "Alerts",
+                    "tone": "warning",
+                    "value": "1 active"
+                  }
+                ],
+                "type": "keyValue"
+              },
+              {
+                "icon": "server",
+                "text": "2 services",
+                "tone": "accent",
+                "type": "badge"
+              }
+            ],
+            "type": "surface"
+          }
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "surface.created"
+    },
+    {
+      "eventId": "surface-table-6",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "surfaceId": "sf-1",
+          "type": "surface"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "surface-table-7",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "surface-table-8",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "surface-table",
+  "protocolVersion": "0.1"
+}

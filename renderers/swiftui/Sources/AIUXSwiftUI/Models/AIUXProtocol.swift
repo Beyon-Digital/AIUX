@@ -530,6 +530,11 @@ public struct AIUXArtifact: Codable, Equatable, Identifiable, Sendable {
     public var content: String?
     public var uri: String?
     public var metadata: AIUXJSONValue?
+    /// Inline preview contract — what the artifact card shows (ADR 0007).
+    public var preview: AIUXArtifactPreview?
+    /// Opened-workspace contract — how the artifact presents when opened
+    /// (ADR 0007).
+    public var workspace: AIUXArtifactWorkspace?
 
     public init(id: String, kind: String) {
         self.id = id
@@ -537,7 +542,7 @@ public struct AIUXArtifact: Codable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, kind, title, revision, content, uri, metadata
+        case id, kind, title, revision, content, uri, metadata, preview, workspace
     }
 
     public init(from decoder: Decoder) throws {
@@ -549,6 +554,8 @@ public struct AIUXArtifact: Codable, Equatable, Identifiable, Sendable {
         content = try c.decodeIfPresent(String.self, forKey: .content)
         uri = try c.decodeIfPresent(String.self, forKey: .uri)
         metadata = try c.decodeIfPresent(AIUXJSONValue.self, forKey: .metadata)
+        preview = try c.decodeIfPresent(AIUXArtifactPreview.self, forKey: .preview)
+        workspace = try c.decodeIfPresent(AIUXArtifactWorkspace.self, forKey: .workspace)
     }
 }
 
@@ -585,6 +592,15 @@ public struct AIUXAction: Codable, Equatable, Sendable {
         self.id = id
         self.payload = payload
     }
+
+    private enum CodingKeys: String, CodingKey { case id, payload }
+
+    /// `payload` is optional on the wire (Rust `#[serde(default)]`).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        payload = try c.decodeIfPresent([String: AIUXJSONValue].self, forKey: .payload) ?? [:]
+    }
 }
 
 // MARK: - Canonical action ids emitted by AIUXSwiftUI views
@@ -616,6 +632,6 @@ extension AIUXAction {
     public static let contextAdd = "aiux.context.add"
     /// Surface field change: payload `{name, value}`.
     public static let fieldChange = "aiux.field.change"
-    /// Artifact opened: payload `{artifactId}`.
+    /// Artifact opened: payload `{artifactId, mode?}` (ADR 0007).
     public static let artifactOpen = "aiux.artifact.open"
 }

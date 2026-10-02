@@ -1,9 +1,10 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, type ComponentType } from "react";
 import type {
   AiuxAction,
   Approval,
   Artifact,
   Capability,
+  SurfaceNode,
   SurfaceTree,
   Tool,
 } from "./types.js";
@@ -41,10 +42,17 @@ export function buildEntityIndex(snapshot: {
   };
 }
 
+/** Host-registered renderer for a `custom` node kind (ADR 0007). */
+export type AiuxCustomNodeComponent = ComponentType<{
+  node: SurfaceNode;
+}>;
+
 export interface AiuxRenderContextValue {
   theme: ResolvedAiuxTheme;
   onAction: AiuxActionHandler | undefined;
   entities: EntityIndex;
+  /** custom `kind` → host renderer; unregistered kinds fall back. */
+  customNodes: Readonly<Record<string, AiuxCustomNodeComponent>>;
   /** capabilityId → enabled; undeclared capabilities default to enabled. */
   capabilityEnabled(id: string): boolean;
 }

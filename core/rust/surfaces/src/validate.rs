@@ -10,7 +10,10 @@
 
 use serde_json::Value;
 
-use crate::node::{Action, MenuItem, SurfaceNode, SurfaceTree};
+use crate::node::{
+    Action, MenuItem, SelectOption, SurfaceDescriptor, SurfaceNode, SurfaceTree, TableCell,
+    TypedTableCell,
+};
 
 /// Maximum nesting depth of a surface tree.
 pub const MAX_DEPTH: usize = 64;
@@ -64,12 +67,13 @@ fn allowed_keys(kind: &str) -> Option<&'static [&'static str]> {
         "code" => &["code", "language"],
         "icon" => &["name", "size"],
         "image" => &["src", "alt"],
-        "badge" => &["text", "tone"],
+        "badge" => &["text", "tone", "icon"],
         "divider" => &[],
         "spacer" => &["size"],
         "keyValue" => &["items"],
         "list" => &["children", "ordered"],
-        "table" => &["headers", "rows", "caption"],
+        "listItem" => &["title", "subtitle", "icon", "action", "children"],
+        "table" => &["headers", "columns", "rows", "caption"],
         "button" => &["label", "action", "variant", "disabled"],
         "menu" => &["label", "items"],
         "progress" => &["value", "max", "label"],
@@ -82,17 +86,55 @@ fn allowed_keys(kind: &str) -> Option<&'static [&'static str]> {
             "inputType",
             "required",
             "disabled",
+            "errorText",
         ],
-        "textarea" => &["name", "label", "placeholder", "value", "rows", "disabled"],
+        "textarea" => &[
+            "name",
+            "label",
+            "placeholder",
+            "value",
+            "rows",
+            "required",
+            "disabled",
+            "errorText",
+        ],
         "select" => &[
             "name",
             "label",
             "options",
             "value",
             "placeholder",
+            "required",
             "disabled",
+            "errorText",
         ],
-        "checkbox" => &["name", "label", "checked", "disabled"],
+        "checkbox" => &[
+            "name",
+            "label",
+            "checked",
+            "required",
+            "disabled",
+            "errorText",
+        ],
+        "radio" => &[
+            "name",
+            "label",
+            "options",
+            "value",
+            "required",
+            "disabled",
+            "errorText",
+        ],
+        "field" => &[
+            "children",
+            "label",
+            "helperText",
+            "required",
+            "disabled",
+            "errorText",
+        ],
+        "form" => &["children", "submit", "submitLabel", "disabled"],
+        "custom" => &["kind", "props", "children"],
         _ => return None,
     })
 }
@@ -150,13 +192,48 @@ pub fn validate(tree: &SurfaceTree) -> Result<(), SurfaceError> {
         return Err(SurfaceError::new("root node must be \"surface\""));
     }
     let mut count = 0usize;
-    validate_node(&tree.root, 0, false, &mut count)
+    validate_node(&tree.root, 0, Ctx::ROOT, &mut count)
+}
+
+/// Validate an inline surface descriptor (`artifact.preview`/`.workspace`).
+/// The descriptor's `root` must be a `surface` node and is held to the same
+/// rules as a session surface's root (ADR 0007).
+pub fn validate_descriptor(descriptor: &SurfaceDescriptor) -> Result<(), SurfaceError> {
+    if descriptor.id.is_empty() {
+        return Err(SurfaceError::new("surface descriptor id must be non-empty"));
+    }
+    if !matches!(descriptor.root, SurfaceNode::Surface { .. }) {
+        return Err(SurfaceError::new(
+            "surface descriptor root node must be \"surface\"",
+        ));
+    }
+    let mut count = 0usize;
+    validate_node(&descriptor.root, 0, Ctx::ROOT, &mut count)
+}
+
+/// Per-node validation context carried down the tree.
+#[derive(Debug, Clone, Copy)]
+struct Ctx {
+    /// Inside an `actions` container (children constrained to button/menu).
+    inside_actions: bool,
+    /// Inside a `form` (forms may not nest).
+    inside_form: bool,
+    /// Direct child of a `list` (the only position a `listItem` may occupy).
+    parent_is_list: bool,
+}
+
+impl Ctx {
+    const ROOT: Self = Self {
+        inside_actions: false,
+        inside_form: false,
+        parent_is_list: false,
+    };
 }
 
 fn validate_node(
     node: &SurfaceNode,
     depth: usize,
-    inside_actions: bool,
+    ctx: Ctx,
     count: &mut usize,
 ) -> Result<(), SurfaceError> {
     if depth > MAX_DEPTH {
@@ -189,15 +266,110 @@ fn validate_node(
                 }
             }
         }
-        SurfaceNode::Table { headers, rows, .. } => {
-            for (i, row) in rows.iter().enumerate() {
-                if row.len() != headers.len() {
+        SurfaceNode::Table {
+            headers,
+            columns,
+            rows,
+            ..
+        } => {
+            let effective = if !headers.is_empty() {
+                headers.len()
+            } else {
+                columns.len()
+            };
+            if effective == 0 {
+                return Err(SurfaceError::new("table requires headers or columns"));
+            }
+            if !headers.is_empty() && !columns.is_empty() && headers.len() != columns.len() {
+                return Err(SurfaceError::new(
+                    "table headers and columns must agree in length",
+                ));
+            }
+            let mut keys = std::collections::BTreeSet::new();
+            for col in columns {
+                if col.key.is_empty() {
+                    return Err(SurfaceError::new("table column keys must be non-empty"));
+                }
+                if !keys.insert(&col.key) {
                     return Err(SurfaceError::new(format!(
-                        "table row {i} has {} cells for {} headers",
-                        row.len(),
-                        headers.len()
+                        "duplicate table column key \"{}\"",
+                        col.key
                     )));
                 }
+            }
+            for (i, row) in rows.iter().enumerate() {
+                if row.len() != effective {
+                    return Err(SurfaceError::new(format!(
+                        "table row {i} has {} cells for {} columns",
+                        row.len(),
+                        effective
+                    )));
+                }
+                for cell in row {
+                    if let TableCell::Typed(TypedTableCell::Action { label, action }) = cell {
+                        if label.is_empty() {
+                            return Err(SurfaceError::new(
+                                "table action cell label must be non-empty",
+                            ));
+                        }
+                        validate_action(action)?;
+                    }
+                }
+            }
+        }
+        SurfaceNode::Field { children, .. } if children.is_empty() => {
+            return Err(SurfaceError::new("field requires children"));
+        }
+        SurfaceNode::Form { submit, .. } => {
+            if ctx.inside_form {
+                return Err(SurfaceError::new("form may not nest inside form"));
+            }
+            validate_action(submit)?;
+        }
+        SurfaceNode::Radio {
+            name,
+            options,
+            value,
+            ..
+        } => {
+            if name.is_empty() {
+                return Err(SurfaceError::new("radio requires a non-empty name"));
+            }
+            validate_options(options, "radio")?;
+            if let Some(v) = value {
+                if !options.iter().any(|o| &o.value == v) {
+                    return Err(SurfaceError::new(format!(
+                        "radio value \"{v}\" is not one of its options"
+                    )));
+                }
+            }
+        }
+        SurfaceNode::ListItem { title, action, .. } => {
+            if !ctx.parent_is_list {
+                return Err(SurfaceError::new(
+                    "listItem may only appear as a direct child of list",
+                ));
+            }
+            if title.is_empty() {
+                return Err(SurfaceError::new("listItem title must be non-empty"));
+            }
+            if let Some(action) = action {
+                validate_action(action)?;
+            }
+        }
+        SurfaceNode::Custom { kind, .. } => {
+            if kind.is_empty() {
+                return Err(SurfaceError::new("custom node kind must be non-empty"));
+            }
+            if kind.contains(char::is_whitespace) {
+                return Err(SurfaceError::new(format!(
+                    "custom node kind \"{kind}\" must not contain whitespace"
+                )));
+            }
+            if kind.starts_with("aiux.") {
+                return Err(SurfaceError::new(format!(
+                    "custom node kind \"{kind}\" uses the reserved aiux.* prefix"
+                )));
             }
         }
         SurfaceNode::Button { label, action, .. } => {
@@ -238,30 +410,38 @@ fn validate_node(
                 node.kind()
             )));
         }
-        SurfaceNode::Select { options, .. } => {
-            if options.is_empty() {
-                return Err(SurfaceError::new("select requires options"));
-            }
-            let mut seen = std::collections::BTreeSet::new();
-            for opt in options {
-                if !seen.insert(&opt.value) {
-                    return Err(SurfaceError::new(format!(
-                        "duplicate select option \"{}\"",
-                        opt.value
-                    )));
-                }
-            }
-        }
+        SurfaceNode::Select { options, .. } => validate_options(options, "select")?,
         _ => {}
     }
-    if inside_actions && !matches!(node, SurfaceNode::Button { .. } | SurfaceNode::Menu { .. }) {
+    if ctx.inside_actions && !matches!(node, SurfaceNode::Button { .. } | SurfaceNode::Menu { .. })
+    {
         return Err(SurfaceError::new(
             "\"actions\" may only contain button/menu nodes",
         ));
     }
-    let in_actions = matches!(node, SurfaceNode::Actions { .. }) || inside_actions;
+    let child_ctx = Ctx {
+        inside_actions: matches!(node, SurfaceNode::Actions { .. }) || ctx.inside_actions,
+        inside_form: matches!(node, SurfaceNode::Form { .. }) || ctx.inside_form,
+        parent_is_list: matches!(node, SurfaceNode::List { .. }),
+    };
     for child in node.children() {
-        validate_node(child, depth + 1, in_actions, count)?;
+        validate_node(child, depth + 1, child_ctx, count)?;
+    }
+    Ok(())
+}
+
+fn validate_options(options: &[SelectOption], kind: &str) -> Result<(), SurfaceError> {
+    if options.is_empty() {
+        return Err(SurfaceError::new(format!("{kind} requires options")));
+    }
+    let mut seen = std::collections::BTreeSet::new();
+    for opt in options {
+        if !seen.insert(&opt.value) {
+            return Err(SurfaceError::new(format!(
+                "duplicate {kind} option \"{}\"",
+                opt.value
+            )));
+        }
     }
     Ok(())
 }

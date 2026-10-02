@@ -1,0 +1,221 @@
+{
+  "events": [
+    {
+      "eventId": "surface-list-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "surface-list"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "surface-list-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "surface-list-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "surface-list"
+          },
+          "name": "query",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "surface-list-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "documents": [
+            "quarterly-report",
+            "onboarding-guide",
+            "archive"
+          ]
+        },
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.completed"
+    },
+    {
+      "eventId": "surface-list-4",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "surface-list-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "surface": {
+          "id": "sf-1",
+          "name": "doc-list",
+          "revision": 0,
+          "root": {
+            "children": [
+              {
+                "children": [
+                  {
+                    "action": {
+                      "id": "doc.open",
+                      "payload": {
+                        "doc": "q3"
+                      }
+                    },
+                    "icon": "document",
+                    "subtitle": "Q3 revenue summary",
+                    "title": "Quarterly report",
+                    "type": "listItem"
+                  },
+                  {
+                    "icon": "checklist",
+                    "subtitle": "New hire checklist",
+                    "title": "Onboarding guide",
+                    "type": "listItem"
+                  },
+                  {
+                    "children": [
+                      {
+                        "text": "12 items",
+                        "tone": "muted",
+                        "type": "badge"
+                      }
+                    ],
+                    "icon": "folder",
+                    "title": "Archive",
+                    "type": "listItem"
+                  }
+                ],
+                "type": "list"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "id": "doc.create"
+                    },
+                    "label": "New document",
+                    "type": "button",
+                    "variant": "primary"
+                  },
+                  {
+                    "items": [
+                      {
+                        "action": {
+                          "id": "doc.import"
+                        },
+                        "label": "Import"
+                      },
+                      {
+                        "action": {
+                          "id": "doc.export"
+                        },
+                        "label": "Export"
+                      }
+                    ],
+                    "label": "More",
+                    "type": "menu"
+                  }
+                ],
+                "type": "actions"
+              }
+            ],
+            "type": "surface"
+          }
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "surface.created"
+    },
+    {
+      "eventId": "surface-list-6",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "surfaceId": "sf-1",
+          "type": "surface"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "surface-list-7",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:07Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "surface-list-8",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "surface-list",
+  "protocolVersion": "0.1"
+}

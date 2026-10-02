@@ -60,6 +60,12 @@ pub fn updated(
     if let Some(metadata) = &patch.metadata {
         artifact.metadata = Some(metadata.clone());
     }
+    if let Some(preview) = &patch.preview {
+        artifact.preview = Some(preview.clone());
+    }
+    if let Some(workspace) = &patch.workspace {
+        artifact.workspace = Some(workspace.clone());
+    }
     artifact.revision += 1;
     Ok(())
 }
@@ -91,6 +97,8 @@ mod tests {
             content: Some("v1".to_string()),
             uri: None,
             metadata: None,
+            preview: None,
+            workspace: None,
             extra: Default::default(),
         }
     }
@@ -106,6 +114,8 @@ mod tests {
             content: Some("v2".to_string()),
             uri: None,
             metadata: None,
+            preview: None,
+            workspace: None,
         };
         updated(&mut store, &patch).unwrap();
         assert_eq!(store.0["a1"].revision, 2);
@@ -122,6 +132,8 @@ mod tests {
             content: None,
             uri: None,
             metadata: None,
+            preview: None,
+            workspace: None,
         };
         assert!(updated(&mut store, &patch).is_err());
     }
