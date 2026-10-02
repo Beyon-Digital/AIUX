@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phases 4 + 6 in flight** (Expo ∥ DSL lanes) — renderers + Flutter landed
+- Current phase: **Phase 4 (Expo) in flight** — all other lanes landed
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
@@ -22,8 +22,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
     22 fixtures byte-identical via C ABI, app verified on flutter run -d linux)
   - Lane I `devin/phase4-expo` — Expo SDK 57 bridge + example (sub-agent, off
     `devin/phase4-expo-base` = compose+swiftui+wasm-js)
-  - Lane J `devin/phase6-dsl` — Surface DSL expansion + artifacts (sub-agent, off
-    `devin/phase6-dsl-base` = expo-base + phase5-web)
+  - PR 10 `devin/phase6-dsl` — Surface Schema v1→31 nodes (ADR 0007) + renderer
+    updates (green 9/9, conformance 27/27, browser-verified)
   - PR 5 `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (green)
 - Held: Phase 8 hardening (last — fires after all lanes land)
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
