@@ -167,7 +167,7 @@ class AIUXUnsupported extends StatelessWidget {
             Flexible(
               child: Text(
                 detail != null
-                    ? 'Unsupported $kind: $detail'
+                    ? 'Unsupported $kind: ${_brief(detail!)}'
                     : 'Unsupported $kind',
                 style: theme.typography.caption.copyWith(color: colors.muted),
               ),
@@ -177,4 +177,11 @@ class AIUXUnsupported extends StatelessWidget {
       ),
     );
   }
+
+  /// Details can carry agent-supplied payloads (e.g. image URLs) that are
+  /// arbitrarily long — clip them so the placeholder never tries to lay
+  /// out a giant string.
+  static String _brief(String detail) => detail.length <= 140
+      ? detail
+      : '${detail.substring(0, 140)}… (${detail.length} chars)';
 }

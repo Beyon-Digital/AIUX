@@ -104,4 +104,35 @@ void main() {
     await _pumpFor(tester, const Duration(seconds: 6));
     expect(find.text('Publish the quarterly report?'), findsOneWidget);
   });
+
+  testWidgets('prompt sent right after cancel starts a clean turn',
+      (tester) async {
+    final controller = DemoController.bootstrap();
+    await tester.pumpWidget(AiuxTheme(
+      data: AiuxThemeData.standard(),
+      child: MaterialApp(home: AiuxExampleRootView(controller: controller)),
+    ));
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField).first, 'go');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 1));
+    await tester.tap(find.bySemanticsLabel('Cancel run'));
+
+    // Send the next prompt within the cancelled turn's in-flight 320ms
+    // delay: the old loop must stay dead instead of resuming on the
+    // reset flag and interleaving turn-1 events into turn 2.
+    await tester.enterText(find.byType(TextField).first, 'again');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 7));
+
+    expect(controller.store.lastError, isNull);
+    // Stale turn-1 dispatches get rejected by the core (its run is
+    // cancelled) and surface as 'dispatch failed' log lines — none here.
+    expect(
+        controller.log.where((l) => l.startsWith('dispatch failed')), isEmpty);
+    expect(find.text('Publish the quarterly report?'), findsOneWidget);
+  });
 }

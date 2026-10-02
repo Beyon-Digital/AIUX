@@ -628,6 +628,9 @@ class _AiuxSurfaceImage extends StatelessWidget {
     final uri = Uri.tryParse(src);
     if (uri == null) return null;
     if (uri.isScheme('http') || uri.isScheme('https')) {
+      // SSRF guard: agent-controlled URLs must not target loopback,
+      // private, link-local, or reserved destinations.
+      if (!_isPublicHost(uri.host)) return null;
       return Image.network(
         src,
         fit: BoxFit.contain,
@@ -641,6 +644,10 @@ class _AiuxSurfaceImage extends StatelessWidget {
     }
     if (uri.isScheme('data')) {
       try {
+        // Bound the inline decode — base64 inflates ~4/3 over the payload,
+        // so an oversized source renders as unsupported rather than
+        // freezing the UI on a huge buffer.
+        if (src.length > _maxInlineImageChars) return null;
         final data = UriData.parse(src);
         if (!data.mimeType.startsWith('image/')) return null;
         return Image.memory(
@@ -654,6 +661,71 @@ class _AiuxSurfaceImage extends StatelessWidget {
       }
     }
     return null;
+  }
+
+  /// Largest inline `data:` source decoded into memory (encoded chars —
+  /// 8 MiB decodes to ≤6 MiB).
+  static const _maxInlineImageChars = 8 * 1024 * 1024;
+
+  /// Best-effort destination check for `http(s)` image sources: literal
+  /// loopback/private/link-local/reserved hosts and non-canonical numeric
+  /// forms are refused so a crafted surface can't make the host request
+  /// internal services. A public-looking hostname that resolves to a
+  /// private address still passes — `Image.network` owns its own DNS, so
+  /// full protection needs a fetch-time allowlist outside the renderer.
+  static bool _isPublicHost(String host) {
+    if (host.isEmpty) return false;
+    final h = host.toLowerCase();
+    if (h == 'localhost' ||
+        h.endsWith('.localhost') ||
+        h.endsWith('.local') ||
+        h.endsWith('.internal')) {
+      return false;
+    }
+    // IPv4-mapped IPv6 literal — recheck the embedded address.
+    if (h.startsWith('::ffff:')) return _isPublicHost(h.substring(7));
+    // IPv6 literals arrive unbracketed in Uri.host.
+    if (h.contains(':')) {
+      if (h == '::' ||
+          h == '::1' ||
+          RegExp('^f[cd]').hasMatch(h) || // fc00::/7 unique-local
+          RegExp('^fe[89ab]').hasMatch(h)) {
+        // fe80::/10 link-local
+        return false;
+      }
+      return true; // other IPv6 literals are global-unicast candidates
+    }
+    final v4 = RegExp(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$').firstMatch(h);
+    if (v4 != null) {
+      final parts = [for (var i = 1; i <= 4; i++) v4[i]!];
+      // Non-canonical octets (leading zero = octal form, or >3 digits)
+      // can alias a private address — refuse rather than interpret.
+      if (parts
+          .any((p) => p.length > 3 || (p.length > 1 && p.startsWith('0')))) {
+        return false;
+      }
+      final a = int.parse(parts[0]), b = int.parse(parts[1]);
+      if (int.parse(parts[2]) > 255 || int.parse(parts[3]) > 255) {
+        return false;
+      }
+      if (a == 0 ||
+          a == 10 || // private
+          a == 127 || // loopback
+          a >= 224 || // multicast / reserved
+          (a == 169 && b == 254) || // link-local
+          (a == 172 && b >= 16 && b <= 31) || // private
+          (a == 192 && b == 168)) {
+        return false; // private
+      }
+      return true;
+    }
+    // Non-canonical numeric hosts (flat decimal, hex literal, hex octets)
+    // are refused; real names contain letters outside this charset.
+    if (RegExp(r'^[0-9.]+$').hasMatch(h) ||
+        RegExp(r'^0x[0-9a-f]*(\.0x[0-9a-f]*)*$').hasMatch(h)) {
+      return false;
+    }
+    return true;
   }
 }
 
@@ -869,6 +941,11 @@ class _AiuxSelectFieldState extends State<_AiuxSelectField> {
         Semantics(
           label: widget.label ?? widget.name,
           child: DropdownButtonFormField<String>(
+            // The field keeps its own FormFieldState value — key on the
+            // effective selection so a wire change rebuilds it; when the
+            // selected option disappears the value falls back to null
+            // instead of tripping the dropdown's item assertion.
+            key: ValueKey(hasOption ? _selected : null),
             initialValue: hasOption ? _selected : null,
             decoration: InputDecoration(
               isDense: true,

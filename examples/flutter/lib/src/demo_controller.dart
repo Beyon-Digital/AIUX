@@ -33,7 +33,7 @@ class DemoController extends ChangeNotifier {
   int _turn = 0;
   Completer<bool>? _approvalGate;
   bool _waitingForApproval = false;
-  bool _turnCancelled = false;
+  int _turnGeneration = 0;
   bool _runActive = false;
 
   /// A decision tapped before the gate was installed — consumed on arrival.
@@ -111,28 +111,33 @@ class DemoController extends ChangeNotifier {
     }
 
     _runActive = true;
-    _turnCancelled = false;
+    final gen = ++_turnGeneration;
     _waitingForApproval = true;
-    unawaited(_runTurn(turn));
+    unawaited(_runTurn(turn, gen));
   }
 
-  Future<void> _runTurn(int turn) async {
+  Future<void> _runTurn(int turn, int gen) async {
+    // `gen` pins this loop to its turn: cancellation and every new prompt
+    // bump _turnGeneration, so a stale loop resuming from a trickle delay
+    // exits instead of emitting events into a cancelled or superseded run.
+    bool live() => gen == _turnGeneration;
     // Pull envelopes lazily: each event's sequence number is consumed on
-    // moveNext(), so checking cancellation first keeps cancelEvents
+    // moveNext(), so checking the generation first keeps cancelEvents
     // contiguous with what was actually dispatched.
     final pre = DemoScenario.preApprovalEvents(_factory, turn).iterator;
-    while (!_turnCancelled && pre.moveNext()) {
+    while (live() && pre.moveNext()) {
       await _dispatchTrickle(pre.current);
     }
-    if (_turnCancelled) return;
+    if (!live()) return;
     // Hold for the approval decision.
     final approved = await _waitForApproval();
+    if (!live()) return;
     final post =
         DemoScenario.postApprovalEvents(_factory, turn, approved).iterator;
-    while (!_turnCancelled && post.moveNext()) {
+    while (live() && post.moveNext()) {
       await _dispatchTrickle(post.current);
     }
-    _runActive = false;
+    if (live()) _runActive = false;
   }
 
   Future<bool> _waitForApproval() {
@@ -148,7 +153,7 @@ class DemoController extends ChangeNotifier {
 
   void _cancelActiveTurn() {
     if (!_runActive) return;
-    _turnCancelled = true;
+    ++_turnGeneration;
     _approvalGate?.complete(false);
     _approvalGate = null;
     _waitingForApproval = false;

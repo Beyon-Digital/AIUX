@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:beyond_aiux/beyond_aiux.dart';
@@ -163,6 +164,35 @@ void main() {
       }
     });
 
+    testWidgets('surface.updated re-renders a changed select value',
+        (tester) async {
+      final store = _storeFor(_selectFixture());
+      await _pumpConversation(tester, store);
+      expect(find.text('Draft'), findsOneWidget);
+      expect(find.text('Published'), findsNothing);
+      // The wire value changes draft → published; the mounted dropdown's
+      // own FormFieldState must follow, not just `initialValue`.
+      store.ingestEvent(_surfaceUpdatedSelect);
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(find.text('Published'), findsOneWidget);
+      expect(find.text('Draft'), findsNothing);
+      store.dispose();
+      (store.backend as AiuxFfiBackend).close();
+    });
+
+    testWidgets('surface images refuse internal hosts and oversized data',
+        (tester) async {
+      final store = _storeFor(_imageFixture());
+      await _pumpConversation(tester, store);
+      // Loopback/private/non-canonical hosts, an over-cap inline payload,
+      // and a non-image data URI all render as unsupported; only the tiny
+      // inline png reaches an Image widget.
+      expect(find.textContaining('Unsupported image:'), findsNWidgets(5));
+      expect(find.byType(Image), findsOneWidget);
+      store.dispose();
+      (store.backend as AiuxFfiBackend).close();
+    });
+
     testWidgets('composer send emits aiux.composer.send', (tester) async {
       final actions = <AiuxAction>[];
       final store = _storeFor(fixture('basic-response'));
@@ -252,3 +282,127 @@ void main() {
     });
   });
 }
+
+// MARK: - Inline fixture builders
+
+const _pv = '0.1';
+
+Map<String, Object?> _env(int seq, String type, Map<String, Object?> payload) =>
+    {
+      'eventId': 'fix-$seq',
+      'protocolVersion': _pv,
+      'sequence': seq,
+      'sessionId': 's1',
+      'timestamp': '2026-01-01T00:00:0${seq}Z',
+      'type': type,
+      'payload': payload,
+    };
+
+/// Minimal scripted message carrying a single surface with [children] —
+/// covers nodes no shipped conformance fixture exercises.
+AiuxFixture _surfaceFixture(List<Map<String, Object?>> children) =>
+    AiuxFixture.fromJson(jsonEncode({
+      'name': 'surface-fields',
+      'protocolVersion': _pv,
+      'events': [
+        _env(0, 'session.created', {
+          'protocolVersion': _pv,
+          'session': {
+            'id': 's1',
+            'title': 'Surface fields',
+            'createdAt': '2026-01-01T00:00:00Z',
+          },
+        }),
+        _env(1, 'run.started', {
+          'protocolVersion': _pv,
+          'run': {
+            'id': 'r1',
+            'startedAt': '2026-01-01T00:00:01Z',
+            'status': 'running',
+          },
+        }),
+        _env(2, 'message.created', {
+          'protocolVersion': _pv,
+          'message': {
+            'id': 'm1',
+            'role': 'assistant',
+            'status': 'streaming',
+          },
+        }),
+        _env(3, 'surface.created', {
+          'protocolVersion': _pv,
+          'surface': {
+            'id': 'sf-1',
+            'name': 'fields',
+            'revision': 0,
+            'root': {'type': 'surface', 'children': children},
+          },
+        }),
+        _env(4, 'part.added', {
+          'protocolVersion': _pv,
+          'messageId': 'm1',
+          'part': {'id': 'm1-sf', 'type': 'surface', 'surfaceId': 'sf-1'},
+        }),
+        _env(5, 'message.updated', {
+          'protocolVersion': _pv,
+          'messageId': 'm1',
+          'status': 'complete',
+        }),
+      ],
+    }));
+
+const _selectOptions = [
+  {'value': 'draft', 'label': 'Draft'},
+  {'value': 'published', 'label': 'Published'},
+];
+
+AiuxFixture _selectFixture() => _surfaceFixture([
+      {
+        'type': 'select',
+        'name': 'status',
+        'label': 'Status',
+        'value': 'draft',
+        'options': _selectOptions,
+      },
+    ]);
+
+/// surface.updated replacing the root with value 'published' (seq 6).
+String get _surfaceUpdatedSelect => jsonEncode(_env(6, 'surface.updated', {
+      'protocolVersion': _pv,
+      'surfaceId': 'sf-1',
+      'root': {
+        'type': 'surface',
+        'children': [
+          {
+            'type': 'select',
+            'name': 'status',
+            'label': 'Status',
+            'value': 'published',
+            'options': _selectOptions,
+          },
+        ],
+      },
+    }));
+
+AiuxFixture _imageFixture() => _surfaceFixture([
+      {'type': 'image', 'src': 'http://127.0.0.1:8080/x.png', 'alt': 'loop'},
+      {'type': 'image', 'src': 'http://host.local/i.png', 'alt': 'local'},
+      {'type': 'image', 'src': 'http://0x7f000001/i.png', 'alt': 'hex'},
+      {
+        'type': 'image',
+        'src': 'data:image/png;base64,${'A' * (8 * 1024 * 1024 + 16)}',
+        'alt': 'huge',
+      },
+      {
+        'type': 'image',
+        'src': 'data:text/plain;base64,aGVsbG8=',
+        'alt': 'not-image',
+      },
+      {
+        // Tiny valid inline png — the one node that reaches an Image widget.
+        'type': 'image',
+        'src':
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        'alt': 'pixel',
+      },
+    ]);
