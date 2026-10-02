@@ -4,9 +4,20 @@
   "private": true,
   "description": "Adapter: WebSocket streams → AIUXEvent[].",
   "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
-    "build": "echo '@beyondigital/aiux-adapter-websocket: build lands in a later phase (docs/PLAN.md)'",
-    "test": "echo '@beyondigital/aiux-adapter-websocket: tests land in a later phase'",
-    "typecheck": "echo '@beyondigital/aiux-adapter-websocket: typecheck lands in a later phase'"
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@beyondigital/aiux-protocol-types": "workspace:*",
+    "@beyondigital/aiux-transport-js": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "ajv": "8.17.1",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
   }
 }
