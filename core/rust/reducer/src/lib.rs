@@ -77,6 +77,12 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
             if p.session.id.is_empty() {
                 return Err(invalid("session.created: session id must be non-empty"));
             }
+            if p.session.id != event.session_id {
+                return Err(invalid(format!(
+                    "session.created: session id \"{}\" does not match event sessionId \"{}\"",
+                    p.session.id, event.session_id
+                )));
+            }
             for entity in &p.session.context {
                 state.context.insert(entity.clone());
             }
@@ -150,9 +156,16 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
                     p.message.id
                 )));
             }
+            let mut part_ids = std::collections::BTreeSet::new();
             for part in &p.message.parts {
                 if part.id().is_empty() {
                     return Err(invalid("message.created: part id must be non-empty"));
+                }
+                if !part_ids.insert(part.id()) {
+                    return Err(invalid(format!(
+                        "message.created: duplicate part id \"{}\"",
+                        part.id()
+                    )));
                 }
             }
             state.messages.insert(p.message);
@@ -213,6 +226,14 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
                         p.part_id, p.message_id
                     ))
                 })?;
+            // Replacement is in-place: the new part keeps the target's id.
+            if p.part.id() != p.part_id {
+                return Err(invalid(format!(
+                    "part.updated: replacement id \"{}\" does not match partId \"{}\"",
+                    p.part.id(),
+                    p.part_id
+                )));
+            }
             message.parts[idx] = p.part;
         }
         EventType::TextDelta => {
@@ -337,7 +358,12 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
             let candidate = Surface {
                 id: existing.id.clone(),
                 name: existing.name.clone(),
-                revision: existing.revision + 1,
+                revision: existing.revision.checked_add(1).ok_or_else(|| {
+                    invalid(format!(
+                        "surface.updated: surface \"{}\" revision overflow",
+                        p.surface_id
+                    ))
+                })?,
                 root: p.root,
                 extra: existing.extra.clone(),
             };
@@ -540,6 +566,114 @@ mod tests {
             1,
             EventType::MessageCreated,
             &serde_json::json!({"wrong": true}),
+        );
+        assert!(matches!(
+            reduce(&mut state, &e),
+            Err(ProtocolError::InvalidEvent { .. })
+        ));
+    }
+
+    #[test]
+    fn session_created_entity_id_must_match_envelope() {
+        let mut state = SessionState::default();
+        let e = ev(
+            0,
+            EventType::SessionCreated,
+            &SessionCreated {
+                protocol_version: PROTOCOL_VERSION.to_string(),
+                session: Session {
+                    id: "not-s1".to_string(), // envelope sessionId is "s1"
+                    title: None,
+                    created_at: None,
+                    capabilities: vec![],
+                    context: vec![],
+                    metadata: None,
+                    extra: BTreeMap::new(),
+                },
+            },
+        );
+        assert!(matches!(
+            reduce(&mut state, &e),
+            Err(ProtocolError::InvalidEvent { .. })
+        ));
+    }
+
+    #[test]
+    fn message_created_duplicate_part_ids_rejected() {
+        let mut state = base_state();
+        let e = ev(
+            1,
+            EventType::MessageCreated,
+            &MessageCreated {
+                protocol_version: PROTOCOL_VERSION.to_string(),
+                message: Message {
+                    id: "m1".to_string(),
+                    role: MessageRole::Assistant,
+                    status: None,
+                    parts: vec![
+                        Part::Text(TextPart {
+                            id: "p1".to_string(),
+                            text: "a".to_string(),
+                            extra: BTreeMap::new(),
+                        }),
+                        Part::Text(TextPart {
+                            id: "p1".to_string(),
+                            text: "b".to_string(),
+                            extra: BTreeMap::new(),
+                        }),
+                    ],
+                    created_at: None,
+                    metadata: None,
+                    extra: BTreeMap::new(),
+                },
+            },
+        );
+        assert!(matches!(
+            reduce(&mut state, &e),
+            Err(ProtocolError::InvalidEvent { .. })
+        ));
+    }
+
+    #[test]
+    fn part_updated_rejects_identity_change() {
+        let mut state = base_state();
+        reduce(
+            &mut state,
+            &ev(
+                1,
+                EventType::MessageCreated,
+                &MessageCreated {
+                    protocol_version: PROTOCOL_VERSION.to_string(),
+                    message: Message {
+                        id: "m1".to_string(),
+                        role: MessageRole::Assistant,
+                        status: Some(MessageStatus::Streaming),
+                        parts: vec![Part::Text(TextPart {
+                            id: "p1".to_string(),
+                            text: "v1".to_string(),
+                            extra: BTreeMap::new(),
+                        })],
+                        created_at: None,
+                        metadata: None,
+                        extra: BTreeMap::new(),
+                    },
+                },
+            ),
+        )
+        .unwrap();
+        let e = ev(
+            2,
+            EventType::PartUpdated,
+            &PartUpdated {
+                protocol_version: PROTOCOL_VERSION.to_string(),
+                message_id: "m1".to_string(),
+                part_id: "p1".to_string(),
+                part: Part::Text(TextPart {
+                    id: "p2".to_string(), // renames p1 — deltas on p1 would break
+                    text: "v2".to_string(),
+                    extra: BTreeMap::new(),
+                }),
+            },
         );
         assert!(matches!(
             reduce(&mut state, &e),

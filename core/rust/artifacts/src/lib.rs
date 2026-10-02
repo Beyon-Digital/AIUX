@@ -48,6 +48,14 @@ pub fn updated(
             patch.artifact_id
         ))
     })?;
+    // Compute the next revision before mutating: a rejected event must
+    // leave the artifact untouched.
+    let next_revision = artifact.revision.checked_add(1).ok_or_else(|| {
+        invalid(format!(
+            "artifact.updated: artifact \"{}\" revision overflow",
+            patch.artifact_id
+        ))
+    })?;
     if let Some(title) = &patch.title {
         artifact.title = Some(title.clone());
     }
@@ -66,7 +74,7 @@ pub fn updated(
     if let Some(workspace) = &patch.workspace {
         artifact.workspace = Some(workspace.clone());
     }
-    artifact.revision += 1;
+    artifact.revision = next_revision;
     Ok(())
 }
 
@@ -120,6 +128,31 @@ mod tests {
         updated(&mut store, &patch).unwrap();
         assert_eq!(store.0["a1"].revision, 2);
         assert_eq!(store.0["a1"].content.as_deref(), Some("v2"));
+    }
+
+    #[test]
+    fn revision_overflow_is_error() {
+        let mut store = Map(BTreeMap::new());
+        created(&mut store, artifact("a1")).unwrap();
+        store.0.get_mut("a1").unwrap().revision = u64::MAX;
+        let patch = ArtifactUpdated {
+            protocol_version: aiux_protocol::PROTOCOL_VERSION.to_string(),
+            artifact_id: "a1".to_string(),
+            title: Some("mutated".to_string()),
+            content: Some("new".to_string()),
+            uri: None,
+            metadata: None,
+            preview: None,
+            workspace: None,
+        };
+        assert!(matches!(
+            updated(&mut store, &patch),
+            Err(ProtocolError::InvalidEvent { .. })
+        ));
+        // The rejected event must leave the artifact entirely unchanged.
+        assert_eq!(store.0["a1"].revision, u64::MAX);
+        assert_eq!(store.0["a1"].title, None);
+        assert_eq!(store.0["a1"].content.as_deref(), Some("v1"));
     }
 
     #[test]

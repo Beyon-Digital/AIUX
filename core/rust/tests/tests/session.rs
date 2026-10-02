@@ -131,6 +131,80 @@ fn sequence_below_expected_is_sequence_gap() {
 }
 
 #[test]
+fn conflicting_buffered_event_is_rejected() {
+    let mut s = fresh();
+    let events = base_events();
+    s.dispatch(&events[0]).unwrap();
+    s.dispatch(&events[2]).unwrap(); // buffered at seq 2
+                                     // A different eventId claiming the occupied future slot collides — it
+                                     // must surface an error, never silently vanish.
+    let clash = json!({
+        "eventId": "ev-clash",
+        "sessionId": SID,
+        "sequence": 2,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "type": "text.delta",
+        "payload": pv(json!({"messageId": "m1", "partId": "p1", "delta": "x"})),
+    })
+    .to_string();
+    assert!(matches!(
+        s.dispatch(&clash),
+        Err(ProtocolError::InvalidEvent { .. })
+    ));
+    // The original buffered event still drains normally once the gap closes.
+    let report = s.dispatch(&events[1]).unwrap();
+    assert_eq!(report.applied, 2);
+}
+
+#[test]
+fn rejected_first_event_does_not_bind_session() {
+    let mut s = fresh();
+    // A first event failing reducer validation must not pin the session id.
+    let bad = json!({
+        "eventId": "ev-bad",
+        "sessionId": "other-session",
+        "sequence": 0,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "type": "message.created",
+        "payload": pv(json!({"notMessage": true})),
+    })
+    .to_string();
+    assert!(matches!(
+        s.dispatch(&bad),
+        Err(ProtocolError::InvalidEvent { .. })
+    ));
+    // The corrected stream from the real session is still accepted.
+    s.dispatch(&base_events()[0]).unwrap();
+    let snap: serde_json::Value = serde_json::from_str(&s.snapshot().unwrap()).unwrap();
+    assert_eq!(snap["sessionId"], SID);
+}
+
+#[test]
+fn buffered_foreign_event_fails_at_drain() {
+    let mut s = fresh();
+    // Out-of-order arrival while unbound parks without pinning identity.
+    let stray = json!({
+        "eventId": "ev-stray",
+        "sessionId": "other-session",
+        "sequence": 1,
+        "timestamp": "2026-01-01T00:00:00Z",
+        "type": "text.delta",
+        "payload": pv(json!({"messageId": "m1", "partId": "p1", "delta": "x"})),
+    })
+    .to_string();
+    let report = s.dispatch(&stray).unwrap();
+    assert_eq!(report.buffered, 1);
+    // Binding happens on the first applied event; draining the foreign stray
+    // errors and releases its slot for a corrected resend.
+    assert!(matches!(
+        s.dispatch(&base_events()[0]),
+        Err(ProtocolError::InvalidEvent { .. })
+    ));
+    let report = s.dispatch(&base_events()[1]).unwrap();
+    assert_eq!(report.applied, 1);
+}
+
+#[test]
 fn reorder_buffer_overflow_is_sequence_gap() {
     let mut s = fresh();
     let events = base_events();
@@ -387,6 +461,23 @@ fn restore_resumes_sequence_and_idempotency() {
         restored.serialize().unwrap(),
         uninterrupted.serialize().unwrap()
     );
+}
+
+#[test]
+fn restore_rejects_duplicate_buffered_sequence() {
+    let mut s = fresh();
+    let events = base_events();
+    s.dispatch(&events[0]).unwrap();
+    s.dispatch(&events[2]).unwrap(); // buffered seq 2
+    let mut saved: serde_json::Value = serde_json::from_str(&s.serialize().unwrap()).unwrap();
+    // Hand-corrupt the persisted buffer: a second event at the same sequence.
+    let mut extra = saved["bufferedEvents"][0].clone();
+    extra["eventId"] = json!("ev-injected");
+    saved["bufferedEvents"].as_array_mut().unwrap().push(extra);
+    assert!(matches!(
+        AiuxSession::restore(&saved.to_string()),
+        Err(ProtocolError::CorruptState { .. })
+    ));
 }
 
 #[test]
