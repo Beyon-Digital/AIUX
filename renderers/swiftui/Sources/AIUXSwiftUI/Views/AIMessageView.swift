@@ -248,6 +248,21 @@ struct AIImagePart: View {
         if let uri = attachment.uri,
            let url = URL(string: uri),
            remoteURLPolicy(url) {
+            imageContent(for: url)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
+                .accessibilityLabel(attachment.name ?? attachment.uri ?? "Image")
+        } else {
+            AIAttachmentRow(attachment: attachment)
+        }
+    }
+
+    // Inline `data:image/…` decodes locally; everything else AsyncImage
+    // fetches (approved-but-unfetchable schemes degrade via .failure).
+    @ViewBuilder
+    private func imageContent(for url: URL) -> some View {
+        if let image = aiuxDecodeDataImage(url) {
+            image.resizable().scaledToFit()
+        } else {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -259,10 +274,6 @@ struct AIImagePart: View {
                         .frame(maxWidth: .infinity, minHeight: 80)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
-            .accessibilityLabel(attachment.name ?? attachment.uri ?? "Image")
-        } else {
-            AIAttachmentRow(attachment: attachment)
         }
     }
 }

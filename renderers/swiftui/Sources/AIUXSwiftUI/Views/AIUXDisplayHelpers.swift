@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 // MARK: - Shared display helpers
 //
@@ -56,6 +61,8 @@ func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
         return s
     case .int(let i):
         return String(i)
+    case .uint(let u):
+        return String(u)
     case .number(let n):
         // Integral doubles print without the `.0`; below 2^53 every whole
         // Double converts exactly and stays far inside Int64.
@@ -80,6 +87,28 @@ func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
           let string = String(data: data, encoding: .utf8)
     else { return nil }
     return string
+}
+
+/// Decode an inline `data:image/…;base64,…` URI — rendered locally, never
+/// fetched (the same surface the web `<img>` gets for free). Nil for
+/// non-image, non-base64, or un-decodable URIs.
+func aiuxDecodeDataImage(_ url: URL) -> Image? {
+    let raw = url.absoluteString
+    guard raw.lowercased().hasPrefix("data:image/"),
+          let comma = raw.firstIndex(of: ",") else { return nil }
+    let meta = raw[raw.startIndex..<comma].lowercased()
+    guard meta.hasSuffix(";base64"),
+          let data = Data(base64Encoded: String(raw[raw.index(after: comma)...]))
+    else { return nil }
+    #if canImport(UIKit)
+    guard let image = UIImage(data: data) else { return nil }
+    return Image(uiImage: image)
+    #elseif canImport(AppKit)
+    guard let image = NSImage(data: data) else { return nil }
+    return Image(nsImage: image)
+    #else
+    return nil
+    #endif
 }
 
 /// A small icon keyed to a semantic attachment `mimeType` prefix.

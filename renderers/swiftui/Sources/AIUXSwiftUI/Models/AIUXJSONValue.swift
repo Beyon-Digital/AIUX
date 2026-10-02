@@ -10,6 +10,8 @@ public enum AIUXJSONValue: Equatable, Sendable {
     /// Integral wire values — kept exact past Double's 2^53 precision bound
     /// (serde_json does the same split: `Number` is i64/u64/f64).
     case int(Int64)
+    /// Unsigned values above Int64.max — only reachable for u64-range ints.
+    case uint(UInt64)
     case number(Double)
     case bool(Bool)
     case array([AIUXJSONValue])
@@ -21,6 +23,7 @@ public enum AIUXJSONValue: Equatable, Sendable {
         switch self {
         case .string(let s): return s
         case .int(let i): return i
+        case .uint(let u): return u
         case .number(let n): return n
         case .bool(let b): return b
         case .array(let a): return a.map { $0.object }
@@ -38,6 +41,7 @@ public enum AIUXJSONValue: Equatable, Sendable {
     public var numberValue: Double? {
         switch self {
         case .int(let i): return Double(i)
+        case .uint(let u): return Double(u)
         case .number(let n): return n
         default: return nil
         }
@@ -46,6 +50,12 @@ public enum AIUXJSONValue: Equatable, Sendable {
     /// The exact integer for `.int`; nil otherwise (`.number` stays Double).
     public var intValue: Int64? {
         if case .int(let i) = self { return i }
+        return nil
+    }
+
+    /// The exact unsigned integer for `.uint`; nil otherwise.
+    public var uintValue: UInt64? {
+        if case .uint(let u) = self { return u }
         return nil
     }
 
@@ -69,6 +79,8 @@ extension AIUXJSONValue: Codable {
             self = .bool(b)
         } else if let i = try? container.decode(Int64.self) {
             self = .int(i)
+        } else if let u = try? container.decode(UInt64.self) {
+            self = .uint(u)
         } else if let n = try? container.decode(Double.self) {
             self = .number(n)
         } else if let s = try? container.decode(String.self) {
@@ -90,6 +102,7 @@ extension AIUXJSONValue: Codable {
         switch self {
         case .string(let s): try container.encode(s)
         case .int(let i): try container.encode(i)
+        case .uint(let u): try container.encode(u)
         case .number(let n): try container.encode(n)
         case .bool(let b): try container.encode(b)
         case .array(let a): try container.encode(a)

@@ -101,12 +101,31 @@ final class AIUXExampleTests: XCTestCase {
             ]),
         ].joined(separator: ",") + "]")
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.cancelEvents(turn: 1)
+            "[" + DemoScenario.cancelEvents(turn: 1, runActive: true, messageStreaming: true)
                 .map { factory.event($0) }.joined(separator: ",") + "]")
         let snap = try snapshot(of: backend)
         XCTAssertEqual(snap.runs.first?.status, .cancelled)
         XCTAssertEqual(snap.messages.last?.status, .cancelled)
         XCTAssertNil(snap.activeRunId)
+    }
+
+    /// Cancelling before the agent's first events must emit nothing — an
+    /// event for an entity the core never saw is rejected, and the rejected
+    /// event's stamped sequence strands every later event in the buffer.
+    func testCancelBeforeAnyAgentEventsEmitsNothing() throws {
+        XCTAssertTrue(
+            DemoScenario.cancelEvents(turn: 1, runActive: false, messageStreaming: false).isEmpty
+        )
+        XCTAssertEqual(
+            DemoScenario.cancelEvents(turn: 1, runActive: true, messageStreaming: false)
+                .map(\.type),
+            ["run.cancelled"]
+        )
+        XCTAssertEqual(
+            DemoScenario.cancelEvents(turn: 1, runActive: false, messageStreaming: true)
+                .map(\.type),
+            ["message.updated"]
+        )
     }
 
     // MARK: - Conformance replay (all fixtures, both decode paths)

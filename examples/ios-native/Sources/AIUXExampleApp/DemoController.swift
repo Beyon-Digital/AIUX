@@ -142,12 +142,27 @@ public final class DemoController: ObservableObject {
         approvalGate = nil
         waitingForApproval = false
         queuedDecision = nil
-        let events = DemoScenario.cancelEvents(turn: turn).map { self.factory.event($0) }
+        // Cancel only what the session actually holds — cancelling a run or
+        // message that was never created makes the core reject the event,
+        // which burns its stamped sequence and strands every later turn.
+        let runId = "r\(turn)"
+        let messageId = "m-agent-\(turn)"
+        let runActive = store.snapshot.runs.contains { $0.id == runId && $0.status == .running }
+        let messageStreaming = store.snapshot.messages.contains {
+            $0.id == messageId && $0.status == .streaming
+        }
+        let events = DemoScenario.cancelEvents(
+            turn: turn,
+            runActive: runActive,
+            messageStreaming: messageStreaming
+        ).map { self.factory.event($0) }
         runTask = nil
-        do {
-            _ = try store.ingest(eventsJson: "[" + events.joined(separator: ",") + "]")
-        } catch {
-            record("cancel events failed: \(error)")
+        if !events.isEmpty {
+            do {
+                _ = try store.ingest(eventsJson: "[" + events.joined(separator: ",") + "]")
+            } catch {
+                record("cancel events failed: \(error)")
+            }
         }
         record("run cancelled")
     }

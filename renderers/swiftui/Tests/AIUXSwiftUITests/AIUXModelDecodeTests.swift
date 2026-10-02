@@ -165,6 +165,24 @@ final class AIUXModelDecodeTests: XCTestCase {
         XCTAssertEqual(re["n"], .int(big))
     }
 
+    func testJSONValuePreservesUnsignedIntegers() throws {
+        // Above Int64.max the value only fits u64 — falling back to Double
+        // would round 18446744073709551615 to 18446744073709552000.
+        let big: UInt64 = 18_446_744_073_709_551_615
+        let v = try decoder.decode(
+            AIUXJSONValue.self,
+            from: Data(#"{"n":18446744073709551615}"#.utf8)
+        )
+        XCTAssertEqual(v["n"], .uint(big))
+        XCTAssertEqual(v["n"]?.uintValue, big)
+        XCTAssertNil(v["n"]?.intValue)
+
+        let reencoded = try JSONEncoder().encode(v)
+        XCTAssertEqual(String(data: reencoded, encoding: .utf8), #"{"n":18446744073709551615}"#)
+        let re = try decoder.decode(AIUXJSONValue.self, from: reencoded)
+        XCTAssertEqual(re["n"], .uint(big))
+    }
+
     func testJSONValueFractionalStaysDouble() throws {
         let v = try decoder.decode(
             AIUXJSONValue.self,

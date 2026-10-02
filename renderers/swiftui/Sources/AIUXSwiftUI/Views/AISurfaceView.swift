@@ -656,6 +656,21 @@ struct AIUXSurfaceImage: View {
 
     var body: some View {
         if let url = URL(string: src), remoteURLPolicy(url) {
+            imageContent(for: url)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.sm)))
+                .accessibilityLabel(alt ?? "Image")
+        } else {
+            AIUXUnsupported(kind: "image", detail: src)
+        }
+    }
+
+    // Inline `data:image/…` decodes locally; everything else AsyncImage
+    // fetches (approved-but-unfetchable schemes degrade via .failure).
+    @ViewBuilder
+    private func imageContent(for url: URL) -> some View {
+        if let image = aiuxDecodeDataImage(url) {
+            image.resizable().scaledToFit()
+        } else {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -667,10 +682,6 @@ struct AIUXSurfaceImage: View {
                         .frame(maxWidth: .infinity, minHeight: 60)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.sm)))
-            .accessibilityLabel(alt ?? "Image")
-        } else {
-            AIUXUnsupported(kind: "image", detail: src)
         }
     }
 }
@@ -728,8 +739,22 @@ struct AIUXInputField: View {
         .font(theme.typography.body)
         .disabled(disabled)
         .onSubmit { commit() }
-        .onChange(of: value) { _ in commit() }
+        // Divergence from the wire value = a real edit; reseeding on remount
+        // (the field .id) must publish silently, not emit a change action.
+        .onChange(of: value) { newValue in
+            publish()
+            if newValue != (initialValue ?? "") {
+                emitChange()
+            }
+        }
         .accessibilityLabel(label ?? name)
+    }
+
+    private func emitChange() {
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(value),
+        ]))
     }
 
     private func commit() {
@@ -818,7 +843,14 @@ struct AIUXTextareaField: View {
                 .font(theme.typography.body)
                 .disabled(disabled)
                 .onSubmit { commit() }
-                .onChange(of: value) { _ in commit() }
+                // Divergence from the wire value = a real edit; reseeding on
+                // remount publishes silently, not a change action.
+                .onChange(of: value) { newValue in
+                    publish()
+                    if newValue != (initialValue ?? "") {
+                        emitChange()
+                    }
+                }
                 .accessibilityLabel(label ?? name)
             AIUXFieldError(errorText)
         }
@@ -826,6 +858,13 @@ struct AIUXTextareaField: View {
             value = initialValue ?? ""
             publish()
         }
+    }
+
+    private func emitChange() {
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(value),
+        ]))
     }
 
     private func commit() {
@@ -943,12 +982,17 @@ struct AIUXCheckboxField: View {
                 isOn = checked
                 publish()
             }
+            // Emit only on divergence from the wire value — wire updates
+            // remount this view (the field .id), and the reseed assignment
+            // would otherwise emit a field change no user ever made.
             .onChange(of: isOn) { newValue in
                 publish(newValue)
-                emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
-                    "name": .string(name),
-                    "value": .bool(newValue),
-                ]))
+                if newValue != checked {
+                    emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+                        "name": .string(name),
+                        "value": .bool(newValue),
+                    ]))
+                }
             }
             .accessibilityLabel(label)
             AIUXFieldError(errorText)

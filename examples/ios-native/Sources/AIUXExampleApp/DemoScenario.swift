@@ -282,16 +282,27 @@ public enum DemoScenario {
     }
 
     /// Specs for the cancellation events when the user stops a running turn.
-    public static func cancelEvents(turn: Int) -> [DemoEventSpec] {
+    /// Emit only for entities the session already holds — the core rejects an
+    /// event for a run/message it never saw, and a rejected event still burns
+    /// its stamped sequence, stranding every later event in the reorder buffer.
+    public static func cancelEvents(
+        turn: Int,
+        runActive: Bool,
+        messageStreaming: Bool
+    ) -> [DemoEventSpec] {
         let runId = "r\(turn)"
         let messageId = "m-agent-\(turn)"
-        return [
-            DemoEventSpec(type: "run.cancelled", payload: [
+        var events: [DemoEventSpec] = []
+        if runActive {
+            events.append(DemoEventSpec(type: "run.cancelled", payload: [
                 "protocolVersion": AIUXSwiftUI.protocolVersion, "runId": runId, "reason": "user pressed stop",
-            ]),
-            DemoEventSpec(type: "message.updated", payload: [
+            ]))
+        }
+        if messageStreaming {
+            events.append(DemoEventSpec(type: "message.updated", payload: [
                 "protocolVersion": AIUXSwiftUI.protocolVersion, "messageId": messageId, "status": "cancelled",
-            ]),
-        ]
+            ]))
+        }
+        return events
     }
 }
