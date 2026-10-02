@@ -29,8 +29,10 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Tool invocation line (running/completed/failed per protocol lifecycle),
- * styled after ChatGPT's inline activity rows: status icon + tool name +
- * state — flat, no card. Result payloads render as a nested muted chip.
+ * styled after ChatGPT's inline activity rows (the collapsed "Thought
+ * for a couple of seconds ›" pattern): status icon + muted tool name +
+ * muted state — flat, no card. Result payloads render as a nested
+ * muted chip.
  */
 @Composable
 fun AIToolStatus(
@@ -69,7 +71,7 @@ fun AIToolStatus(
             Text(
                 tool.name,
                 style = theme.typography.label,
-                color = theme.colors.foreground,
+                color = theme.colors.mutedForeground,
                 modifier = Modifier.padding(start = theme.spacing.sm).weight(1f),
             )
             Text(

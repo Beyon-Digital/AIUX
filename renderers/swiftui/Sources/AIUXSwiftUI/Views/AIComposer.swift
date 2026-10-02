@@ -28,69 +28,57 @@ public struct AIComposer: View {
 
     public var body: some View {
         let colors = theme.colors(for: colorScheme)
-        HStack(alignment: .center, spacing: theme.space(.sm)) {
+        // Unified floating pill: + | input | action circle — the current
+        // ChatGPT mobile composer shape (borderless, shadowed).
+        HStack(alignment: .center, spacing: 0) {
             Button {
                 emit(AIUXAction(id: AIUXAction.composerAttach))
             } label: {
                 Image(systemName: "plus")
                     .font(theme.typography.title)
-                    .foregroundStyle(colors.muted)
+                    .foregroundStyle(colors.foreground)
                     .frame(width: 40, height: 40)
-                    .background(colors.surface)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .strokeBorder(colors.border, lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Attach")
 
-            HStack(alignment: .center, spacing: theme.space(.xs)) {
-                TextField(placeholder, text: $text, axis: .vertical)
-                    .lineLimit(1...5)
-                    .font(theme.typography.body)
-                    .padding(.horizontal, theme.space(.sm))
-                    .padding(.vertical, theme.space(.xs))
-                    .accessibilityLabel("Message input")
+            TextField(placeholder, text: $text, axis: .vertical)
+                .lineLimit(1...5)
+                .font(theme.typography.body)
+                .padding(.horizontal, theme.space(.xs))
+                .padding(.vertical, theme.space(.xs))
+                .accessibilityLabel("Message input")
 
-                if runActive {
-                    Button(role: .cancel) {
-                        emit(AIUXAction(id: AIUXAction.composerCancel))
-                    } label: {
-                        Image(systemName: "stop.circle.fill")
-                            .font(theme.typography.title)
-                            .foregroundStyle(colors.accent)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Cancel run")
-                } else {
-                    Button {
-                        send()
-                    } label: {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(theme.typography.title)
-                            .foregroundStyle(canSend ? colors.accent : colors.muted.opacity(0.5))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!canSend)
-                    .accessibilityLabel("Send")
+            if runActive {
+                Button(role: .cancel) {
+                    emit(AIUXAction(id: AIUXAction.composerCancel))
+                } label: {
+                    Image(systemName: "stop.circle.fill")
+                        .font(theme.typography.title)
+                        .foregroundStyle(colors.accent)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Cancel run")
+            } else {
+                Button {
+                    send()
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(theme.typography.title)
+                        .foregroundStyle(canSend ? colors.accent : colors.muted.opacity(0.5))
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+                .accessibilityLabel("Send")
             }
-            .padding(.leading, theme.space(.sm))
-            .padding(.trailing, 6)
-            .padding(.vertical, 4)
-            .background(colors.surface)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .strokeBorder(colors.border, lineWidth: 1)
-            )
-            // Floating composer: soft elevation instead of a docked bar.
-            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 3)
-
         }
+        .padding(.leading, theme.space(.sm))
+        .padding(.trailing, 6)
+        .padding(.vertical, 4)
+        .background(colors.surfaceElevated)
+        .clipShape(Capsule())
+        // Floating composer: soft elevation instead of a docked bar.
+        .shadow(color: .black.opacity(0.10), radius: 10, x: 0, y: 4)
         .padding(.horizontal, theme.space(.md))
         .padding(.top, theme.space(.xs))
         .padding(.bottom, theme.space(.md))

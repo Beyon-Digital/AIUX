@@ -128,16 +128,16 @@ data class AIUXTheme(
 
         fun dark(): AIUXTheme = AIUXTheme(
             colors = AIUXColors(
-                background = Color(0xFF212121),
-                surface = Color(0xFF212121),
-                surfaceElevated = Color(0xFF303030),
-                userSurface = Color(0xFF3A3A3A),
+                background = Color(0xFF0C0C0C),
+                surface = Color(0xFF0C0C0C),
+                surfaceElevated = Color(0xFF242424),
+                userSurface = Color(0xFF2F2F2F),
                 assistantSurface = Color.Transparent,
                 accent = Color(0xFFFFFFFF),
                 accentForeground = Color(0xFF0D0D0D),
-                muted = Color(0xFF2F2F2F),
+                muted = Color(0xFF2A2A2A),
                 mutedForeground = Color(0xFFB4B4B4),
-                border = Color(0xFF424242),
+                border = Color(0xFF333333),
                 destructive = Color(0xFFF97066),
                 destructiveForeground = Color(0xFF0D0D0D),
                 success = Color(0xFF81C784),

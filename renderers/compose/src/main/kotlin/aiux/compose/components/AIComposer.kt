@@ -6,11 +6,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -88,39 +86,28 @@ fun AIComposer(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Standalone + circle — attachment hook.
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .shadow(2.dp, CircleShape)
-                .clip(CircleShape)
-                .background(theme.colors.surfaceElevated)
-                .border(1.dp, theme.colors.border, CircleShape)
-                .clickable(enabled = enabled) { onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH)) }
-                .semantics { contentDescription = "add attachment" },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = null,
-                tint = theme.colors.mutedForeground,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        Spacer(Modifier.width(theme.spacing.sm))
-
-        // Pill: input + trailing action circle inside one elevated surface.
+        // Unified floating pill: + | input | action circle — the current
+        // ChatGPT mobile composer shape (borderless, shadowed).
         Surface(
             color = theme.colors.surfaceElevated,
-            shape = RoundedCornerShape(26.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, theme.colors.border),
-            shadowElevation = 3.dp,
+            shape = RoundedCornerShape(28.dp),
+            shadowElevation = 4.dp,
             modifier = Modifier.weight(1f),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = theme.spacing.lg, end = theme.spacing.xs),
+                modifier = Modifier.padding(start = theme.spacing.sm, end = theme.spacing.xs),
             ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "add attachment",
+                    tint = theme.colors.foreground,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(enabled = enabled) { onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH)) }
+                        .padding(theme.spacing.sm),
+                )
                 TextField(
                     value = text,
                     onValueChange = { text = it },

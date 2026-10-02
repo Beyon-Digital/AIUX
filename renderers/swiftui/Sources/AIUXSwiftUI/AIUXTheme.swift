@@ -215,19 +215,19 @@ extension AIUXTheme {
         colors: AIUXColorRoles(
             background: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
-                dark: (0.129, 0.129, 0.129, 1.0)
+                dark: (0.047, 0.047, 0.047, 1.0)
             ),
             surface: AIUXColor(
                 light: (0.957, 0.957, 0.961, 1.0),
-                dark: (0.188, 0.188, 0.188, 1.0)
+                dark: (0.141, 0.141, 0.141, 1.0)
             ),
             surfaceElevated: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
-                dark: (0.208, 0.208, 0.22, 1.0)
+                dark: (0.16, 0.16, 0.16, 1.0)
             ),
             userSurface: AIUXColor(
                 light: (0.925, 0.925, 0.945, 1.0),
-                dark: (0.227, 0.227, 0.227, 1.0)
+                dark: (0.184, 0.184, 0.184, 1.0)
             ),
             assistantSurface: AIUXColor(.clear),
             accent: AIUXColor(
@@ -244,7 +244,7 @@ extension AIUXTheme {
             ),
             border: AIUXColor(
                 light: (0.902, 0.902, 0.902, 1.0),
-                dark: (0.259, 0.259, 0.259, 1.0)
+                dark: (0.2, 0.2, 0.2, 1.0)
             ),
             destructive: AIUXColor(
                 light: (0.851, 0.176, 0.125, 1.0),

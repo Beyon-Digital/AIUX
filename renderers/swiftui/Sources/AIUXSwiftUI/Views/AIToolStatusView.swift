@@ -25,6 +25,7 @@ public struct AIToolStatus: View {
                     .foregroundStyle(statusColor)
                 Text(tool.name)
                     .font(theme.typography.label)
+                    .foregroundStyle(colors.muted)
                 statusBadge
                 Spacer()
             }
