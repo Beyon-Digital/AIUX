@@ -1,0 +1,231 @@
+{
+  "name": "zz-artifact-preview",
+  "protocolVersion": "0.1",
+  "events": [
+    {
+      "eventId": "artifact-workspace-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "artifact-workspace"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "artifact-workspace-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "artifact-workspace-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "artifact-workspace"
+          },
+          "name": "query",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "artifact-workspace-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "report": "ingest-q3",
+          "rows": 1240
+        },
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.completed"
+    },
+    {
+      "eventId": "artifact-workspace-4",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "streaming"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "artifact-workspace-5",
+      "payload": {
+        "artifact": {
+          "id": "art-1",
+          "kind": "report",
+          "preview": {
+            "summary": "1,240 rows ingested, 0 errors",
+            "surface": {
+              "id": "sd-preview",
+              "root": {
+                "children": [
+                  {
+                    "items": [
+                      {
+                        "key": "Rows",
+                        "value": "1,240"
+                      },
+                      {
+                        "key": "Errors",
+                        "tone": "success",
+                        "value": "0"
+                      }
+                    ],
+                    "type": "keyValue"
+                  }
+                ],
+                "type": "surface"
+              }
+            }
+          },
+          "revision": 0,
+          "title": "Ingest report Q3",
+          "workspace": {
+            "lazy": true,
+            "mode": "detail",
+            "surface": {
+              "id": "sd-workspace",
+              "root": {
+                "children": [
+                  {
+                    "columns": [
+                      {
+                        "key": "row",
+                        "title": "Row"
+                      },
+                      {
+                        "align": "end",
+                        "key": "count",
+                        "title": "Count"
+                      }
+                    ],
+                    "rows": [
+                      [
+                        "eu-1",
+                        {
+                          "type": "number",
+                          "value": 620
+                        }
+                      ],
+                      [
+                        "us-1",
+                        {
+                          "type": "number",
+                          "value": 620
+                        }
+                      ]
+                    ],
+                    "type": "table"
+                  },
+                  {
+                    "children": [
+                      {
+                        "action": {
+                          "id": "report.export",
+                          "payload": {
+                            "fmt": "csv"
+                          }
+                        },
+                        "label": "Export CSV",
+                        "type": "button",
+                        "variant": "secondary"
+                      }
+                    ],
+                    "type": "actions"
+                  }
+                ],
+                "type": "surface"
+              }
+            }
+          }
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "artifact.created"
+    },
+    {
+      "eventId": "artifact-workspace-6",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "artifactId": "art-1",
+          "id": "p1",
+          "type": "artifact"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "artifact-workspace-8",
+      "payload": {
+        "messageId": "m1",
+        "protocolVersion": "0.1",
+        "status": "complete"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 7,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:08Z",
+      "type": "message.updated"
+    },
+    {
+      "eventId": "artifact-workspace-9",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 8,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:09Z",
+      "type": "run.completed"
+    }
+  ]
+}

@@ -9,62 +9,62 @@ import Foundation
 // failing the whole tree (plan §21).
 
 /// Semantic gap between children (`xs|sm|md|lg|xl`).
-public enum AIUXGap: String, Decodable, Sendable {
+public enum AIUXGap: String, Codable, Sendable {
     case xs, sm, md, lg, xl
 }
 
 /// Semantic padding (`none|xs|sm|md|lg`).
-public enum AIUXPadding: String, Decodable, Sendable {
+public enum AIUXPadding: String, Codable, Sendable {
     case none, xs, sm, md, lg
 }
 
 /// Semantic corner radius (`sm|md|lg|full`).
-public enum AIUXRadius: String, Decodable, Sendable {
+public enum AIUXRadius: String, Codable, Sendable {
     case sm, md, lg, full
 }
 
 /// Cross-axis alignment within a container.
-public enum AIUXAlignment: String, Decodable, Sendable {
+public enum AIUXAlignment: String, Codable, Sendable {
     case start, center, end, stretch
 }
 
 /// Main-axis distribution of children within a container.
-public enum AIUXDistribution: String, Decodable, Sendable {
+public enum AIUXDistribution: String, Codable, Sendable {
     case start, center, end, spaceBetween, spaceAround, spaceEvenly
 }
 
 /// Stack direction.
-public enum AIUXStackDirection: String, Decodable, Sendable {
+public enum AIUXStackDirection: String, Codable, Sendable {
     case vertical, horizontal
 }
 
 /// Semantic text variant.
-public enum AIUXTextVariant: String, Decodable, Sendable {
+public enum AIUXTextVariant: String, Codable, Sendable {
     case body, caption, label, emphasis, strong, muted
 }
 
 /// Semantic tone for badges, statuses, and emphasis.
-public enum AIUXTone: String, Decodable, Sendable {
+public enum AIUXTone: String, Codable, Sendable {
     case `default`, accent, muted, success, warning, destructive
 }
 
 /// Icon size (semantic, resolved by renderer theme).
-public enum AIUXIconSize: String, Decodable, Sendable {
+public enum AIUXIconSize: String, Codable, Sendable {
     case sm, md, lg
 }
 
 /// Button hierarchy variant.
-public enum AIUXButtonVariant: String, Decodable, Sendable {
+public enum AIUXButtonVariant: String, Codable, Sendable {
     case primary, secondary, ghost, destructive
 }
 
 /// Input field type (semantic; renderers map to platform keyboards).
-public enum AIUXInputType: String, Decodable, Sendable {
+public enum AIUXInputType: String, Codable, Sendable {
     case text, email, number, password, url
 }
 
 /// A key/value row for `keyValue` nodes.
-public struct AIUXKeyValueItem: Equatable, Decodable, Sendable {
+public struct AIUXKeyValueItem: Equatable, Codable, Sendable {
     public var key: String
     public var value: String
     /// Semantic tone applied to the value (ADR 0007).
@@ -72,18 +72,18 @@ public struct AIUXKeyValueItem: Equatable, Decodable, Sendable {
 }
 
 /// A selectable option for `select` nodes.
-public struct AIUXSelectOption: Equatable, Decodable, Sendable {
+public struct AIUXSelectOption: Equatable, Codable, Sendable {
     public var value: String
     public var label: String
 }
 
 /// Table column alignment (ADR 0007).
-public enum AIUXColumnAlign: String, Decodable, Sendable {
+public enum AIUXColumnAlign: String, Codable, Sendable {
     case start, center, end
 }
 
 /// A `table` column descriptor (ADR 0007).
-public struct AIUXTableColumn: Equatable, Decodable, Sendable {
+public struct AIUXTableColumn: Equatable, Codable, Sendable {
     public var key: String
     public var title: String
     public var align: AIUXColumnAlign?
@@ -131,8 +131,30 @@ extension AIUXTableCell: Decodable {
     }
 }
 
+extension AIUXTableCell: Encodable {
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .text(let text):
+            try c.encode("text", forKey: .type)
+            try c.encode(text, forKey: .text)
+        case .number(let value):
+            try c.encode("number", forKey: .type)
+            try c.encode(value, forKey: .value)
+        case .badge(let text, let tone):
+            try c.encode("badge", forKey: .type)
+            try c.encode(text, forKey: .text)
+            try c.encodeIfPresent(tone, forKey: .tone)
+        case .action(let label, let action):
+            try c.encode("action", forKey: .type)
+            try c.encode(label, forKey: .label)
+            try c.encode(action, forKey: .action)
+        }
+    }
+}
+
 /// A `menu` entry.
-public struct AIUXMenuItem: Equatable, Decodable, Sendable {
+public struct AIUXMenuItem: Equatable, Codable, Sendable {
     public var label: String
     public var action: AIUXAction
     public var icon: String?
@@ -175,6 +197,18 @@ extension AIUXNodeLayout: Decodable {
         radius = (try? c.decodeIfPresent(AIUXRadius.self, forKey: .radius)) ?? nil
         alignment = (try? c.decodeIfPresent(AIUXAlignment.self, forKey: .alignment)) ?? nil
         distribution = (try? c.decodeIfPresent(AIUXDistribution.self, forKey: .distribution)) ?? nil
+    }
+}
+
+extension AIUXNodeLayout: Encodable {
+    /// Layout keys serialize flattened into the node object (no `layout` key).
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(gap, forKey: .gap)
+        try c.encodeIfPresent(padding, forKey: .padding)
+        try c.encodeIfPresent(radius, forKey: .radius)
+        try c.encodeIfPresent(alignment, forKey: .alignment)
+        try c.encodeIfPresent(distribution, forKey: .distribution)
     }
 }
 
@@ -312,7 +346,7 @@ public enum AIUXSurfaceNode: Equatable, Sendable {
              .menu(_, _, let l), .actions(_, let l),
              .card(_, _, let l), .stack(_, _, let l), .grid(_, _, let l),
              .heading(_, _, let l), .text(_, _, let l), .code(_, _, let l),
-             .icon(_, _, let l), .image(_, _, let l), .badge(_, _, let l),
+             .icon(_, _, let l), .image(_, _, let l), .badge(_, _, _, let l),
              .list(_, _, let l), .table(_, _, _, _, let l),
              .progress(_, _, _, let l), .status(_, _, let l),
              .button(_, _, _, _, let l), .checkbox(_, _, _, _, _, _, let l),
@@ -568,6 +602,178 @@ extension AIUXSurfaceNode: Decodable {
     }
 }
 
+extension AIUXSurfaceNode: Encodable {
+    /// Wire-format encode: `{"type": "<kind>", ...}` with layout flattened —
+    /// the inverse of the tolerant decoder.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try layout.encode(to: encoder)
+        switch self {
+        case .surface(let children, _):
+            try c.encode("surface", forKey: .type)
+            try c.encode(children, forKey: .children)
+        case .card(let children, let title, _):
+            try c.encode("card", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encodeIfPresent(title, forKey: .title)
+        case .stack(let children, let direction, _):
+            try c.encode("stack", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encodeIfPresent(direction, forKey: .direction)
+        case .row(let children, _):
+            try c.encode("row", forKey: .type)
+            try c.encode(children, forKey: .children)
+        case .grid(let children, let columns, _):
+            try c.encode("grid", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encode(columns, forKey: .columns)
+        case .heading(let text, let level, _):
+            try c.encode("heading", forKey: .type)
+            try c.encode(text, forKey: .text)
+            try c.encodeIfPresent(level, forKey: .level)
+        case .text(let text, let variant, _):
+            try c.encode("text", forKey: .type)
+            try c.encode(text, forKey: .text)
+            try c.encodeIfPresent(variant, forKey: .variant)
+        case .markdown(let markdown, _):
+            try c.encode("markdown", forKey: .type)
+            try c.encode(markdown, forKey: .markdown)
+        case .code(let code, let language, _):
+            try c.encode("code", forKey: .type)
+            try c.encode(code, forKey: .code)
+            try c.encodeIfPresent(language, forKey: .language)
+        case .icon(let name, let size, _):
+            try c.encode("icon", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(size, forKey: .size)
+        case .image(let src, let alt, _):
+            try c.encode("image", forKey: .type)
+            try c.encode(src, forKey: .src)
+            try c.encodeIfPresent(alt, forKey: .alt)
+        case .badge(let text, let tone, let icon, _):
+            try c.encode("badge", forKey: .type)
+            try c.encode(text, forKey: .text)
+            try c.encodeIfPresent(tone, forKey: .tone)
+            try c.encodeIfPresent(icon, forKey: .icon)
+        case .divider:
+            try c.encode("divider", forKey: .type)
+        case .spacer(let size, _):
+            try c.encode("spacer", forKey: .type)
+            try c.encodeIfPresent(size, forKey: .size)
+        case .keyValue(let items, _):
+            try c.encode("keyValue", forKey: .type)
+            try c.encode(items, forKey: .items)
+        case .list(let children, let ordered, _):
+            try c.encode("list", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encode(ordered, forKey: .ordered)
+        case .listItem(let title, let subtitle, let icon, let action, let children, _):
+            try c.encode("listItem", forKey: .type)
+            try c.encode(title, forKey: .title)
+            try c.encodeIfPresent(subtitle, forKey: .subtitle)
+            try c.encodeIfPresent(icon, forKey: .icon)
+            try c.encodeIfPresent(action, forKey: .action)
+            try c.encode(children, forKey: .children)
+        case .table(let headers, let columns, let rows, let caption, _):
+            try c.encode("table", forKey: .type)
+            try c.encode(headers, forKey: .headers)
+            try c.encode(columns, forKey: .columns)
+            try c.encode(rows, forKey: .rows)
+            try c.encodeIfPresent(caption, forKey: .caption)
+        case .button(let label, let action, let variant, let disabled, _):
+            try c.encode("button", forKey: .type)
+            try c.encode(label, forKey: .label)
+            try c.encode(action, forKey: .action)
+            try c.encodeIfPresent(variant, forKey: .variant)
+            try c.encode(disabled, forKey: .disabled)
+        case .menu(let label, let items, _):
+            try c.encode("menu", forKey: .type)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encode(items, forKey: .items)
+        case .progress(let value, let max, let label, _):
+            try c.encode("progress", forKey: .type)
+            try c.encodeIfPresent(value, forKey: .value)
+            try c.encodeIfPresent(max, forKey: .max)
+            try c.encodeIfPresent(label, forKey: .label)
+        case .status(let text, let tone, _):
+            try c.encode("status", forKey: .type)
+            try c.encode(text, forKey: .text)
+            try c.encodeIfPresent(tone, forKey: .tone)
+        case .input(let name, let label, let placeholder, let value, let inputType, let required, let disabled, let errorText, _):
+            try c.encode("input", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encodeIfPresent(placeholder, forKey: .placeholder)
+            try c.encodeIfPresent(value, forKey: .value)
+            try c.encodeIfPresent(inputType, forKey: .inputType)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .textarea(let name, let label, let placeholder, let value, let rows, let required, let disabled, let errorText, _):
+            try c.encode("textarea", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encodeIfPresent(placeholder, forKey: .placeholder)
+            try c.encodeIfPresent(value, forKey: .value)
+            try c.encodeIfPresent(rows, forKey: .rows)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .select(let name, let label, let options, let value, let placeholder, let required, let disabled, let errorText, _):
+            try c.encode("select", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encode(options, forKey: .options)
+            try c.encodeIfPresent(value, forKey: .value)
+            try c.encodeIfPresent(placeholder, forKey: .placeholder)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .checkbox(let name, let label, let checked, let required, let disabled, let errorText, _):
+            try c.encode("checkbox", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encode(label, forKey: .label)
+            try c.encode(checked, forKey: .checked)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .radio(let name, let label, let options, let value, let required, let disabled, let errorText, _):
+            try c.encode("radio", forKey: .type)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encode(options, forKey: .options)
+            try c.encodeIfPresent(value, forKey: .value)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .field(let children, let label, let helperText, let required, let disabled, let errorText, _):
+            try c.encode("field", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encodeIfPresent(label, forKey: .label)
+            try c.encodeIfPresent(helperText, forKey: .helperText)
+            try c.encode(required, forKey: .required)
+            try c.encode(disabled, forKey: .disabled)
+            try c.encodeIfPresent(errorText, forKey: .errorText)
+        case .form(let children, let submit, let submitLabel, let disabled, _):
+            try c.encode("form", forKey: .type)
+            try c.encode(children, forKey: .children)
+            try c.encode(submit, forKey: .submit)
+            try c.encodeIfPresent(submitLabel, forKey: .submitLabel)
+            try c.encode(disabled, forKey: .disabled)
+        case .actions(let children, _):
+            try c.encode("actions", forKey: .type)
+            try c.encode(children, forKey: .children)
+        case .custom(let kind, let props, let children, _):
+            try c.encode("custom", forKey: .type)
+            try c.encode(kind, forKey: .kind)
+            try c.encode(props, forKey: .props)
+            try c.encode(children, forKey: .children)
+        case .unknown(let type):
+            try c.encode(type, forKey: .type)
+        }
+    }
+}
+
 /// A surface: a named, revisioned semantic node tree.
 public struct AIUXSurfaceTree: Equatable, Decodable, Identifiable, Sendable {
     /// Stable surface identifier.
@@ -601,7 +807,7 @@ public struct AIUXSurfaceTree: Equatable, Decodable, Identifiable, Sendable {
 /// An inline surface descriptor: a self-contained semantic node tree carried
 /// inside another entity (`artifact.preview` / `artifact.workspace`) rather
 /// than registered as a session surface.
-public struct AIUXSurfaceDescriptor: Equatable, Decodable, Identifiable, Sendable {
+public struct AIUXSurfaceDescriptor: Equatable, Codable, Identifiable, Sendable {
     /// Stable descriptor identifier (lazy-mount key).
     public var id: String
     /// Root node — a `surface` node per the schema.
@@ -609,14 +815,14 @@ public struct AIUXSurfaceDescriptor: Equatable, Decodable, Identifiable, Sendabl
 }
 
 /// How an opened artifact workspace presents.
-public enum AIUXWorkspaceMode: String, Decodable, Sendable {
+public enum AIUXWorkspaceMode: String, Codable, Sendable {
     case fullscreen, detail, sheet
 }
 
 /// `artifact.workspace` — the contract a host honors when the user opens an
 /// artifact: a presentation mode, an optional detail surface descriptor, and
 /// a lazy render hint.
-public struct AIUXArtifactWorkspace: Equatable, Decodable, Sendable {
+public struct AIUXArtifactWorkspace: Equatable, Codable, Sendable {
     public var mode: AIUXWorkspaceMode?
     public var surface: AIUXSurfaceDescriptor?
     public var lazy: Bool = false
@@ -624,7 +830,7 @@ public struct AIUXArtifactWorkspace: Equatable, Decodable, Sendable {
 
 /// `artifact.preview` — what an artifact card shows inline: a short summary
 /// and/or an inline surface descriptor.
-public struct AIUXArtifactPreview: Equatable, Decodable, Sendable {
+public struct AIUXArtifactPreview: Equatable, Codable, Sendable {
     public var summary: String?
     public var surface: AIUXSurfaceDescriptor?
 }
