@@ -1103,7 +1103,6 @@ struct AIUXListItemView: View {
     let children: [AIUXSurfaceNode]
 
     var body: some View {
-        let colors = theme.colors(for: colorScheme)
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
             row
             if !children.isEmpty {
@@ -1120,6 +1119,7 @@ struct AIUXListItemView: View {
 
     @ViewBuilder
     private var row: some View {
+        let colors = theme.colors(for: colorScheme)
         let content = HStack(spacing: theme.space(.sm)) {
             if let icon {
                 Image(systemName: aiuxIconName(icon))
