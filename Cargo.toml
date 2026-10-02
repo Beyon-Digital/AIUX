@@ -12,6 +12,7 @@ members = [
     "core/rust/tests",
     "bindings/uniffi",
     "bindings/wasm",
+    "bindings/dart/capi",
     "conformance/harness",
 ]
 

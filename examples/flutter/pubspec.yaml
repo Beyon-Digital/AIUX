@@ -1,6 +1,20 @@
 name: aiux_example
-description: "AIUX flutter — stub, implementation lands in a later phase (docs/PLAN.md)."
+description: "AIUX example app — the mocked-agent scenario over the Dart FFI backend (docs/PLAN.md)."
 version: 0.1.0
 publish_to: none
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  beyond_aiux:
+    path: ../../renderers/flutter
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
