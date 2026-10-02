@@ -19,6 +19,10 @@ use crate::node::{
 pub const MAX_DEPTH: usize = 64;
 /// Maximum total nodes in a surface tree.
 pub const MAX_NODES: usize = 4096;
+/// Maximum total elements across all free-form payloads (`custom` `props`
+/// and action `payload`s) in a surface tree — a separate budget from the
+/// node count so ordinary node properties never compete with it.
+pub const MAX_PAYLOAD_ELEMS: usize = 4096;
 
 /// A surface validation failure. `detail` is human-readable and safe to
 /// surface in logs/UI.
@@ -143,10 +147,16 @@ fn allowed_keys(kind: &str) -> Option<&'static [&'static str]> {
 /// Rejects unknown node types and unknown keys (anything outside the schema).
 pub fn validate_raw(value: &Value) -> Result<(), SurfaceError> {
     let mut count = 0usize;
-    validate_raw_node(value, 0, &mut count)
+    let mut payload = 0usize;
+    validate_raw_node(value, 0, &mut count, &mut payload)
 }
 
-fn validate_raw_node(value: &Value, depth: usize, count: &mut usize) -> Result<(), SurfaceError> {
+fn validate_raw_node(
+    value: &Value,
+    depth: usize,
+    count: &mut usize,
+    payload: &mut usize,
+) -> Result<(), SurfaceError> {
     if depth > MAX_DEPTH {
         return Err(SurfaceError::new(format!("nesting exceeds {MAX_DEPTH}")));
     }
@@ -171,49 +181,98 @@ fn validate_raw_node(value: &Value, depth: usize, count: &mut usize) -> Result<(
             "key \"{key}\" not allowed on \"{kind}\" node"
         )));
     }
-    // Free-form values (custom `props`, action payloads, table rows, …) are
-    // data by design (§23) but still count against the surface budget —
-    // otherwise a single `custom` node could carry an unbounded tree.
+    // Free-form payloads (`custom` `props` and action `payload`s —
+    // including actions nested in menu items and table cells) share a
+    // budget of their own; ordinary node properties are not charged (§23).
     for (key, val) in obj {
-        if key == "children" || key == "type" {
-            continue;
+        match key.as_str() {
+            "props" if kind == "custom" => budget_json(val, depth, payload)?,
+            "action" | "submit" => budget_action(val, depth, payload)?,
+            "items" | "rows" => {
+                for entry in val.as_array().into_iter().flatten() {
+                    let cells: &[Value] = match entry.as_array() {
+                        Some(row) => row,
+                        None => std::slice::from_ref(entry),
+                    };
+                    for cell in cells {
+                        if let Some(action) = cell.get("action") {
+                            budget_action(action, depth + 1, payload)?;
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
-        budget_json(val, depth, count)?;
     }
     if let Some(children) = obj.get("children") {
         let arr = children
             .as_array()
             .ok_or_else(|| SurfaceError::new("\"children\" must be an array"))?;
         for child in arr {
-            validate_raw_node(child, depth + 1, count)?;
+            validate_raw_node(child, depth + 1, count, payload)?;
         }
     }
     Ok(())
 }
 
-/// Count an arbitrary JSON value against the same depth/size budget as
-/// nodes, so free-form payloads can't smuggle unbounded data past
-/// [`validate_raw`].
-fn budget_json(value: &Value, depth: usize, count: &mut usize) -> Result<(), SurfaceError> {
+/// Budget every value on an action object except the schema-fixed `id` —
+/// the free-form `payload` (and any unknown extras dropped at typed
+/// parsing) share the payload budget.
+fn budget_action(action: &Value, depth: usize, payload: &mut usize) -> Result<(), SurfaceError> {
+    if let Some(map) = action.as_object() {
+        for (key, val) in map {
+            if key != "id" {
+                budget_json(val, depth, payload)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Count an arbitrary JSON value (a `custom` `props` map or an action
+/// `payload`) against the payload budget — free-form data must not smuggle
+/// unbounded trees past the surface limits.
+fn budget_json(value: &Value, depth: usize, payload: &mut usize) -> Result<(), SurfaceError> {
     if depth > MAX_DEPTH {
         return Err(SurfaceError::new(format!("nesting exceeds {MAX_DEPTH}")));
     }
-    *count += 1;
-    if *count > MAX_NODES {
-        return Err(SurfaceError::new(format!("more than {MAX_NODES} nodes")));
+    *payload += 1;
+    if *payload > MAX_PAYLOAD_ELEMS {
+        return Err(SurfaceError::new(format!(
+            "more than {MAX_PAYLOAD_ELEMS} free-form payload elements"
+        )));
     }
     match value {
         Value::Array(items) => {
             for item in items {
-                budget_json(item, depth + 1, count)?;
+                budget_json(item, depth + 1, payload)?;
             }
         }
         Value::Object(map) => {
             for item in map.values() {
-                budget_json(item, depth + 1, count)?;
+                budget_json(item, depth + 1, payload)?;
             }
         }
         _ => {}
+    }
+    Ok(())
+}
+
+/// Budget one free-form `Map<String, Value>` payload (typed `custom`
+/// `props` or an action `payload`).
+fn budget_map(
+    map: &serde_json::Map<String, Value>,
+    depth: usize,
+    payload: &mut usize,
+) -> Result<(), SurfaceError> {
+    *payload += 1;
+    if *payload > MAX_PAYLOAD_ELEMS {
+        return Err(SurfaceError::new(format!(
+            "more than {MAX_PAYLOAD_ELEMS} free-form payload elements"
+        )));
+    }
+    for value in map.values() {
+        budget_json(value, depth + 1, payload)?;
     }
     Ok(())
 }
@@ -227,7 +286,8 @@ pub fn validate(tree: &SurfaceTree) -> Result<(), SurfaceError> {
         return Err(SurfaceError::new("root node must be \"surface\""));
     }
     let mut count = 0usize;
-    validate_node(&tree.root, 0, Ctx::ROOT, &mut count)
+    let mut payload = 0usize;
+    validate_node(&tree.root, 0, Ctx::ROOT, &mut count, &mut payload)
 }
 
 /// Validate an inline surface descriptor (`artifact.preview`/`.workspace`).
@@ -243,7 +303,8 @@ pub fn validate_descriptor(descriptor: &SurfaceDescriptor) -> Result<(), Surface
         ));
     }
     let mut count = 0usize;
-    validate_node(&descriptor.root, 0, Ctx::ROOT, &mut count)
+    let mut payload = 0usize;
+    validate_node(&descriptor.root, 0, Ctx::ROOT, &mut count, &mut payload)
 }
 
 /// Per-node validation context carried down the tree.
@@ -270,6 +331,7 @@ fn validate_node(
     depth: usize,
     ctx: Ctx,
     count: &mut usize,
+    payload: &mut usize,
 ) -> Result<(), SurfaceError> {
     if depth > MAX_DEPTH {
         return Err(SurfaceError::new(format!("nesting exceeds {MAX_DEPTH}")));
@@ -347,7 +409,7 @@ fn validate_node(
                                 "table action cell label must be non-empty",
                             ));
                         }
-                        validate_action(action)?;
+                        validate_action(action, depth, payload)?;
                     }
                 }
             }
@@ -359,7 +421,7 @@ fn validate_node(
             if ctx.inside_form {
                 return Err(SurfaceError::new("form may not nest inside form"));
             }
-            validate_action(submit)?;
+            validate_action(submit, depth, payload)?;
         }
         SurfaceNode::Radio {
             name,
@@ -389,7 +451,7 @@ fn validate_node(
                 return Err(SurfaceError::new("listItem title must be non-empty"));
             }
             if let Some(action) = action {
-                validate_action(action)?;
+                validate_action(action, depth, payload)?;
             }
         }
         SurfaceNode::Custom { kind, props, .. } => {
@@ -406,20 +468,14 @@ fn validate_node(
                     "custom node kind \"{kind}\" uses the reserved aiux.* prefix"
                 )));
             }
-            // `props` is free-form data but not free of the surface budget.
-            *count += 1;
-            if *count > MAX_NODES {
-                return Err(SurfaceError::new(format!("more than {MAX_NODES} nodes")));
-            }
-            for value in props.values() {
-                budget_json(value, depth + 1, count)?;
-            }
+            // `props` is free-form data but not free of the payload budget.
+            budget_map(props, depth, payload)?;
         }
         SurfaceNode::Button { label, action, .. } => {
             if label.is_empty() {
                 return Err(SurfaceError::new("button label must be non-empty"));
             }
-            validate_action(action)?;
+            validate_action(action, depth, payload)?;
         }
         SurfaceNode::Menu { items, .. } => {
             if items.is_empty() {
@@ -429,7 +485,7 @@ fn validate_node(
                 if label.is_empty() {
                     return Err(SurfaceError::new("menu item label must be non-empty"));
                 }
-                validate_action(action)?;
+                validate_action(action, depth, payload)?;
             }
         }
         SurfaceNode::Progress { value, max, .. } => {
@@ -468,7 +524,7 @@ fn validate_node(
         parent_is_list: matches!(node, SurfaceNode::List { .. }),
     };
     for child in node.children() {
-        validate_node(child, depth + 1, child_ctx, count)?;
+        validate_node(child, depth + 1, child_ctx, count, payload)?;
     }
     Ok(())
 }
@@ -489,7 +545,7 @@ fn validate_options(options: &[SelectOption], kind: &str) -> Result<(), SurfaceE
     Ok(())
 }
 
-fn validate_action(action: &Action) -> Result<(), SurfaceError> {
+fn validate_action(action: &Action, depth: usize, payload: &mut usize) -> Result<(), SurfaceError> {
     if action.id.is_empty() {
         return Err(SurfaceError::new("action id must be non-empty"));
     }
@@ -499,7 +555,7 @@ fn validate_action(action: &Action) -> Result<(), SurfaceError> {
             action.id
         )));
     }
-    Ok(())
+    budget_map(&action.payload, depth, payload)
 }
 
 #[cfg(test)]
@@ -582,13 +638,39 @@ mod tests {
 
     #[test]
     fn raw_rejects_oversized_custom_props() {
-        let props: serde_json::Map<String, Value> = (0..MAX_NODES)
+        let props: serde_json::Map<String, Value> = (0..MAX_PAYLOAD_ELEMS)
             .map(|i| (format!("k{i}"), serde_json::json!(i)))
             .collect();
         let json = serde_json::json!({
             "type": "custom", "kind": "acme.widget", "props": props
         });
         assert!(validate_raw(&json).is_err());
+    }
+
+    #[test]
+    fn raw_rejects_oversized_action_payload() {
+        let payload: serde_json::Map<String, Value> = (0..MAX_PAYLOAD_ELEMS)
+            .map(|i| (format!("k{i}"), serde_json::json!(i)))
+            .collect();
+        let json = serde_json::json!({
+            "type": "button", "label": "Go",
+            "action": {"id": "a1", "payload": payload}
+        });
+        assert!(validate_raw(&json).is_err());
+    }
+
+    #[test]
+    fn ordinary_properties_do_not_consume_payload_budget() {
+        // 2,049 text children: the node count stays under MAX_NODES and
+        // ordinary scalar properties are never charged to the payload
+        // budget — both gates must accept.
+        let children: Vec<Value> = (0..2049)
+            .map(|i| serde_json::json!({"type": "text", "text": format!("line {i}")}))
+            .collect();
+        let json = serde_json::json!({"type": "surface", "children": children});
+        validate_raw(&json).unwrap();
+        let tree = parse(&serde_json::json!({"id": "s1", "root": json}).to_string());
+        validate(&tree).unwrap();
     }
 
     #[test]
