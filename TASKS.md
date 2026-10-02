@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 4 (Expo) in flight** — all other lanes landed
+- Current phase: **Phase 8 hardening in flight** — ALL implementation lanes landed
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
@@ -20,12 +20,15 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
   - PR 8 `devin/phase5-web` — aiux-web renderer + example (green 9/9, fixtures byte-identical via real wasm core)
   - PR 9 `devin/phase7-flutter` — Dart C-ABI + `beyond_aiux` renderer (green 10/10,
     22 fixtures byte-identical via C ABI, app verified on flutter run -d linux)
-  - Lane I `devin/phase4-expo` — Expo SDK 57 bridge + example (sub-agent, off
-    `devin/phase4-expo-base` = compose+swiftui+wasm-js)
+  - PR 11 `devin/phase4-expo` — Expo SDK 57 bridge + example (green 9/9, emulator-verified)
+  - Lane K `devin/phase8-hardening` — release hardening → v0.1.0 (sub-agent, off
+    `devin/integration` = all lane branches merged, conformance 27/27 verified)
+  - Integration branches (orchestrator-maintained): `devin/phase5-web-base`,
+    `devin/phase4-expo-base`, `devin/phase6-dsl-base`, `devin/integration`
   - PR 10 `devin/phase6-dsl` — Surface Schema v1→31 nodes (ADR 0007) + renderer
     updates (green 9/9, conformance 27/27, browser-verified)
   - PR 5 `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (green)
-- Held: Phase 8 hardening (last — fires after all lanes land)
+
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
