@@ -32,14 +32,17 @@ rm -rf "$OUT"
 mkdir -p "$OUT/lib" "$OUT/include"
 
 # Simulator (x86_64 + arm64) and macOS (x86_64 + arm64) ship as fat archives.
+# CocoaPods requires every slice to share the same library filename — keep
+# libaiux_uniffi.a under per-slice dirs instead of suffixing the name.
+mkdir -p "$OUT/lib/iossim" "$OUT/lib/macos"
 lipo -create \
     "$ROOT/target/x86_64-apple-ios/release/libaiux_uniffi.a" \
     "$ROOT/target/aarch64-apple-ios-sim/release/libaiux_uniffi.a" \
-    -output "$OUT/lib/libaiux_uniffi_iossim.a"
+    -output "$OUT/lib/iossim/libaiux_uniffi.a"
 lipo -create \
     "$ROOT/target/x86_64-apple-darwin/release/libaiux_uniffi.a" \
     "$ROOT/target/aarch64-apple-darwin/release/libaiux_uniffi.a" \
-    -output "$OUT/lib/libaiux_uniffi_macos.a"
+    -output "$OUT/lib/macos/libaiux_uniffi.a"
 
 # Header for every slice comes from the same codegen run.
 cargo run -q -p aiux-uniffi --features cli --bin uniffi-bindgen -- \
@@ -47,11 +50,15 @@ cargo run -q -p aiux-uniffi --features cli --bin uniffi-bindgen -- \
     --language swift --config bindings/uniffi/uniffi.toml \
     --out-dir "$OUT/gen" --no-format
 cp "$OUT/gen/AIUXCoreFFI.h" "$OUT/include/AIUXCoreFFI.h"
+# Consumers importing the clang module (pods, plain Xcode targets) need the
+# FFI modulemap inside the xcframework headers dir.
+cp "$OUT/gen/AIUXCoreFFI.modulemap" "$OUT/include/module.modulemap" 2>/dev/null || \
+    cp "$HERE/Sources/AIUXCoreFFI/include/module.modulemap" "$OUT/include/module.modulemap"
 
 xcodebuild -create-xcframework \
     -library "$ROOT/target/aarch64-apple-ios/release/libaiux_uniffi.a" -headers "$OUT/include" \
-    -library "$OUT/lib/libaiux_uniffi_iossim.a" -headers "$OUT/include" \
-    -library "$OUT/lib/libaiux_uniffi_macos.a" -headers "$OUT/include" \
+    -library "$OUT/lib/iossim/libaiux_uniffi.a" -headers "$OUT/include" \
+    -library "$OUT/lib/macos/libaiux_uniffi.a" -headers "$OUT/include" \
     -output "$OUT/AIUXCore.xcframework"
 
 rm -rf "$OUT/gen"

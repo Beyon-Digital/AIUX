@@ -37,7 +37,14 @@ class AIUXSessionStore private constructor(
 
     private val dispatchMutex = Mutex()
 
-    private val _snapshot = MutableStateFlow(readSnapshot())
+    private val _snapshotJson = MutableStateFlow(session.snapshot())
+
+    /** Canonical render snapshot as raw JSON, kept verbatim from the FFI. */
+    val snapshotJson: StateFlow<String> = _snapshotJson.asStateFlow()
+
+    private val _snapshot = MutableStateFlow(
+        AIUXModelParser.parseSnapshot(_snapshotJson.value),
+    )
     val snapshot: StateFlow<AIUXSnapshot> = _snapshot.asStateFlow()
 
     private val _lastError = MutableStateFlow<AIUXError?>(null)
@@ -68,6 +75,11 @@ class AIUXSessionStore private constructor(
         runCatching { session.serialize() }.mapError()
     }
 
+    /** Canonical render snapshot as raw JSON (verbatim across the boundary). */
+    suspend fun snapshotJson(): Result<String> = withContext(ioDispatcher) {
+        runCatching { session.snapshot() }.mapError()
+    }
+
     fun reset() {
         runCatching { session.reset() }
         refresh()
@@ -85,7 +97,11 @@ class AIUXSessionStore private constructor(
         session.close()
     }
 
-    private fun readSnapshot(): AIUXSnapshot = AIUXModelParser.parseSnapshot(session.snapshot())
+    private fun readSnapshot(): AIUXSnapshot {
+        val raw = session.snapshot()
+        _snapshotJson.value = raw
+        return AIUXModelParser.parseSnapshot(raw)
+    }
 
     private suspend fun runFfi(call: () -> String): Result<AIUXDispatchReport> =
         withContext(ioDispatcher) {

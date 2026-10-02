@@ -1,0 +1,49 @@
+pluginManagement {
+  def reactNativeGradlePlugin = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine("node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
+    }.standardOutput.asText.get().trim()
+  ).getParentFile().absolutePath
+  includeBuild(reactNativeGradlePlugin)
+  
+  def expoPluginsPath = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine("node", "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
+    }.standardOutput.asText.get().trim(),
+    "../android/expo-gradle-plugin"
+  ).absolutePath
+  includeBuild(expoPluginsPath)
+}
+
+plugins {
+  id("com.facebook.react.settings")
+  id("expo-autolinking-settings")
+}
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+  if (System.getenv('EXPO_USE_COMMUNITY_AUTOLINKING') == '1') {
+    ex.autolinkLibrariesFromCommand()
+  } else {
+    ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
+  }
+}
+expoAutolinking.useExpoModules()
+
+rootProject.name = 'AIUX Expo Example'
+
+expoAutolinking.useExpoVersionCatalog()
+
+// Composite-build link back to the AIUX repo: the bridge's `aiux:compose` /
+// `aiux:bindings` coordinates resolve to the in-repo renderer + binding
+// projects, which keep their own plugin versions and repositories.
+includeBuild("../../..") {
+  dependencySubstitution {
+    substitute(module("aiux:compose")).using(project(":renderers:compose"))
+    substitute(module("aiux:bindings")).using(project(":bindings:kotlin"))
+  }
+}
+
+include ':app'
+includeBuild(expoAutolinking.reactNativeGradlePlugin)

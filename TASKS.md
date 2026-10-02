@@ -107,18 +107,22 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 - **Gate:** mocked agent interaction end-to-end on both platforms: user prompt →
   stream → tool start/finish → approval → approve → render result.
   - [x] iOS (`AIUXExample` scenario + XCTest, verified on macOS CI)
-  - [ ] Android
+  - [x] Android (mocked agent script verified on `vendor_v3` emulator)
 
 ## Phase 4 — Expo SDK 57 bridge → PR 6
 
-- [ ] `@beyondigital/aiux-expo` — Expo Modules native view
-- [ ] `<AIConversation sessionId theme context capabilities onAction />`
-- [ ] iOS: Expo view → SwiftUI hosting → AIUXSwiftUI → core
-- [ ] Android: Expo view → ComposeView → AIUXCompose → core
-- [ ] JS transport adapter + event buffer + `dispatchBatch` flush policy
-  (start 16–50 ms / size threshold, benchmark)
-- [ ] examples/expo running the mocked fixture
+- [x] `@beyondigital/aiux-expo` — Expo Modules native view
+- [x] `<AIConversation sessionId theme context capabilities onAction />`
+- [x] iOS: Expo view → SwiftUI hosting → AIUXSwiftUI → core
+- [x] Android: Expo view → ComposeView → AIUXCompose → core
+- [x] JS transport adapter + event buffer + `dispatchBatch` flush policy
+  (16–50 ms coalescing + size cap; FIFO drain keeps ordering, failures
+  requeue for the next flush — event-id dedup makes replays safe)
+- [x] examples/expo running the mocked fixture (dev-client, prompt → stream →
+  tool → approval → surface → error+retry, light/dark — verified on
+  `vendor_v3` emulator)
 - **Gate:** same fixture natively on iOS+Android, zero RN message UI.
+  Android verified end-to-end; iOS compiles via macOS CI (xcodebuild sim).
 
 ## Phase 5 — Web → PR 7
 
