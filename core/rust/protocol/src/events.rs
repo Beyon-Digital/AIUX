@@ -14,7 +14,8 @@ use serde_json::Value;
 
 use crate::entities::{
     AiuxError, Approval, ApprovalResolution, Artifact, ArtifactPreview, ArtifactWorkspace,
-    ContextEntity, Message, MessageRole, MessageStatus, Part, Progress, Run, Session, Surface, Tool,
+    ContextEntity, Message, MessageRole, MessageStatus, Part, Progress, Run, Session, Surface,
+    Tool,
 };
 use crate::PROTOCOL_VERSION;
 

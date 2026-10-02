@@ -12,10 +12,10 @@ mod node;
 mod validate;
 
 pub use node::{
-    Action, Alignment, ArtifactPreview, ArtifactWorkspace, ButtonVariant, ColumnAlign, Distribution,
-    Gap, IconSize, InputType, KeyValueItem, Layout, MenuItem, Padding, Radius, SelectOption,
-    StackDirection, SurfaceDescriptor, SurfaceNode, SurfaceTree, TableCell, TableColumn,
-    TextVariant, Tone, TypedTableCell, WorkspaceMode,
+    Action, Alignment, ArtifactPreview, ArtifactWorkspace, ButtonVariant, ColumnAlign,
+    Distribution, Gap, IconSize, InputType, KeyValueItem, Layout, MenuItem, Padding, Radius,
+    SelectOption, StackDirection, SurfaceDescriptor, SurfaceNode, SurfaceTree, TableCell,
+    TableColumn, TextVariant, Tone, TypedTableCell, WorkspaceMode,
 };
 pub use validate::{
     validate, validate_descriptor, validate_raw, SurfaceError, MAX_DEPTH, MAX_NODES,

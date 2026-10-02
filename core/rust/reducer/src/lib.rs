@@ -297,8 +297,7 @@ pub fn reduce(state: &mut SessionState, event: &AiuxEvent<Value>) -> Result<(), 
             .into_iter()
             .flatten()
             {
-                aiux_surfaces::validate_descriptor(descriptor)
-                    .map_err(|e| invalid(e.detail))?;
+                aiux_surfaces::validate_descriptor(descriptor).map_err(|e| invalid(e.detail))?;
             }
             aiux_artifacts::updated(&mut state.artifacts, &p)?;
         }

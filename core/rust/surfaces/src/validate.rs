@@ -200,9 +200,7 @@ pub fn validate(tree: &SurfaceTree) -> Result<(), SurfaceError> {
 /// rules as a session surface's root (ADR 0007).
 pub fn validate_descriptor(descriptor: &SurfaceDescriptor) -> Result<(), SurfaceError> {
     if descriptor.id.is_empty() {
-        return Err(SurfaceError::new(
-            "surface descriptor id must be non-empty",
-        ));
+        return Err(SurfaceError::new("surface descriptor id must be non-empty"));
     }
     if !matches!(descriptor.root, SurfaceNode::Surface { .. }) {
         return Err(SurfaceError::new(
@@ -280,9 +278,7 @@ fn validate_node(
                 columns.len()
             };
             if effective == 0 {
-                return Err(SurfaceError::new(
-                    "table requires headers or columns",
-                ));
+                return Err(SurfaceError::new("table requires headers or columns"));
             }
             if !headers.is_empty() && !columns.is_empty() && headers.len() != columns.len() {
                 return Err(SurfaceError::new(
@@ -348,9 +344,7 @@ fn validate_node(
                 }
             }
         }
-        SurfaceNode::ListItem {
-            title, action, ..
-        } => {
+        SurfaceNode::ListItem { title, action, .. } => {
             if !ctx.parent_is_list {
                 return Err(SurfaceError::new(
                     "listItem may only appear as a direct child of list",
@@ -419,8 +413,7 @@ fn validate_node(
         SurfaceNode::Select { options, .. } => validate_options(options, "select")?,
         _ => {}
     }
-    if ctx.inside_actions
-        && !matches!(node, SurfaceNode::Button { .. } | SurfaceNode::Menu { .. })
+    if ctx.inside_actions && !matches!(node, SurfaceNode::Button { .. } | SurfaceNode::Menu { .. })
     {
         return Err(SurfaceError::new(
             "\"actions\" may only contain button/menu nodes",
