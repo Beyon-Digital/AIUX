@@ -5,18 +5,33 @@ plugins {
     kotlin("android")
 }
 
-// UniFFI codegen + host native lib; skipped when bindings already exist
-// (bindings/kotlin/generate.sh regenerates unconditionally — run it to refresh).
+// UniFFI codegen + host native lib; up-to-date-checked on its Rust/script
+// inputs so changed sources regenerate (bindings/kotlin/generate.sh
+// regenerates unconditionally when it runs).
 val uniffiGenerated = layout.buildDirectory.dir("generated/uniffi")
+val uniffiJniLibs = layout.buildDirectory.dir("generated/jniLibs")
 val generateUniffiBindings = tasks.register("generateUniffiBindings", Exec::class) {
     description = "UniFFI Kotlin bindings + native libraries via bindings/kotlin/generate.sh"
     commandLine("bash", "${rootDir}/bindings/kotlin/generate.sh")
+    inputs.files(
+        "${rootDir}/bindings/kotlin/generate.sh",
+        "${rootDir}/bindings/uniffi/uniffi.toml",
+        "${rootDir}/Cargo.toml",
+        "${rootDir}/Cargo.lock",
+    )
+    inputs.dir("${rootDir}/core/rust")
+    inputs.dir("${rootDir}/bindings/uniffi")
     outputs.dir(uniffiGenerated)
-    onlyIf { !uniffiGenerated.get().file("aiux/aiux.kt").asFile.exists() }
+    outputs.dir(uniffiJniLibs)
 }
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn(generateUniffiBindings)
     compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+}
+// AAR packaging consumes generated jniLibs — ordering must not depend on
+// Kotlin compilation alone or a clean release can ship bindings without .so.
+tasks.matching { it.name.endsWith("JniLibFolders") }.configureEach {
+    dependsOn(generateUniffiBindings)
 }
 
 android {

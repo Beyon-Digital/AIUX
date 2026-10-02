@@ -144,7 +144,15 @@ class MockAgent(private val sessionId: String = "s1") {
         put("protocolVersion", "0.1"); put("messageId", id); put("status", "complete")
     })
 
+    fun messageCancelled(id: String): String = event("message.updated", buildJsonObject {
+        put("protocolVersion", "0.1"); put("messageId", id); put("status", "cancelled")
+    })
+
     fun runCompleted(id: String): String = event("run.completed", buildJsonObject {
+        put("protocolVersion", "0.1"); put("runId", id)
+    })
+
+    fun runCancelled(id: String): String = event("run.cancelled", buildJsonObject {
         put("protocolVersion", "0.1"); put("runId", id)
     })
 

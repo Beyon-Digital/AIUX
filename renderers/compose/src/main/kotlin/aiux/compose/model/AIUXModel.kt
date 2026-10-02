@@ -398,10 +398,11 @@ object AIUXModelParser {
             },
             workspace = (obj["workspace"] as? JsonObject)?.let { w ->
                 AIUXArtifactWorkspace(
+                    // Contract default is fullscreen; unknown values degrade to it.
                     mode = when (w["mode"]?.str()) {
-                        "fullscreen" -> AIWorkspaceMode.Fullscreen
+                        "detail" -> AIWorkspaceMode.Detail
                         "sheet" -> AIWorkspaceMode.Sheet
-                        else -> AIWorkspaceMode.Detail
+                        else -> AIWorkspaceMode.Fullscreen
                     },
                     surface = SurfaceNodeParser.parseDescriptor(w["surface"] as? JsonObject),
                     lazy = w["lazy"].bool() ?: false,

@@ -96,6 +96,10 @@ import kotlinx.serialization.json.buildJsonObject
 /// action payload as `fields`.
 val LocalAIUXFormScope = compositionLocalOf<MutableMap<String, JsonElement>?> { null }
 
+/// Whether the nearest enclosing `form`/`field` is disabled — interactive
+/// descendants must be inert, not just the submit action (ADR 0007).
+val LocalAIUXFormDisabled = compositionLocalOf { false }
+
 /// Host registry for `custom` surface node kinds (ADR 0007). Unregistered
 /// kinds degrade to a labelled placeholder plus their children.
 val LocalAIUXCustomNodes = compositionLocalOf<Map<String, @Composable (AISurfaceNode.Custom) -> Unit>> {
@@ -128,6 +132,7 @@ fun SurfaceNodeView(
 ) {
     val theme = AIUX.theme
     val m = modifier.nodeStyle(node.style, theme)
+    val formDisabled = LocalAIUXFormDisabled.current
     when (node) {
         is AISurfaceNode.Surface -> Column(
             modifier = m.fillMaxWidth(),
@@ -238,7 +243,7 @@ fun SurfaceNodeView(
             modifier = m
                 .fillMaxWidth()
                 .height(120.dp)
-                .clickable {
+                .clickable(enabled = !formDisabled) {
                     onAction(AIUXAction(AIUXActions.IMAGE_OPEN, buildJsonObject { put("uri", JsonPrimitive(node.src)) }))
                 }
                 .semantics { contentDescription = node.alt ?: "image ${node.src}" },
@@ -354,12 +359,13 @@ fun SurfaceNodeView(
         }
 
         is AISurfaceNode.Button -> {
-            val click = { if (!node.disabled) onAction(node.action) }
+            val enabled = !node.disabled && !formDisabled
+            val click = { if (enabled) onAction(node.action) }
             val shape = RoundedCornerShape(theme.radii.radius(node.style.radius?.name?.lowercase() ?: "md"))
             when (node.variant) {
                 AIButtonVariant.Primary -> Button(
                     onClick = click,
-                    enabled = !node.disabled,
+                    enabled = enabled,
                     shape = shape,
                     modifier = m.semantics { contentDescription = "button ${node.label}" },
                     colors = ButtonDefaults.buttonColors(
@@ -369,18 +375,18 @@ fun SurfaceNodeView(
                 ) { Text(node.label) }
                 AIButtonVariant.Secondary -> OutlinedButton(
                     onClick = click,
-                    enabled = !node.disabled,
+                    enabled = enabled,
                     shape = shape,
                     modifier = m.semantics { contentDescription = "button ${node.label}" },
                 ) { Text(node.label) }
                 AIButtonVariant.Ghost -> TextButton(
                     onClick = click,
-                    enabled = !node.disabled,
+                    enabled = enabled,
                     modifier = m.semantics { contentDescription = "button ${node.label}" },
                 ) { Text(node.label) }
                 AIButtonVariant.Destructive -> Button(
                     onClick = click,
-                    enabled = !node.disabled,
+                    enabled = enabled,
                     shape = shape,
                     modifier = m.semantics { contentDescription = "button ${node.label}" },
                     colors = ButtonDefaults.buttonColors(
@@ -394,7 +400,7 @@ fun SurfaceNodeView(
         is AISurfaceNode.Menu -> {
             var expanded by remember { mutableStateOf(false) }
             Box(m) {
-                OutlinedButton(onClick = { expanded = true }) {
+                OutlinedButton(onClick = { expanded = true }, enabled = !formDisabled) {
                     Text(node.label)
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
@@ -464,7 +470,7 @@ fun SurfaceNodeView(
                     modifier = Modifier.fillMaxWidth(),
                     label = node.label?.let { l -> { Text(l + if (node.required) " *" else "") } },
                     placeholder = node.placeholder?.let { { Text(it) } },
-                    enabled = !node.disabled,
+                    enabled = !node.disabled && !formDisabled,
                     singleLine = true,
                     isError = !node.errorText.isNullOrEmpty(),
                     keyboardOptions = KeyboardOptions(
@@ -496,7 +502,7 @@ fun SurfaceNodeView(
                     modifier = Modifier.fillMaxWidth(),
                     label = node.label?.let { l -> { Text(l + if (node.required) " *" else "") } },
                     placeholder = node.placeholder?.let { { Text(it) } },
-                    enabled = !node.disabled,
+                    enabled = !node.disabled && !formDisabled,
                     minLines = node.rows ?: 3,
                     isError = !node.errorText.isNullOrEmpty(),
                 )
@@ -521,7 +527,7 @@ fun SurfaceNodeView(
                 Box {
                     OutlinedButton(
                         onClick = { expanded = true },
-                        enabled = !node.disabled,
+                        enabled = !node.disabled && !formDisabled,
                     ) {
                         Text(current?.label ?: node.placeholder ?: node.name)
                         Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -556,7 +562,7 @@ fun SurfaceNodeView(
             LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(checked)) }
             Column(modifier = m) {
                 Row(
-                    modifier = Modifier.clickable(enabled = !node.disabled) {
+                    modifier = Modifier.clickable(enabled = !node.disabled && !formDisabled) {
                         checked = !checked
                         formScope?.set(node.name, JsonPrimitive(checked))
                         onAction(
@@ -574,7 +580,7 @@ fun SurfaceNodeView(
                     Checkbox(
                         checked = checked,
                         onCheckedChange = null,
-                        enabled = !node.disabled,
+                        enabled = !node.disabled && !formDisabled,
                     )
                     Text(
                         node.label + if (node.required) " *" else "",
@@ -601,7 +607,7 @@ fun SurfaceNodeView(
                 node.options.forEach { option ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable(enabled = !node.disabled) {
+                        modifier = Modifier.clickable(enabled = !node.disabled && !formDisabled) {
                             selected = option.value
                             formScope?.set(node.name, JsonPrimitive(option.value))
                             onAction(
@@ -613,7 +619,7 @@ fun SurfaceNodeView(
                             )
                         },
                     ) {
-                        RadioButton(selected = selected == option.value, onClick = null, enabled = !node.disabled)
+                        RadioButton(selected = selected == option.value, onClick = null, enabled = !node.disabled && !formDisabled)
                         Text(option.label, style = theme.typography.body, color = theme.colors.foreground)
                     }
                 }
@@ -621,27 +627,34 @@ fun SurfaceNodeView(
             }
         }
 
-        is AISurfaceNode.Field -> Column(
-            modifier = m.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
+        is AISurfaceNode.Field -> CompositionLocalProvider(
+            LocalAIUXFormDisabled provides (formDisabled || node.disabled),
         ) {
-            node.label?.let {
-                Text(
-                    it + if (node.required) " *" else "",
-                    style = theme.typography.label,
-                    color = theme.colors.foreground,
-                )
+            Column(
+                modifier = m.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(theme.spacing.xs),
+            ) {
+                node.label?.let {
+                    Text(
+                        it + if (node.required) " *" else "",
+                        style = theme.typography.label,
+                        color = theme.colors.foreground,
+                    )
+                }
+                node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
+                if (node.errorText == null && node.helperText != null) {
+                    Text(node.helperText, style = theme.typography.caption, color = theme.colors.mutedForeground)
+                }
+                AIUXFieldError(node.errorText)
             }
-            node.children.forEach { SurfaceNodeView(it, onAction = onAction) }
-            if (node.errorText == null && node.helperText != null) {
-                Text(node.helperText, style = theme.typography.caption, color = theme.colors.mutedForeground)
-            }
-            AIUXFieldError(node.errorText)
         }
 
         is AISurfaceNode.Form -> {
             val scope = remember { mutableStateMapOf<String, JsonElement>() }
-            CompositionLocalProvider(LocalAIUXFormScope provides scope) {
+            CompositionLocalProvider(
+                LocalAIUXFormScope provides scope,
+                LocalAIUXFormDisabled provides (formDisabled || node.disabled),
+            ) {
                 Column(
                     modifier = m.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(theme.spacing.md),
@@ -692,7 +705,7 @@ fun SurfaceNodeView(
                 }
             }
             if (node.action != null) {
-                Box(Modifier.fillMaxWidth().clickable { node.action?.let { onAction(it) } }) { row() }
+                Box(Modifier.fillMaxWidth().clickable(enabled = !formDisabled) { node.action?.let { onAction(it) } }) { row() }
             } else {
                 row()
             }
@@ -791,6 +804,7 @@ private fun AITableCellView(cell: AITableCell, align: TextAlign, onAction: (AIUX
         }
         is AITableCell.Action -> TextButton(
             onClick = { onAction(cell.action) },
+            enabled = !LocalAIUXFormDisabled.current,
         ) { Text(cell.label) }
     }
 }
