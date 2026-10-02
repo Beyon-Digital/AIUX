@@ -6,3 +6,8 @@ packages:
   - "examples/expo"
   - "examples/react-native"
   - "examples/web"
+
+# pnpm 12+: build-script allowlists live here, not in package.json.
+# esbuild's postinstall is required by vitest.
+allowBuilds:
+  esbuild: true

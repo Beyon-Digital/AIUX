@@ -11,10 +11,5 @@
     "test": "pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "pnpm -r --if-present run lint"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
