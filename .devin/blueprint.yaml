@@ -1,9 +1,24 @@
-# AIUX dev environment: Node+pnpm for JS packages; cargo/java preinstalled on base image.
+# AIUX dev environment: Node+pnpm for JS packages, Android SDK for Compose/Expo,
+# wasm32 target for the web binding; cargo/java preinstalled on base image.
 initialize:
   - uses: github.com/actions/setup-node@v4
     with:
       node-version: "22"
   - run: npm install -g pnpm@12
+  - run: rustup target add wasm32-unknown-unknown || true
+  - run: |
+      # Android SDK cmdline-tools + platform for Gradle/Compose builds (no sudo needed)
+      export ANDROID_HOME=$HOME/android-sdk
+      mkdir -p $ANDROID_HOME/cmdline-tools
+      curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/ct.zip
+      unzip -q /tmp/ct.zip -d $ANDROID_HOME/cmdline-tools
+      mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+      echo "ANDROID_HOME=$ANDROID_HOME" >> $ENVRC
+      echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $ENVRC
+  - run: |
+      export ANDROID_HOME=$HOME/android-sdk
+      yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null
+      $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 # Install workspace deps incrementally.
 maintenance: |
   pnpm install --frozen-lockfile=false
