@@ -112,6 +112,13 @@ export default function App() {
             sessionId={SESSION_ID}
             theme={theme}
             mode="fullscreen"
+            composerToolbar={{
+              // Composer customization contract: hide built-ins by passing
+              // false, append host-owned tools that emit their action id.
+              extra: [
+                { id: "aiux.composer.docs", label: "Docs", glyph: "doc" },
+              ],
+            }}
             onAction={(action) => controller.current?.onAction(action)}
             onError={setError}
             style={styles.conversation}

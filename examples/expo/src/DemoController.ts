@@ -186,6 +186,26 @@ export class DemoController {
         }
         break;
       }
+      case "aiux.composer.attach":
+      case "aiux.composer.tools":
+      case "aiux.composer.dictate":
+      case "aiux.composer.voice":
+      case "aiux.composer.docs": {
+        // Toolbar affordances are host policy — the demo acknowledges the
+        // tap so the customization contract is visibly exercised.
+        const n = ++this.messageN;
+        const mid = this.id("m", n);
+        this.send(
+          this.agent.assistantMessage(mid),
+          this.agent.textPart(
+            mid,
+            `${mid}:p`,
+            `Host received \`"${action.id}"\` — composer toolbar tools arrive as actions, including custom ones.`,
+          ),
+          this.agent.messageComplete(mid),
+        );
+        break;
+      }
       default:
         // Navigation actions (context.open, citation.open, surface custom
         // ids like invoice.publish…) are host policy — the demo ignores them.

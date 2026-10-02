@@ -16,6 +16,8 @@ export interface NativeViewProps {
   mode?: AIConversationMode | undefined;
   /** Whether the composer row is visible. */
   showComposer?: boolean | undefined;
+  /** `AIUXComposerToolbarSpec` serialized to JSON. */
+  composerToolbar?: string | undefined;
   style?: unknown;
   children?: unknown;
 }

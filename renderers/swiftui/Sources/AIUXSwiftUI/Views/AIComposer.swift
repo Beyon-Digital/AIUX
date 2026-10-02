@@ -21,12 +21,19 @@ public struct AIComposer: View {
     public var runActive: Bool
     /// Placeholder text.
     public var placeholder: String
+    /// Which controls render + custom tools appended to the row.
+    public var toolbar: AIUXComposerToolbar
 
     @State private var text: String = ""
 
-    public init(runActive: Bool = false, placeholder: String = "Message…") {
+    public init(
+        runActive: Bool = false,
+        placeholder: String = "Message…",
+        toolbar: AIUXComposerToolbar = .default
+    ) {
         self.runActive = runActive
         self.placeholder = placeholder
+        self.toolbar = toolbar
     }
 
     public var body: some View {
@@ -41,51 +48,69 @@ public struct AIComposer: View {
                 .padding(.top, theme.space(.xs))
                 .accessibilityLabel("Message input")
 
-            HStack(alignment: .center, spacing: theme.space(.sm)) {
-                Button {
-                    emit(AIUXAction(id: AIUXAction.composerAttach))
-                } label: {
-                    Image(systemName: "plus")
-                        .font(theme.typography.title)
-                        .frame(width: 40, height: 40)
+            HStack(alignment: .center, spacing: theme.space(.xs)) {
+                if toolbar.attach {
+                    Button {
+                        emit(AIUXAction(id: AIUXAction.composerAttach))
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(theme.typography.title)
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Attach")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Attach")
 
                 Spacer(minLength: 0)
 
-                Button {
-                    emit(AIUXAction(id: AIUXAction.composerTools))
-                } label: {
-                    toolsGlyph(colors: colors)
-                        .frame(width: 40, height: 40)
+                if toolbar.tools {
+                    Button {
+                        emit(AIUXAction(id: AIUXAction.composerTools))
+                    } label: {
+                        toolsGlyph(colors: colors)
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Tools")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Tools")
 
-                Button {
-                    emit(AIUXAction(id: AIUXAction.composerDictate))
-                } label: {
-                    Image(systemName: "mic")
-                        .font(theme.typography.title)
-                        .frame(width: 36, height: 40)
+                if toolbar.dictate {
+                    Button {
+                        emit(AIUXAction(id: AIUXAction.composerDictate))
+                    } label: {
+                        Image(systemName: "mic")
+                            .font(theme.typography.title)
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Dictate")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Dictate")
+
+                ForEach(toolbar.extra) { tool in
+                    Button {
+                        emit(AIUXAction(id: tool.id))
+                    } label: {
+                        Image(systemName: tool.systemImage)
+                            .font(theme.typography.title)
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(tool.accessibilityLabel)
+                }
 
                 actionButton(colors: colors)
             }
         }
-        .padding(.leading, theme.space(.sm))
-        .padding(.trailing, theme.space(.sm))
-        .padding(.top, theme.space(.xs))
-        .padding(.bottom, theme.space(.xs))
+        .padding(.leading, theme.space(.md))
+        .padding(.trailing, theme.space(.md))
+        .padding(.top, theme.space(.sm))
+        .padding(.bottom, theme.space(.sm))
         .background(colors.inputSurface)
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .stroke(colors.border, lineWidth: 1)
-        )
         // Floating composer: soft elevation instead of a docked bar.
         .shadow(color: .black.opacity(0.10), radius: 10, x: 0, y: 4)
         .padding(.horizontal, theme.space(.md))

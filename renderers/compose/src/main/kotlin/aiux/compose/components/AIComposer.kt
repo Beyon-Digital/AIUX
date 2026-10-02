@@ -1,7 +1,6 @@
 package aiux.compose.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -19,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -54,6 +54,9 @@ import kotlinx.serialization.json.JsonPrimitive
  * right an accent-ringed tools toggle, an outline mic, and the filled
  * action circle (waveform → voice mode while empty, up-arrow → send with
  * text, square → stop while a run is active). Emits actions upward only.
+ *
+ * [toolbar] hides built-in controls and appends custom tools — see
+ * [AIComposerToolbar].
  */
 @Composable
 fun AIComposer(
@@ -61,6 +64,7 @@ fun AIComposer(
     enabled: Boolean = true,
     running: Boolean = false,
     placeholder: String = "Message",
+    toolbar: AIComposerToolbar = AIComposerToolbar.Default,
     onAction: (AIUXAction) -> Unit = {},
 ) {
     val theme = AIUX.theme
@@ -93,14 +97,13 @@ fun AIComposer(
         Surface(
             color = theme.colors.inputSurface,
             shape = RoundedCornerShape(30.dp),
-            border = BorderStroke(1.dp, theme.colors.border),
             shadowElevation = 2.dp,
             modifier = Modifier.weight(1f),
         ) {
             Column(
                 modifier = Modifier.padding(
-                    start = theme.spacing.lg,
-                    end = theme.spacing.sm,
+                    start = theme.spacing.md,
+                    end = theme.spacing.md,
                     top = theme.spacing.sm,
                     bottom = theme.spacing.sm,
                 ),
@@ -138,35 +141,59 @@ fun AIComposer(
                         .fillMaxWidth()
                         .padding(top = theme.spacing.xs),
                 ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "add attachment",
-                        tint = theme.colors.foreground,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable(enabled = enabled) {
-                                onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH))
-                            }
-                            .padding(theme.spacing.sm),
-                    )
+                    if (toolbar.attach) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "add attachment",
+                            tint = theme.colors.foreground,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable(enabled = enabled) {
+                                    onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH))
+                                }
+                                .padding(theme.spacing.sm),
+                        )
+                    }
                     Spacer(Modifier.weight(1f))
-                    ComposerGlyphButton(
-                        enabled = enabled,
-                        contentDescription = "composer tools",
-                        onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_TOOLS)) },
-                    ) {
-                        ToolsGlyph(accent = theme.colors.accent, glyph = theme.colors.foreground)
+                    if (toolbar.tools) {
+                        ComposerGlyphButton(
+                            enabled = enabled,
+                            contentDescription = "composer tools",
+                            onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_TOOLS)) },
+                        ) {
+                            ToolsGlyph(accent = theme.colors.accent, glyph = theme.colors.foreground)
+                        }
+                    }
+                    if (toolbar.dictate) {
+                        Spacer(Modifier.width(theme.spacing.xs))
+                        ComposerGlyphButton(
+                            enabled = enabled,
+                            contentDescription = "dictate",
+                            onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_DICTATE)) },
+                        ) {
+                            MicGlyph(color = theme.colors.foreground)
+                        }
+                    }
+                    toolbar.extra.forEach { tool ->
+                        Spacer(Modifier.width(theme.spacing.xs))
+                        ComposerGlyphButton(
+                            enabled = enabled,
+                            contentDescription = tool.contentDescription,
+                            onClick = { onAction(AIUXAction(tool.id)) },
+                        ) {
+                            if (tool.icon != null) {
+                                tool.icon.invoke()
+                            } else {
+                                ComposerGlyphCanvas(
+                                    glyph = tool.glyph,
+                                    color = theme.colors.foreground,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
+                        }
                     }
                     Spacer(Modifier.width(theme.spacing.xs))
-                    ComposerGlyphButton(
-                        enabled = enabled,
-                        contentDescription = "dictate",
-                        onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_DICTATE)) },
-                    ) {
-                        MicGlyph(color = theme.colors.foreground)
-                    }
-                    Spacer(Modifier.width(theme.spacing.sm))
                     ComposerActionButton(
                         running = running,
                         canSend = canSend,
@@ -260,6 +287,161 @@ private fun ToolsGlyph(accent: Color, glyph: Color, modifier: Modifier = Modifie
             strokeWidth = ring * 0.9f,
             cap = StrokeCap.Round,
         )
+    }
+}
+
+/**
+ * Stock glyph renderer for [AIComposerGlyph] — every custom tool icon is
+ * drawn (material-icons-extended isn't a dependency).
+ */
+@Composable
+internal fun ComposerGlyphCanvas(
+    glyph: AIComposerGlyph,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    when (glyph) {
+        AIComposerGlyph.Mic -> MicGlyph(color = color, modifier = modifier)
+        AIComposerGlyph.Plus ->
+            Icon(
+                Icons.Default.Add,
+                contentDescription = null,
+                tint = color,
+                modifier = modifier,
+            )
+        AIComposerGlyph.Star ->
+            Icon(
+                Icons.Default.Star,
+                contentDescription = null,
+                tint = color,
+                modifier = modifier,
+            )
+        else -> Canvas(modifier = modifier) {
+            val w = size.width
+            val h = size.height
+            val stroke = w * 0.09f
+            when (glyph) {
+                AIComposerGlyph.Sparkle -> {
+                    // Four-point star: two crossed diamonds.
+                    drawLine(
+                        color,
+                        Offset(w * 0.5f, h * 0.08f),
+                        Offset(w * 0.5f, h * 0.92f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                    drawLine(
+                        color,
+                        Offset(w * 0.08f, h * 0.5f),
+                        Offset(w * 0.92f, h * 0.5f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                    drawCircle(
+                        color,
+                        radius = w * 0.10f,
+                        center = Offset(w * 0.5f, h * 0.5f),
+                    )
+                }
+                AIComposerGlyph.Document -> {
+                    drawRoundRect(
+                        color,
+                        topLeft = Offset(w * 0.22f, h * 0.08f),
+                        size = Size(w * 0.56f, h * 0.84f),
+                        cornerRadius = CornerRadius(w * 0.08f, w * 0.08f),
+                        style = Stroke(width = stroke),
+                    )
+                    for (i in 0..2) {
+                        val y = h * (0.30f + i * 0.18f)
+                        drawLine(
+                            color,
+                            Offset(w * 0.34f, y),
+                            Offset(w * 0.66f, y),
+                            strokeWidth = stroke * 0.8f,
+                            cap = StrokeCap.Round,
+                        )
+                    }
+                }
+                AIComposerGlyph.Photo -> {
+                    drawRoundRect(
+                        color,
+                        topLeft = Offset(w * 0.10f, h * 0.16f),
+                        size = Size(w * 0.80f, h * 0.68f),
+                        cornerRadius = CornerRadius(w * 0.10f, w * 0.10f),
+                        style = Stroke(width = stroke),
+                    )
+                    drawCircle(
+                        color,
+                        radius = w * 0.08f,
+                        center = Offset(w * 0.34f, h * 0.38f),
+                    )
+                    drawLine(
+                        color,
+                        Offset(w * 0.16f, h * 0.78f),
+                        Offset(w * 0.44f, h * 0.50f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                    drawLine(
+                        color,
+                        Offset(w * 0.44f, h * 0.50f),
+                        Offset(w * 0.62f, h * 0.66f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                    drawLine(
+                        color,
+                        Offset(w * 0.62f, h * 0.66f),
+                        Offset(w * 0.86f, h * 0.46f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                }
+                AIComposerGlyph.Gear -> {
+                    val c = Offset(w * 0.5f, h * 0.5f)
+                    drawCircle(color, radius = w * 0.16f, center = c, style = Stroke(width = stroke))
+                    for (i in 0 until 8) {
+                        val a = Math.toRadians(i * 45.0)
+                        drawLine(
+                            color,
+                            Offset(c.x + kotlin.math.cos(a).toFloat() * w * 0.26f, c.y + kotlin.math.sin(a).toFloat() * w * 0.26f),
+                            Offset(c.x + kotlin.math.cos(a).toFloat() * w * 0.44f, c.y + kotlin.math.sin(a).toFloat() * w * 0.44f),
+                            strokeWidth = stroke,
+                            cap = StrokeCap.Round,
+                        )
+                    }
+                }
+                AIComposerGlyph.Globe -> {
+                    val c = Offset(w * 0.5f, h * 0.5f)
+                    drawCircle(color, radius = w * 0.40f, center = c, style = Stroke(width = stroke))
+                    drawOval(
+                        color,
+                        topLeft = Offset(w * 0.32f, h * 0.10f),
+                        size = Size(w * 0.36f, h * 0.80f),
+                        style = Stroke(width = stroke * 0.8f),
+                    )
+                    drawLine(
+                        color,
+                        Offset(w * 0.12f, h * 0.5f),
+                        Offset(w * 0.88f, h * 0.5f),
+                        strokeWidth = stroke * 0.8f,
+                    )
+                }
+                AIComposerGlyph.Search -> {
+                    val lensR = w * 0.30f
+                    val lensC = Offset(w * 0.42f, h * 0.42f)
+                    drawCircle(color, radius = lensR, center = lensC, style = Stroke(width = stroke))
+                    drawLine(
+                        color,
+                        Offset(lensC.x + lensR * 0.72f, lensC.y + lensR * 0.72f),
+                        Offset(w * 0.90f, h * 0.90f),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                }
+                else -> {}
+            }
+        }
     }
 }
 

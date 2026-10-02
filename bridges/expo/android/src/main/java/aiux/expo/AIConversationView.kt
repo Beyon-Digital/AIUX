@@ -1,6 +1,9 @@
 package aiux.expo
 
 import aiux.compose.AIUXThemeProvider
+import aiux.compose.components.AIComposerGlyph
+import aiux.compose.components.AIComposerTool
+import aiux.compose.components.AIComposerToolbar
 import aiux.compose.components.AIConversation
 import aiux.compose.components.AIConversationMode
 import android.content.Context
@@ -19,6 +22,8 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 import kotlinx.coroutines.flow.sample
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Hosts the complete Compose `AIConversation` surface behind the Expo view
@@ -36,6 +41,7 @@ class AIConversationView(context: Context, appContext: AppContext) :
     private var themeJson by mutableStateOf<String?>(null)
     private var mode by mutableStateOf(AIConversationMode.Fullscreen)
     private var showComposer by mutableStateOf(true)
+    private var composerToolbarJson by mutableStateOf<String?>(null)
 
     private val composeView = ComposeView(context).apply {
         setViewCompositionStrategy(
@@ -70,6 +76,10 @@ class AIConversationView(context: Context, appContext: AppContext) :
         showComposer = value
     }
 
+    fun applyComposerToolbarJson(value: String) {
+        composerToolbarJson = value
+    }
+
     @Composable
     private fun AIConversationContent() {
         val id = sessionId ?: return
@@ -85,6 +95,9 @@ class AIConversationView(context: Context, appContext: AppContext) :
         val theme = androidx.compose.runtime.remember(themeJson, dark) {
             AIUXThemeJson.parse(themeJson, dark)
         }
+        val composerToolbar = androidx.compose.runtime.remember(composerToolbarJson) {
+            parseComposerToolbar(composerToolbarJson)
+        }
 
         val content: @Composable () -> Unit = {
             AIConversation(
@@ -92,6 +105,7 @@ class AIConversationView(context: Context, appContext: AppContext) :
                 modifier = Modifier.fillMaxSize(),
                 mode = mode,
                 showComposer = showComposer,
+                composerToolbar = composerToolbar,
                 onAction = { action ->
                     onAction(
                         mapOf(
@@ -129,5 +143,58 @@ class AIConversationView(context: Context, appContext: AppContext) :
     companion object {
         /** Native-side coalescing for `onSnapshot` events (plan §10, §22). */
         private const val SNAPSHOT_EVENT_THROTTLE_MS = 150L
+
+        /**
+         * `AIUXComposerToolbarSpec` (JSON) → `AIComposerToolbar`. Unknown
+         * glyph names fall back to `Sparkle`; malformed input → defaults.
+         */
+        private fun parseComposerToolbar(json: String?): AIComposerToolbar {
+            if (json.isNullOrBlank()) return AIComposerToolbar.Default
+            val root = try {
+                kotlinx.serialization.json.Json.parseToJsonElement(json)
+                    .jsonObject
+            } catch (_: Exception) {
+                return AIComposerToolbar.Default
+            }
+            fun flag(name: String) =
+                (root[name] as? kotlinx.serialization.json.JsonPrimitive)
+                    ?.contentOrNull?.toBooleanStrictOrNull() ?: true
+            val extras = (root["extra"] as? kotlinx.serialization.json.JsonArray)
+                ?.mapNotNull { el ->
+                    val o = el as? kotlinx.serialization.json.JsonObject
+                        ?: return@mapNotNull null
+                    val id = (o["id"] as? kotlinx.serialization.json.JsonPrimitive)
+                        ?.contentOrNull ?: return@mapNotNull null
+                    val label =
+                        (o["label"] as? kotlinx.serialization.json.JsonPrimitive)
+                            ?.contentOrNull ?: id
+                    val glyph =
+                        (o["glyph"] as? kotlinx.serialization.json.JsonPrimitive)
+                            ?.contentOrNull
+                    AIComposerTool(
+                        id = id,
+                        contentDescription = label,
+                        glyph = glyphFor(glyph),
+                    )
+                } ?: emptyList()
+            return AIComposerToolbar(
+                attach = flag("attach"),
+                tools = flag("tools"),
+                dictate = flag("dictate"),
+                extra = extras,
+            )
+        }
+
+        private fun glyphFor(name: String?): AIComposerGlyph = when (name) {
+            "doc" -> AIComposerGlyph.Document
+            "photo" -> AIComposerGlyph.Photo
+            "gear" -> AIComposerGlyph.Gear
+            "globe" -> AIComposerGlyph.Globe
+            "mic" -> AIComposerGlyph.Mic
+            "search" -> AIComposerGlyph.Search
+            "plus" -> AIComposerGlyph.Plus
+            "star" -> AIComposerGlyph.Star
+            else -> AIComposerGlyph.Sparkle
+        }
     }
 }
