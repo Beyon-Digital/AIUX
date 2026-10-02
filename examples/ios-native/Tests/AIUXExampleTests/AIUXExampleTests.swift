@@ -14,10 +14,11 @@ final class AIUXExampleTests: XCTestCase {
 
     private var repoRoot: URL {
         URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // AIUXExampleTests
-            .deletingLastPathComponent() // Tests
-            .deletingLastPathComponent() // ios-native
-            .deletingLastPathComponent() // examples
+            .deletingLastPathComponent() // AIUXExampleTests.swift -> AIUXExampleTests/
+            .deletingLastPathComponent() // Tests/
+            .deletingLastPathComponent() // ios-native/
+            .deletingLastPathComponent() // examples/
+            .deletingLastPathComponent() // repo root
     }
 
     private var fixturesDir: URL { repoRoot.appendingPathComponent("conformance/fixtures") }
@@ -123,8 +124,9 @@ final class AIUXExampleTests: XCTestCase {
                 continue
             }
 
-            // Replay through the real session core.
-            let backend = try UniFFIBackend.create(configJson: #"{"sessionId":"replay"}"#)
+            // Replay through the real session core. Fixtures all address
+            // session "s1"; the session rejects events for another id.
+            let backend = try UniFFIBackend.create(configJson: #"{"sessionId":"s1"}"#)
             _ = try backend.dispatchBatch(eventsJson: fixture.eventsJSON())
 
             // Both sides decode through the renderer's models — semantic,
@@ -150,7 +152,7 @@ final class AIUXExampleTests: XCTestCase {
 
     @MainActor
     func testSessionStorePublishesAfterUniFFIIngest() throws {
-        let backend = try UniFFIBackend.create(configJson: #"{"sessionId":"store"}"#)
+        let backend = try UniFFIBackend.create(configJson: #"{"sessionId":"demo"}"#)
         let store = AIUXSessionStore(backend: backend)
         var factory = DemoEventFactory(sessionId: DemoScenario.sessionId)
         _ = try store.ingest(eventJson: DemoScenario.sessionCreated(factory: &factory))

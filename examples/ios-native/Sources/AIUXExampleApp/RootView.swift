@@ -186,10 +186,11 @@ private struct ContentUnavailableShim: View {
 /// would bundle the catalog as a resource instead.
 public func aiuxConformanceFixturesURL() -> URL {
     URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent() // AIUXExampleApp
-        .deletingLastPathComponent() // Sources
-        .deletingLastPathComponent() // ios-native
-        .deletingLastPathComponent() // examples
+        .deletingLastPathComponent() // RootView.swift -> AIUXExampleApp/
+        .deletingLastPathComponent() // Sources/
+        .deletingLastPathComponent() // ios-native/
+        .deletingLastPathComponent() // examples/
+        .deletingLastPathComponent() // repo root
         .appendingPathComponent("conformance/fixtures")
 }
 

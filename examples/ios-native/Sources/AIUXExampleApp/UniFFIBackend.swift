@@ -43,6 +43,6 @@ public final class UniFFIBackend: AIUXSessionBackend {
     }
 
     public func reset() throws {
-        try session.reset()
+        session.reset()
     }
 }
