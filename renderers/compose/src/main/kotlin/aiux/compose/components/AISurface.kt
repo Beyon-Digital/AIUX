@@ -398,16 +398,16 @@ fun SurfaceNodeView(
         }
 
         is AISurfaceNode.Menu -> {
-            var expanded by remember { mutableStateOf(false) }
-            // Clear the remembered state too — hiding without clearing would
-            // reopen the popup when the form re-enables, without a tap.
-            LaunchedEffect(formDisabled) { if (formDisabled) expanded = false }
+            // Keyed on formDisabled so disabling the form recreates the state
+            // synchronously — an async clear would let the popup flash open
+            // for a frame when the form re-enables.
+            var expanded by remember(formDisabled) { mutableStateOf(false) }
             Box(m) {
                 OutlinedButton(onClick = { expanded = true }, enabled = !formDisabled) {
                     Text(node.label)
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
-                DropdownMenu(expanded = expanded && !formDisabled, onDismissRequest = { expanded = false }) {
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     node.items.forEach { item ->
                         DropdownMenuItem(
                             text = { Text(item.label) },
@@ -514,11 +514,10 @@ fun SurfaceNodeView(
         }
 
         is AISurfaceNode.Select -> {
-            var expanded by remember { mutableStateOf(false) }
+            var expanded by remember(formDisabled) { mutableStateOf(false) }
             var selected by remember(node.value) { mutableStateOf(node.value) }
             val formScope = LocalAIUXFormScope.current
             LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(selected ?: "")) }
-            LaunchedEffect(formDisabled) { if (formDisabled) expanded = false }
             val current = node.options.firstOrNull { it.value == selected }
             Column(modifier = m) {
                 node.label?.let {
@@ -536,7 +535,7 @@ fun SurfaceNodeView(
                         Text(current?.label ?: node.placeholder ?: node.name)
                         Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                     }
-                    DropdownMenu(expanded = expanded && !formDisabled, onDismissRequest = { expanded = false }) {
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         node.options.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option.label) },
