@@ -197,6 +197,8 @@ export class DemoController {
     this.pendingApproval?.(false);
     this.pendingApproval = null;
     this.activeRun = null;
-    this.transport.close();
+    // Fire-and-forget: rejects only if native delivery is down, which the
+    // app already surfaces through the transport policy.
+    void this.transport.close().catch(() => {});
   }
 }

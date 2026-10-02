@@ -45,7 +45,7 @@ describe("createAIUXTransport", () => {
     const [sessionId, eventsJson] = dispatchBatch.mock.calls[0]!;
     expect(sessionId).toBe("s1");
     expect(JSON.parse(eventsJson)).toHaveLength(3);
-    transport.close();
+    await transport.close();
   });
 
   it("accepts pre-serialized JSON strings and objects alike", async () => {
@@ -55,7 +55,7 @@ describe("createAIUXTransport", () => {
     await transport.flush();
     const [, eventsJson] = dispatchBatch.mock.calls[0]!;
     expect(JSON.parse(eventsJson)).toHaveLength(2);
-    transport.close();
+    await transport.close();
   });
 
   it("requeues the batch when the native sink rejects", async () => {
@@ -71,6 +71,6 @@ describe("createAIUXTransport", () => {
     expect(errors).toHaveLength(1);
     await transport.flush();
     expect(dispatchBatch).toHaveBeenCalledTimes(2);
-    transport.close();
+    await transport.close();
   });
 });

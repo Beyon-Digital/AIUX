@@ -4,6 +4,7 @@ import aiux.compose.AIUXSessionStore
 import aiux.compose.model.AIUXDispatchReport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -58,8 +59,10 @@ internal object AIUXSessionRegistry {
             ?.jsonPrimitive
             ?.content
             ?: error("serialized session is missing sessionId")
-        stores[sessionId] = store
-        generations.getOrPut(sessionId) { MutableStateFlow(0L) }.value += 1
+        // Close the displaced store — it owns a coroutine scope + session
+        // that would leak once rebound views drop their reference.
+        stores.put(sessionId, store)?.close()
+        generations.getOrPut(sessionId) { MutableStateFlow(0L) }.update { it + 1 }
         return sessionId
     }
 
