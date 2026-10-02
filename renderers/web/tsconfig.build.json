@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": true,
+    "declarationMap": true,
+    // Build against the real package (dist), not the dev path alias —
+    // pulling aiux-core sources in would break rootDir.
+    "paths": {}
+  },
+  "include": ["src"]
+}

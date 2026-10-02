@@ -1,12 +1,29 @@
 {
-  "name": "aiux-example-web",
+  "name": "@beyondigital/aiux-example-web",
   "version": "0.1.0",
   "private": true,
-  "description": "Example web app rendering an AIUX session.",
-  "main": "src/index.ts",
+  "description": "AIUX web example \u2014 replays every conformance fixture through the real aiux-wasm core and renders it with @beyondigital/aiux-web.",
+  "type": "module",
   "scripts": {
-    "build": "echo 'aiux-example-web: build lands in a later phase (docs/PLAN.md)'",
-    "test": "echo 'aiux-example-web: tests land in a later phase'",
-    "typecheck": "echo 'aiux-example-web: typecheck lands in a later phase'"
+    "dev": "pnpm --filter @beyondigital/aiux-core run build:wasm && vite",
+    "build": "pnpm --filter @beyondigital/aiux-core run build:wasm && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@beyondigital/aiux-core": "workspace:*",
+    "@beyondigital/aiux-web": "workspace:*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.0"
   }
 }
