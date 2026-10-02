@@ -23,16 +23,11 @@ Pod::Spec.new do |s|
   # stays JSON-only end to end (plan §10, ADR 0005).
   s.vendored_frameworks = 'vendor/AIUXCore.xcframework'
 
-  # Paths are relative to this podspec's directory (bridges/expo/ios) —
-  # ../../.. reaches the repo root for the renderer + generated binding.
+  # source_files must live under this pod root — prepare-ios.sh stages the
+  # renderer + generated UniFFI binding into vendor/staged/.
   s.source_files = [
     'Sources/**/*.swift',
-    '../../../renderers/swiftui/Sources/AIUXSwiftUI/**/*.swift',
-    '../../../bindings/swift/Sources/AIUXCore/**/*.swift',
-  ]
-
-  s.exclude_files = [
-    '../../../bindings/swift/Sources/AIUXCore/Placeholder.swift',
+    'vendor/staged/**/*.swift',
   ]
 
   s.pod_target_xcconfig = {
