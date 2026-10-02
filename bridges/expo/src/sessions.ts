@@ -35,6 +35,9 @@ function asJsonString(value: AIUXEventLike): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+/** In-flight creates keyed by sessionId — serializes concurrent callers. */
+const sessionCreates = new Map<string, Promise<void>>();
+
 /**
  * Create the native `AiuxSession` for `sessionId` and, when a `title`,
  * `context`, or `capabilities` seed is provided, dispatch a `session.created`
@@ -44,6 +47,25 @@ function asJsonString(value: AIUXEventLike): string {
  * a session entity skips the seed so producer-owned bootstrap always wins.
  */
 export async function createAIUXSession(
+  bootstrap: AIUXSessionBootstrap,
+): Promise<void> {
+  // Serialize per sessionId — two concurrent callers would each pass the
+  // empty-snapshot check and both emit the seed at `sequence: 0`.
+  const prior = sessionCreates.get(bootstrap.sessionId);
+  const run = (prior ?? Promise.resolve())
+    .catch(() => undefined)
+    .then(() => createSessionOnce(bootstrap));
+  sessionCreates.set(bootstrap.sessionId, run);
+  try {
+    await run;
+  } finally {
+    if (sessionCreates.get(bootstrap.sessionId) === run) {
+      sessionCreates.delete(bootstrap.sessionId);
+    }
+  }
+}
+
+async function createSessionOnce(
   bootstrap: AIUXSessionBootstrap,
 ): Promise<void> {
   const native = requireNative();

@@ -104,15 +104,28 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Populated from AIUX_UPLOAD_* env vars or gradle.properties
+            // when a release signing key is provided (see buildTypes.release).
+            storeFile file((findProperty('AIUX_UPLOAD_STORE_FILE') ?: System.getenv('AIUX_UPLOAD_STORE_FILE')) ?: 'debug.keystore')
+            storePassword findProperty('AIUX_UPLOAD_STORE_PASSWORD') ?: System.getenv('AIUX_UPLOAD_STORE_PASSWORD')
+            keyAlias findProperty('AIUX_UPLOAD_KEY_ALIAS') ?: System.getenv('AIUX_UPLOAD_KEY_ALIAS')
+            keyPassword findProperty('AIUX_UPLOAD_KEY_PASSWORD') ?: System.getenv('AIUX_UPLOAD_KEY_PASSWORD')
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Never ship a release artifact signed with the debug keystore.
+            // Provide AIUX_UPLOAD_STORE_FILE/AIUX_UPLOAD_STORE_PASSWORD/
+            // AIUX_UPLOAD_KEY_ALIAS/AIUX_UPLOAD_KEY_PASSWORD via the
+            // environment or gradle.properties to sign; without them the
+            // release build stays unsigned.
+            if (findProperty('AIUX_UPLOAD_STORE_FILE') ?: System.getenv('AIUX_UPLOAD_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

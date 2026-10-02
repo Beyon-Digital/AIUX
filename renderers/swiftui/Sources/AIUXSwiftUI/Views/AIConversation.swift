@@ -32,15 +32,19 @@ public struct AIConversation: View {
     public var mode: AIUXConversationMode
     /// Optional override for the composer's placeholder text.
     public var composerPlaceholder: String
+    /// Whether the composer renders in fullscreen mode (default true).
+    public var showsComposer: Bool
 
     public init(
         store: AIUXSessionStore,
         mode: AIUXConversationMode = .fullscreen,
-        composerPlaceholder: String = "Message…"
+        composerPlaceholder: String = "Message…",
+        showsComposer: Bool = true
     ) {
         self.store = store
         self.mode = mode
         self.composerPlaceholder = composerPlaceholder
+        self.showsComposer = showsComposer
     }
 
     public var body: some View {
@@ -53,7 +57,7 @@ public struct AIConversation: View {
             messageStream
                 .background(colors.background)
 
-            if mode == .fullscreen {
+            if mode == .fullscreen && showsComposer {
                 AIComposer(
                     runActive: store.snapshot.activeRunId != nil,
                     placeholder: composerPlaceholder

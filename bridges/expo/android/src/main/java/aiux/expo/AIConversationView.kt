@@ -73,7 +73,11 @@ class AIConversationView(context: Context, appContext: AppContext) :
     @Composable
     private fun AIConversationContent() {
         val id = sessionId ?: return
-        val store = androidx.compose.runtime.remember(id) {
+        // Re-resolve the store when a restore replaces it for this id —
+        // remember(id) alone would keep the pre-restore store forever.
+        val generation by AIUXSessionRegistry.generationFlow(id)
+            .collectAsStateWithLifecycle()
+        val store = androidx.compose.runtime.remember(id, generation) {
             AIUXSessionRegistry.getOrCreate(id)
         }
         val snapshot by store.snapshot.collectAsStateWithLifecycle()
@@ -98,10 +102,12 @@ class AIConversationView(context: Context, appContext: AppContext) :
                 },
             )
         }
+        // Always wrap — with no `theme` prop the provider's default still
+        // follows the system scheme; bare content() would pin light.
         if (theme != null) {
             AIUXThemeProvider(theme = theme, content = content)
         } else {
-            content()
+            AIUXThemeProvider(content = content)
         }
 
         LaunchedEffect(store) {

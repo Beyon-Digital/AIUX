@@ -23,8 +23,12 @@ export interface AIUXTransport {
   push(event: AIUXEventLike): void;
   /** Force a buffer flush + drain kick. */
   flush(): void;
-  /** Flush, stop accepting events, and let the drain finish. */
-  close(): void;
+  /**
+   * Flush, stop accepting events, and let the drain finish. Rejects when
+   * batches remain undelivered after the drain — `push` can no longer
+   * retrigger it (call `flush()` to retry the queue manually).
+   */
+  close(): Promise<void>;
   /** Events waiting in the buffer (unserialized by a flush yet). */
   readonly pending: number;
   /** Batch payloads still awaiting native delivery. */
@@ -57,27 +61,34 @@ export function createAIUXTransport(
 
   const { policy = {}, onDispatch } = options;
   const queue: string[] = [];
-  let draining = false;
+  let activeDrain: Promise<void> | undefined;
 
-  const drain = async (): Promise<void> => {
-    if (draining) return;
-    draining = true;
-    try {
-      while (queue.length > 0) {
-        const batch = queue[0]!;
-        try {
-          const report = await native.dispatchBatch(sessionId, batch);
-          queue.shift();
-          onDispatch?.(report);
-        } catch (error) {
-          // Keep the batch queued; a later push()/flush() resumes the drain.
-          policy.onFlushError?.(error);
-          break;
+  const drain = (): Promise<void> => {
+    if (activeDrain) return activeDrain;
+    // An empty queue must not mint `activeDrain` — the IIFE would finish
+    // synchronously, clear the flag, then reassign the completed promise,
+    // and every later drain() would reuse it without touching the queue.
+    if (queue.length === 0) return Promise.resolve();
+    const run = (async () => {
+      try {
+        while (queue.length > 0) {
+          const batch = queue[0]!;
+          try {
+            const report = await native.dispatchBatch(sessionId, batch);
+            queue.shift();
+            onDispatch?.(report);
+          } catch (error) {
+            // Keep the batch queued; a later push()/flush() resumes the drain.
+            policy.onFlushError?.(error);
+            break;
+          }
         }
+      } finally {
+        activeDrain = undefined;
       }
-    } finally {
-      draining = false;
-    }
+    })();
+    activeDrain = run;
+    return run;
   };
 
   const buffer = new EventBuffer<void>(
@@ -97,8 +108,20 @@ export function createAIUXTransport(
       buffer.flush();
       void drain();
     },
-    close: () => {
+    close: async () => {
       buffer.close();
+      // `push` can no longer retrigger the drain — if it stops on a failure
+      // the final batches sit stranded. Await the drain and reject so the
+      // undelivered count reaches the closer even with no onFlushError set
+      // (flush() still retries the queue).
+      await drain();
+      if (queue.length > 0) {
+        const error = new Error(
+          `@beyondigital/aiux-expo: closed with ${queue.length} undelivered batch(es)`,
+        );
+        policy.onFlushError?.(error);
+        throw error;
+      }
     },
     get pending() {
       return buffer.pending;
