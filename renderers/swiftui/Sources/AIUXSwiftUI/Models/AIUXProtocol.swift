@@ -38,6 +38,11 @@ public struct AIUXSnapshot: Equatable, Sendable {
 }
 
 extension AIUXSnapshot: Decodable {
+    private enum CodingKeys: String, CodingKey {
+        case protocolVersion, sessionId, session, messages, tools, approvals
+        case artifacts, surfaces, context, runs, activeRunId
+    }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         protocolVersion = try c.decodeIfPresent(String.self, forKey: .protocolVersion) ?? ""

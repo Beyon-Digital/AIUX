@@ -349,69 +349,67 @@ extension AIUXSurfaceNode: Decodable {
                 layout: layout
             )
         case "table":
-            self = .table(
-                headers: (try? c.decodeIfPresent([String].self, forKey: .headers)) ?? [],
-                rows: (try? c.decodeIfPresent([[String]].self, forKey: .rows)) ?? [],
-                caption: try c.decodeIfPresent(String.self, forKey: .caption),
-                layout: layout
-            )
+            let headers = (try? c.decodeIfPresent([String].self, forKey: .headers)) ?? []
+            let rows = (try? c.decodeIfPresent([[String]].self, forKey: .rows)) ?? []
+            let caption = try c.decodeIfPresent(String.self, forKey: .caption)
+            self = .table(headers: headers, rows: rows, caption: caption, layout: layout)
         case "button":
+            let label = try c.decodeIfPresent(String.self, forKey: .label) ?? ""
+            let action = (try? c.decodeIfPresent(AIUXAction.self, forKey: .action))
+                ?? AIUXAction(id: "aiux.unresolved")
+            let variant = (try? c.decodeIfPresent(AIUXButtonVariant.self, forKey: .variant)) ?? nil
+            let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .button(
-                label: try c.decodeIfPresent(String.self, forKey: .label) ?? "",
-                action: (try? c.decodeIfPresent(AIUXAction.self, forKey: .action)) ?? AIUXAction(id: "aiux.unresolved"),
-                variant: (try? c.decodeIfPresent(AIUXButtonVariant.self, forKey: .variant)) ?? nil,
-                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
-                layout: layout
+                label: label, action: action, variant: variant,
+                disabled: disabled, layout: layout
             )
         case "menu":
-            self = .menu(
-                label: try c.decodeIfPresent(String.self, forKey: .label),
-                items: (try? c.decodeIfPresent([AIUXMenuItem].self, forKey: .items)) ?? [],
-                layout: layout
-            )
+            let label = try c.decodeIfPresent(String.self, forKey: .label)
+            let items = (try? c.decodeIfPresent([AIUXMenuItem].self, forKey: .items)) ?? []
+            self = .menu(label: label, items: items, layout: layout)
         case "progress":
-            self = .progress(
-                value: (try? c.decodeIfPresent(Double.self, forKey: .value)) ?? nil,
-                max: (try? c.decodeIfPresent(Double.self, forKey: .max)) ?? nil,
-                label: try c.decodeIfPresent(String.self, forKey: .label),
-                layout: layout
-            )
+            let value = (try? c.decodeIfPresent(Double.self, forKey: .value)) ?? nil
+            let maxValue = (try? c.decodeIfPresent(Double.self, forKey: .max)) ?? nil
+            let label = try c.decodeIfPresent(String.self, forKey: .label)
+            self = .progress(value: value, max: maxValue, label: label, layout: layout)
         case "status":
-            self = .status(
-                text: try c.decodeIfPresent(String.self, forKey: .text) ?? "",
-                tone: (try? c.decodeIfPresent(AIUXTone.self, forKey: .tone)) ?? nil,
-                layout: layout
-            )
+            let text = try c.decodeIfPresent(String.self, forKey: .text) ?? ""
+            let tone = (try? c.decodeIfPresent(AIUXTone.self, forKey: .tone)) ?? nil
+            self = .status(text: text, tone: tone, layout: layout)
         case "input":
+            let name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            let label = try c.decodeIfPresent(String.self, forKey: .label)
+            let placeholder = try c.decodeIfPresent(String.self, forKey: .placeholder)
+            let value = try c.decodeIfPresent(String.self, forKey: .value)
+            let inputType = (try? c.decodeIfPresent(AIUXInputType.self, forKey: .inputType)) ?? nil
+            let required = (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false
+            let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .input(
-                name: try c.decodeIfPresent(String.self, forKey: .name) ?? "",
-                label: try c.decodeIfPresent(String.self, forKey: .label),
-                placeholder: try c.decodeIfPresent(String.self, forKey: .placeholder),
-                value: try c.decodeIfPresent(String.self, forKey: .value),
-                inputType: (try? c.decodeIfPresent(AIUXInputType.self, forKey: .inputType)) ?? nil,
-                required: (try? c.decodeIfPresent(Bool.self, forKey: .required)) ?? false,
-                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
+                name: name, label: label, placeholder: placeholder, value: value,
+                inputType: inputType, required: required, disabled: disabled,
                 layout: layout
             )
         case "textarea":
+            let name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            let label = try c.decodeIfPresent(String.self, forKey: .label)
+            let placeholder = try c.decodeIfPresent(String.self, forKey: .placeholder)
+            let value = try c.decodeIfPresent(String.self, forKey: .value)
+            let rows = (try? c.decodeIfPresent(Int.self, forKey: .rows)) ?? nil
+            let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .textarea(
-                name: try c.decodeIfPresent(String.self, forKey: .name) ?? "",
-                label: try c.decodeIfPresent(String.self, forKey: .label),
-                placeholder: try c.decodeIfPresent(String.self, forKey: .placeholder),
-                value: try c.decodeIfPresent(String.self, forKey: .value),
-                rows: (try? c.decodeIfPresent(Int.self, forKey: .rows)) ?? nil,
-                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
-                layout: layout
+                name: name, label: label, placeholder: placeholder, value: value,
+                rows: rows, disabled: disabled, layout: layout
             )
         case "select":
+            let name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+            let label = try c.decodeIfPresent(String.self, forKey: .label)
+            let options = (try? c.decodeIfPresent([AIUXSelectOption].self, forKey: .options)) ?? []
+            let value = try c.decodeIfPresent(String.self, forKey: .value)
+            let placeholder = try c.decodeIfPresent(String.self, forKey: .placeholder)
+            let disabled = (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false
             self = .select(
-                name: try c.decodeIfPresent(String.self, forKey: .name) ?? "",
-                label: try c.decodeIfPresent(String.self, forKey: .label),
-                options: (try? c.decodeIfPresent([AIUXSelectOption].self, forKey: .options)) ?? [],
-                value: try c.decodeIfPresent(String.self, forKey: .value),
-                placeholder: try c.decodeIfPresent(String.self, forKey: .placeholder),
-                disabled: (try? c.decodeIfPresent(Bool.self, forKey: .disabled)) ?? false,
-                layout: layout
+                name: name, label: label, options: options, value: value,
+                placeholder: placeholder, disabled: disabled, layout: layout
             )
         case "checkbox":
             self = .checkbox(
