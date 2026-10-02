@@ -110,7 +110,10 @@ jobs:
       - name: Install cargo-ndk + Android NDK
         run: |
           cargo install cargo-ndk --version "^4" --locked
-          sdkmanager "ndk;27.0.12077973"
+          # sdkmanager isn't on PATH on current ubuntu-latest — call it via
+          # ANDROID_HOME like ci.yml does, and pin CI's NDK version.
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            --install "cmake;3.22.1" "ndk;27.1.12297006"
       - name: Generate UniFFI Kotlin bindings + NDK slices
         run: bash bindings/kotlin/generate.sh
       - name: Build AARs
