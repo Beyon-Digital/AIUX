@@ -1,0 +1,161 @@
+{
+  "events": [
+    {
+      "eventId": "surface-created-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Surface created"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "surface-created-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "surface-created-2",
+      "payload": {
+        "message": {
+          "id": "m1",
+          "role": "assistant",
+          "status": "complete"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "surface-created-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "surface": {
+          "id": "sf-1",
+          "name": "invoice-card",
+          "revision": 0,
+          "root": {
+            "children": [
+              {
+                "level": 1,
+                "text": "Invoice summary",
+                "type": "heading"
+              },
+              {
+                "children": [
+                  {
+                    "items": [
+                      {
+                        "key": "Total",
+                        "value": "$420.00"
+                      },
+                      {
+                        "key": "Status",
+                        "value": "pending"
+                      }
+                    ],
+                    "type": "keyValue"
+                  },
+                  {
+                    "text": "Due soon",
+                    "tone": "warning",
+                    "type": "badge"
+                  }
+                ],
+                "direction": "vertical",
+                "gap": "sm",
+                "type": "stack"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "id": "invoice.approve",
+                      "payload": {
+                        "id": "inv-9"
+                      }
+                    },
+                    "label": "Approve",
+                    "type": "button",
+                    "variant": "primary"
+                  },
+                  {
+                    "action": {
+                      "id": "invoice.decline",
+                      "payload": {
+                        "id": "inv-9"
+                      }
+                    },
+                    "label": "Decline",
+                    "type": "button",
+                    "variant": "secondary"
+                  }
+                ],
+                "type": "actions"
+              }
+            ],
+            "type": "surface"
+          }
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "surface.created"
+    },
+    {
+      "eventId": "surface-created-4",
+      "payload": {
+        "messageId": "m1",
+        "part": {
+          "id": "p1",
+          "surfaceId": "sf-1",
+          "type": "surface"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "part.added"
+    },
+    {
+      "eventId": "surface-created-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "surface-created",
+  "protocolVersion": "0.1"
+}

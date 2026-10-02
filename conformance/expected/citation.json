@@ -1,0 +1,54 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 7,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "citation-0",
+    "citation-1",
+    "citation-2",
+    "citation-3",
+    "citation-4",
+    "citation-5",
+    "citation-6"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "Per the plan, Phase 1 ships the core.",
+            "type": "text"
+          },
+          {
+            "citation": {
+              "id": "c1",
+              "snippet": "Protocol v1 + Rust core",
+              "source": "docs-index",
+              "title": "AIUX Plan §1",
+              "uri": "https://docs.beyondigital.in/aiux/plan"
+            },
+            "id": "p2",
+            "type": "citation"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Citation"
+    }
+  }
+}

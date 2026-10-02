@@ -1,0 +1,49 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 5,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "surface-updated-0",
+    "surface-updated-1",
+    "surface-updated-2",
+    "surface-updated-3",
+    "surface-updated-4"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Surface updated"
+    },
+    "surfaces": [
+      {
+        "id": "sf-1",
+        "name": "invoice-card",
+        "revision": 1,
+        "root": {
+          "children": [
+            {
+              "level": 1,
+              "text": "Invoice summary",
+              "type": "heading"
+            },
+            {
+              "text": "Approved",
+              "tone": "success",
+              "type": "status"
+            }
+          ],
+          "type": "surface"
+        }
+      }
+    ]
+  }
+}

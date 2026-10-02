@@ -1,0 +1,40 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 6,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "artifact-update-0",
+    "artifact-update-1",
+    "artifact-update-2",
+    "artifact-update-3",
+    "artifact-update-4",
+    "artifact-update-5"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "artifacts": [
+      {
+        "content": "pub fn a() {}\npub fn b() {}",
+        "id": "art-1",
+        "kind": "code",
+        "metadata": {
+          "format": "rustfmt"
+        },
+        "revision": 2,
+        "title": "lib.rs (v2)"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Artifact update"
+    }
+  }
+}

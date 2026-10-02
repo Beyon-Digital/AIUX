@@ -1,0 +1,118 @@
+{
+  "events": [
+    {
+      "eventId": "tool-success-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Tool success"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "tool-success-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "tool-success-2",
+      "payload": {
+        "protocolVersion": "0.1",
+        "tool": {
+          "id": "t1",
+          "input": {
+            "q": "aiux spec"
+          },
+          "name": "search",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "tool.started"
+    },
+    {
+      "eventId": "tool-success-3",
+      "payload": {
+        "progress": {
+          "current": 1,
+          "label": "querying",
+          "total": 4
+        },
+        "protocolVersion": "0.1",
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "tool.progress"
+    },
+    {
+      "eventId": "tool-success-4",
+      "payload": {
+        "progress": {
+          "current": 3,
+          "label": "ranking",
+          "total": 4
+        },
+        "protocolVersion": "0.1",
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 4,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:04Z",
+      "type": "tool.progress"
+    },
+    {
+      "eventId": "tool-success-5",
+      "payload": {
+        "protocolVersion": "0.1",
+        "result": {
+          "hits": 3
+        },
+        "toolId": "t1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 5,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:05Z",
+      "type": "tool.completed"
+    },
+    {
+      "eventId": "tool-success-6",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 6,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:06Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "tool-success",
+  "protocolVersion": "0.1"
+}

@@ -1,0 +1,51 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 6,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "approval-accepted-0",
+    "approval-accepted-1",
+    "approval-accepted-2",
+    "approval-accepted-3",
+    "approval-accepted-4",
+    "approval-accepted-5"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "approvals": [
+      {
+        "action": {
+          "id": "git.prune",
+          "payload": {
+            "count": 12
+          }
+        },
+        "description": "Git cleanup action",
+        "expiresAt": "2026-01-01T01:00:00Z",
+        "id": "a1",
+        "prompt": "Delete 12 stale branches?",
+        "resolution": {
+          "decision": "executed",
+          "resolvedAt": "2026-01-01T00:09:30Z",
+          "resolvedBy": "host"
+        },
+        "status": "executed"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "result": {
+          "pruned": 12
+        },
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Approval accepted"
+    }
+  }
+}

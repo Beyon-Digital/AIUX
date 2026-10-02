@@ -1,0 +1,44 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 8,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "network-reconnect-0",
+    "network-reconnect-1",
+    "network-reconnect-2",
+    "network-reconnect-3",
+    "network-reconnect-4",
+    "network-reconnect-5",
+    "network-reconnect-6",
+    "network-reconnect-7"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "Hello",
+            "type": "text"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Network reconnect"
+    }
+  }
+}

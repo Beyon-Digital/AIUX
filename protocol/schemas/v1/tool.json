@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "AiuxError": {
+      "additionalProperties": true,
+      "description": "Structured error payload (entity name `error` on the wire).",
+      "properties": {
+        "code": {
+          "description": "Stable machine-readable code.",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Additional detail for debugging."
+        },
+        "message": {
+          "description": "Human-readable message.",
+          "type": "string"
+        },
+        "retryable": {
+          "description": "Whether the operation may be retried.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "Progress": {
+      "additionalProperties": true,
+      "description": "Normalized progress value.",
+      "properties": {
+        "current": {
+          "description": "Units complete.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Progress label.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Total units.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ToolStatus": {
+      "description": "Tool lifecycle status.",
+      "enum": [
+        "running",
+        "completed",
+        "failed"
+      ],
+      "type": "string"
+    }
+  },
+  "description": "A tool invocation tracked by the session.",
+  "properties": {
+    "completedAt": {
+      "description": "Completion timestamp (ISO-8601, host-supplied).",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AiuxError"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Error on failure."
+    },
+    "id": {
+      "description": "Stable identifier.",
+      "type": "string"
+    },
+    "input": {
+      "description": "Invocation input."
+    },
+    "name": {
+      "description": "Tool name.",
+      "type": "string"
+    },
+    "progress": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Progress"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Latest progress."
+    },
+    "result": {
+      "description": "Result on success."
+    },
+    "startedAt": {
+      "description": "Start timestamp (ISO-8601, host-supplied).",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ToolStatus"
+        }
+      ],
+      "description": "Lifecycle status."
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "status"
+  ],
+  "title": "Tool",
+  "type": "object"
+}

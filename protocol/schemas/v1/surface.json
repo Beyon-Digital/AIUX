@@ -1,0 +1,2513 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "Action": {
+      "description": "A semantic action emitted by interactive nodes (button, menu).\n\nPayloads are data only (§23); the host resolves `id` through its own policy before executing anything.",
+      "properties": {
+        "id": {
+          "description": "Semantic action identifier, e.g. `invoice.approve`.",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "description": "Arbitrary JSON payload carried to the host.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Alignment": {
+      "description": "Cross-axis alignment within a container.",
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "stretch"
+      ],
+      "type": "string"
+    },
+    "ButtonVariant": {
+      "description": "Button hierarchy variant.",
+      "enum": [
+        "primary",
+        "secondary",
+        "ghost",
+        "destructive"
+      ],
+      "type": "string"
+    },
+    "Distribution": {
+      "description": "Main-axis distribution of children within a container.",
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "spaceBetween",
+        "spaceAround",
+        "spaceEvenly"
+      ],
+      "type": "string"
+    },
+    "Gap": {
+      "description": "Semantic gap between children (`xs|sm|md|lg|xl`).",
+      "enum": [
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl"
+      ],
+      "type": "string"
+    },
+    "IconSize": {
+      "description": "Icon size (semantic, resolved by renderer theme).",
+      "enum": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "type": "string"
+    },
+    "InputType": {
+      "description": "Input field type (semantic; renderers map to platform keyboards).",
+      "enum": [
+        "text",
+        "email",
+        "number",
+        "password",
+        "url"
+      ],
+      "type": "string"
+    },
+    "KeyValueItem": {
+      "description": "A key/value row for `keyValue` nodes.",
+      "properties": {
+        "key": {
+          "description": "Item label.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Item value (rendered as text).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "MenuItem": {
+      "description": "A `menu` entry.",
+      "properties": {
+        "action": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Action"
+            }
+          ],
+          "description": "Action emitted when the item is chosen."
+        },
+        "disabled": {
+          "description": "Whether the item is disabled.",
+          "type": "boolean"
+        },
+        "icon": {
+          "description": "Optional leading icon.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Item label.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "label"
+      ],
+      "type": "object"
+    },
+    "Padding": {
+      "description": "Semantic padding (`none|xs|sm|md|lg`).",
+      "enum": [
+        "none",
+        "xs",
+        "sm",
+        "md",
+        "lg"
+      ],
+      "type": "string"
+    },
+    "Radius": {
+      "description": "Semantic corner radius (`sm|md|lg|full`).",
+      "enum": [
+        "sm",
+        "md",
+        "lg",
+        "full"
+      ],
+      "type": "string"
+    },
+    "SelectOption": {
+      "description": "A selectable option for `select` nodes.",
+      "properties": {
+        "label": {
+          "description": "Option display label.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Option value submitted via action payloads.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "StackDirection": {
+      "description": "Stack direction.",
+      "enum": [
+        "vertical",
+        "horizontal"
+      ],
+      "type": "string"
+    },
+    "SurfaceNode": {
+      "description": "AIUX Surface Schema v1 node. Serialized as `{\"type\": \"<kind>\", ...}`.\n\nThe primitive set is closed: `surface`, `card`, `stack`, `row`, `grid`, `heading`, `text`, `markdown`, `code`, `icon`, `image`, `badge`, `divider`, `spacer`, `keyValue`, `list`, `table`, `button`, `menu`, `progress`, `status`, `input`, `textarea`, `select`, `checkbox`, `actions`.",
+      "oneOf": [
+        {
+          "description": "Root surface container. Only valid as the tree root.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "surface"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Grouped content container.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "title": {
+              "description": "Optional card title.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "enum": [
+                "card"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Vertical or horizontal stack.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "direction": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/StackDirection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Stack direction (default vertical)."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "stack"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Horizontal row (stack shorthand).",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "row"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Fixed-column grid.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes laid out into the grid.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "columns": {
+              "description": "Column count (≥ 1).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Section heading.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "level": {
+              "description": "Heading level 1–6 (default 1).",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "text": {
+              "description": "Heading text.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "heading"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Plain text.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "text": {
+              "description": "Text content.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            },
+            "variant": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/TextVariant"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic variant."
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Markdown content.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "markdown": {
+              "description": "Markdown source.",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "markdown"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "markdown",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Code block.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "code": {
+              "description": "Code source.",
+              "type": "string"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "language": {
+              "description": "Language hint for highlighting.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "code"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Named icon.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "name": {
+              "description": "Semantic icon name (renderer-resolved).",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "size": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/IconSize"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic size."
+            },
+            "type": {
+              "enum": [
+                "icon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Image by URI.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "alt": {
+              "description": "Accessibility label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "src": {
+              "description": "Image URI (host-mediated resolution).",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "image"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "src",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Small labelled indicator.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "text": {
+              "description": "Badge text.",
+              "type": "string"
+            },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic tone."
+            },
+            "type": {
+              "enum": [
+                "badge"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Visual separator.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "divider"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Flexible whitespace.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "size": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic size (default md)."
+            },
+            "type": {
+              "enum": [
+                "spacer"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Key/value pairs.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "items": {
+              "description": "Rows.",
+              "items": {
+                "$ref": "#/definitions/KeyValueItem"
+              },
+              "type": "array"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "keyValue"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Ordered or unordered list of nodes.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "List items.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "ordered": {
+              "description": "Ordered (numbered) list when true.",
+              "type": "boolean"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "list"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Semantic table.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "caption": {
+              "description": "Optional caption.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "headers": {
+              "description": "Column headers.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "rows": {
+              "description": "Rows; each row must match `headers` length.",
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "table"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "headers",
+            "rows",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Action button.",
+          "properties": {
+            "action": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/Action"
+                }
+              ],
+              "description": "Action emitted on activation."
+            },
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "disabled": {
+              "description": "Whether the button is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "button"
+              ],
+              "type": "string"
+            },
+            "variant": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ButtonVariant"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hierarchy variant."
+            }
+          },
+          "required": [
+            "action",
+            "label",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Overflow/dropdown menu of actions.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "items": {
+              "description": "Menu entries.",
+              "items": {
+                "$ref": "#/definitions/MenuItem"
+              },
+              "type": "array"
+            },
+            "label": {
+              "description": "Menu trigger label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "menu"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Progress indicator.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Optional label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "max": {
+              "description": "Maximum value (default 1.0 semantics are renderer-defined).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "progress"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Current value (omit for indeterminate).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Inline status line.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "text": {
+              "description": "Status text.",
+              "type": "string"
+            },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic tone."
+            },
+            "type": {
+              "enum": [
+                "status"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Single-line input field.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "disabled": {
+              "description": "Whether input is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "input_type": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InputType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Semantic input type."
+            },
+            "label": {
+              "description": "Field label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Field name submitted in action payloads.",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "placeholder": {
+              "description": "Placeholder text.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "required": {
+              "description": "Whether input is required.",
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "input"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Current value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Multi-line input field.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "disabled": {
+              "description": "Whether input is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Field label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Field name submitted in action payloads.",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "placeholder": {
+              "description": "Placeholder text.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "rows": {
+              "description": "Visible row hint.",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "type": {
+              "enum": [
+                "textarea"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Current value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Single-choice dropdown.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "disabled": {
+              "description": "Whether input is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Field label.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Field name submitted in action payloads.",
+              "type": "string"
+            },
+            "options": {
+              "description": "Options (must be non-empty).",
+              "items": {
+                "$ref": "#/definitions/SelectOption"
+              },
+              "type": "array"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "placeholder": {
+              "description": "Placeholder when no value is selected.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "select"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Selected value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "options",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Boolean checkbox.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "checked": {
+              "description": "Checked state.",
+              "type": "boolean"
+            },
+            "disabled": {
+              "description": "Whether input is disabled.",
+              "type": "boolean"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "label": {
+              "description": "Checkbox label.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Field name submitted in action payloads.",
+              "type": "string"
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "checkbox"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Action row/container; children must be `button` or `menu` nodes.",
+          "properties": {
+            "alignment": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Alignment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cross-axis alignment."
+            },
+            "children": {
+              "default": [],
+              "description": "Child nodes.",
+              "items": {
+                "$ref": "#/definitions/SurfaceNode"
+              },
+              "type": "array"
+            },
+            "distribution": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Distribution"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Main-axis distribution."
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Gap"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Gap between children."
+            },
+            "padding": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Padding"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inner padding."
+            },
+            "radius": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Radius"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Corner radius."
+            },
+            "type": {
+              "enum": [
+                "actions"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "TextVariant": {
+      "description": "Semantic text variant.",
+      "enum": [
+        "body",
+        "caption",
+        "label",
+        "emphasis",
+        "strong",
+        "muted"
+      ],
+      "type": "string"
+    },
+    "Tone": {
+      "description": "Semantic tone for badges, statuses, and emphasis.",
+      "enum": [
+        "default",
+        "accent",
+        "muted",
+        "success",
+        "warning",
+        "destructive"
+      ],
+      "type": "string"
+    }
+  },
+  "description": "A surface: a named, revisioned semantic node tree.",
+  "properties": {
+    "id": {
+      "description": "Stable surface identifier.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Optional human-facing name.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revision": {
+      "default": 0,
+      "description": "Monotonic revision; bumps on every `surface.updated`.",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "root": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/SurfaceNode"
+        }
+      ],
+      "description": "Root node — must be a `surface` node."
+    }
+  },
+  "required": [
+    "id",
+    "root"
+  ],
+  "title": "SurfaceTree",
+  "type": "object"
+}

@@ -1,0 +1,57 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 7,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "basic-response-0",
+    "basic-response-1",
+    "basic-response-2",
+    "basic-response-3",
+    "basic-response-4",
+    "basic-response-5",
+    "basic-response-6"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m-user",
+        "parts": [
+          {
+            "id": "m-user-p0",
+            "text": "What is the answer?",
+            "type": "text"
+          }
+        ],
+        "role": "user"
+      },
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "The answer is 42.",
+            "type": "text"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "result": {
+          "ok": true
+        },
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Basic response"
+    }
+  }
+}

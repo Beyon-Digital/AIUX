@@ -1,0 +1,52 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 6,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "tool-failure-0",
+    "tool-failure-1",
+    "tool-failure-2",
+    "tool-failure-3",
+    "tool-failure-4",
+    "tool-failure-5"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "runs": [
+      {
+        "error": {
+          "code": "TOOL_FAILURE",
+          "message": "search failed"
+        },
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "failed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Tool failure"
+    },
+    "tools": [
+      {
+        "error": {
+          "code": "TIMEOUT",
+          "message": "search backend timed out after 30s",
+          "retryable": true
+        },
+        "id": "t1",
+        "input": {
+          "q": "aiux spec"
+        },
+        "name": "search",
+        "progress": {
+          "current": 1.0,
+          "label": "querying",
+          "total": 4.0
+        },
+        "status": "failed"
+      }
+    ]
+  }
+}

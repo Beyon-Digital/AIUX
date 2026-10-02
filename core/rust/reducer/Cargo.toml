@@ -6,3 +6,10 @@ license = "Proprietary"
 publish = false
 
 [dependencies]
+aiux-protocol = { workspace = true }
+aiux-surfaces = { workspace = true }
+aiux-tools = { workspace = true }
+aiux-approvals = { workspace = true }
+aiux-artifacts = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

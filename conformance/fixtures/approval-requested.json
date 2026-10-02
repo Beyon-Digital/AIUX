@@ -1,0 +1,62 @@
+{
+  "events": [
+    {
+      "eventId": "approval-requested-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Approval requested"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "approval-requested-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "approval-requested-2",
+      "payload": {
+        "approval": {
+          "action": {
+            "id": "git.prune",
+            "payload": {
+              "count": 12
+            }
+          },
+          "description": "Git cleanup action",
+          "expiresAt": "2026-01-01T01:00:00Z",
+          "id": "a1",
+          "prompt": "Delete 12 stale branches?",
+          "status": "requested"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "approval.requested"
+    }
+  ],
+  "name": "approval-requested",
+  "protocolVersion": "0.1"
+}

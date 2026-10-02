@@ -1,0 +1,12 @@
+[package]
+name = "aiux-conformance"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false
+
+[dependencies]
+aiux-protocol = { workspace = true }
+aiux-session = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,58 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 8,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "retry-0",
+    "retry-1",
+    "retry-2",
+    "retry-3",
+    "retry-4",
+    "retry-5",
+    "retry-6",
+    "retry-7"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "text": "Retry succeeded.",
+            "type": "text"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "error": {
+          "code": "UPSTREAM_503",
+          "message": "backend unavailable",
+          "retryable": true
+        },
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "failed"
+      },
+      {
+        "id": "r2",
+        "result": {
+          "attempt": 2
+        },
+        "retryOf": "r1",
+        "startedAt": "2026-01-01T00:00:30Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Retry"
+    }
+  }
+}

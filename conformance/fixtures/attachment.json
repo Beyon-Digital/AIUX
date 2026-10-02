@@ -1,0 +1,83 @@
+{
+  "events": [
+    {
+      "eventId": "attachment-0",
+      "payload": {
+        "protocolVersion": "0.1",
+        "session": {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "id": "s1",
+          "title": "Attachment"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 0,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:00Z",
+      "type": "session.created"
+    },
+    {
+      "eventId": "attachment-1",
+      "payload": {
+        "protocolVersion": "0.1",
+        "run": {
+          "id": "r1",
+          "startedAt": "2026-01-01T00:00:01Z",
+          "status": "running"
+        }
+      },
+      "protocolVersion": "0.1",
+      "sequence": 1,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:01Z",
+      "type": "run.started"
+    },
+    {
+      "eventId": "attachment-2",
+      "payload": {
+        "message": {
+          "id": "m-u",
+          "parts": [
+            {
+              "id": "p0",
+              "text": "See the spec:",
+              "type": "text"
+            },
+            {
+              "attachment": {
+                "id": "file-1",
+                "mimeType": "application/pdf",
+                "name": "aiux-spec.pdf",
+                "sizeBytes": 20480,
+                "uri": "aiux://files/file-1"
+              },
+              "id": "p1",
+              "type": "attachment"
+            }
+          ],
+          "role": "user"
+        },
+        "protocolVersion": "0.1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 2,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:02Z",
+      "type": "message.created"
+    },
+    {
+      "eventId": "attachment-3",
+      "payload": {
+        "protocolVersion": "0.1",
+        "runId": "r1"
+      },
+      "protocolVersion": "0.1",
+      "sequence": 3,
+      "sessionId": "s1",
+      "timestamp": "2026-01-01T00:00:03Z",
+      "type": "run.completed"
+    }
+  ],
+  "name": "attachment",
+  "protocolVersion": "0.1"
+}

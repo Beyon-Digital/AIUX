@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Per-dispatch accounting returned by `dispatch`/`dispatch_batch`.",
+  "properties": {
+    "applied": {
+      "description": "Events that mutated state.",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "buffered": {
+      "description": "Events buffered pending missing earlier sequences.",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    },
+    "duplicatesIgnored": {
+      "description": "Duplicate `eventId`s safely ignored (idempotency).",
+      "format": "uint64",
+      "minimum": 0.0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "applied",
+    "buffered",
+    "duplicatesIgnored"
+  ],
+  "title": "DispatchReport",
+  "type": "object"
+}

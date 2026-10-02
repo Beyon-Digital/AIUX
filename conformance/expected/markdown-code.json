@@ -1,0 +1,51 @@
+{
+  "bufferedEvents": [],
+  "nextExpectedSequence": 9,
+  "protocolVersion": "0.1",
+  "seenEventIds": [
+    "markdown-code-0",
+    "markdown-code-1",
+    "markdown-code-2",
+    "markdown-code-3",
+    "markdown-code-4",
+    "markdown-code-5",
+    "markdown-code-6",
+    "markdown-code-7",
+    "markdown-code-8"
+  ],
+  "sessionId": "s1",
+  "state": {
+    "messages": [
+      {
+        "id": "m1",
+        "parts": [
+          {
+            "id": "p1",
+            "markdown": "# Result\n\nHere is the snippet:",
+            "type": "markdown"
+          },
+          {
+            "code": "fn main() { println!(\"hi\"); }",
+            "id": "p2",
+            "language": "rust",
+            "type": "code"
+          }
+        ],
+        "role": "assistant",
+        "status": "complete"
+      }
+    ],
+    "runs": [
+      {
+        "id": "r1",
+        "startedAt": "2026-01-01T00:00:01Z",
+        "status": "completed"
+      }
+    ],
+    "session": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "id": "s1",
+      "title": "Markdown + code"
+    }
+  }
+}
