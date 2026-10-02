@@ -19,10 +19,24 @@ initialize:
       export ANDROID_HOME=$HOME/android-sdk
       yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null
       $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+  - run: |
+      # wasm-bindgen CLI — version must match the crate in Cargo.lock or
+      # wasm-bindgen refuses to run (bindings/wasm/build.sh).
+      cargo install wasm-bindgen-cli --version 0.2.129 --locked
+  - uses: github.com/subosito/flutter-action@v2
+    with:
+      channel: stable
+      cache: true
 # Install workspace deps incrementally.
 maintenance: |
   pnpm install --frozen-lockfile=false
+  # Playwright chromium for examples/web e2e (test:e2e, opt-in only) —
+  # must run after pnpm install so the playwright package exists.
+  pnpm -C examples/web exec playwright install chromium
   cargo fetch
+  (cd bindings/dart && dart pub get)
+  (cd renderers/flutter && flutter pub get)
+  (cd examples/flutter && flutter pub get)
 knowledge:
   - name: lint
     contents: |
@@ -33,7 +47,24 @@ knowledge:
   - name: build
     contents: |
       cargo build --workspace && pnpm build && ./gradlew build --no-daemon
+  - name: wasm-build
+    contents: |
+      bash bindings/wasm/build.sh — produces bindings/wasm/pkg for the JS
+      package and web renderer. wasm-bindgen-cli is preinstalled, pinned to
+      the crate version in Cargo.lock (update both together).
+  - name: flutter-test
+    contents: |
+      bash bindings/dart/generate.sh first (builds libaiux_capi), then:
+      (cd bindings/dart && dart test) &&
+      (cd renderers/flutter && flutter test) &&
+      (cd examples/flutter && flutter test)
+  - name: conformance
+    contents: |
+      cargo run --release --bin aiux-conformance \
+        --manifest-path conformance/harness/Cargo.toml -- \
+        verify conformance/fixtures conformance/expected
   - name: notes
     contents: |
       Plan of record: docs/PLAN.md; progress: TASKS.md. Swift/SwiftUI cannot
       compile on this Linux box — Apple verification happens on macOS CI runners.
+      Android emulator testing: see the aiux-android-emulator-testing skill.
