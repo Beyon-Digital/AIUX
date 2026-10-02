@@ -10,6 +10,7 @@ members = [
     "core/rust/surfaces",
     "core/rust/persistence",
     "core/rust/tests",
+    "bindings/uniffi",
     "bindings/wasm",
     "conformance/harness",
 ]

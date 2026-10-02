@@ -1,0 +1,10 @@
+[bindings.kotlin]
+package_name = "aiux"
+cdylib_name = "aiux_uniffi"
+
+[bindings.swift]
+module_name = "AIUXCore"
+ffi_module_name = "AIUXCoreFFI"
+generate_swift_sources = true
+generate_headers = true
+generate_module_map = true

@@ -52,6 +52,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - name: Generate UniFFI Swift bindings
         run: |
           if [ -f bindings/swift/generate.sh ]; then
@@ -82,17 +84,14 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - uses: gradle/actions/setup-gradle@v4
+      - name: UniFFI Kotlin binding generation + native libs
+        run: bash bindings/kotlin/generate.sh
       - name: Gradle build
         run: |
           if [ -x ./gradlew ]; then ./gradlew build --no-daemon; else echo "No gradlew yet — skipping."; fi
-      - name: UniFFI Kotlin binding generation
-        run: |
-          if [ -f bindings/kotlin/generate.sh ]; then
-            bash bindings/kotlin/generate.sh
-          else
-            echo "No Kotlin binding generator yet — Phase 2 deliverable."
-          fi
 
   js:
     name: JS typecheck + test

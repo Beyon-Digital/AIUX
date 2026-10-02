@@ -53,11 +53,12 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 2 — Native bindings → PR 3
 
-- [ ] UniFFI (pinned version) — `AIUXSession` object: `dispatch()`,
-  `dispatchBatch()`, `snapshot()`, `serialize()`, `restore_session()`
-- [ ] Swift bindings + XCFramework/SPM packaging path
-- [ ] Kotlin bindings + Android library (AAR) packaging path
-- [ ] Binding smoke tests both languages
+- [x] UniFFI (pinned `=0.29.5`) — `AiuxSession` object: `create()`,
+  `restore()`, `dispatch()`, `dispatchBatch()`, `snapshot()`, `serialize()`,
+  `reset()`
+- [x] Swift bindings + XCFramework/SPM packaging path (verified on macOS CI)
+- [x] Kotlin bindings + Android library (AAR) packaging path
+- [x] Binding smoke tests both languages (Kotlin JVM+CI; Swift macOS CI)
 - **Gate:** Swift + Kotlin example tests can create session → dispatch fixture →
   snapshot → serialize → restore.
 

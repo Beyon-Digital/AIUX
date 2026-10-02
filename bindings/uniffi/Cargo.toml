@@ -1,0 +1,28 @@
+[package]
+name = "aiux-uniffi"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+aiux-session = { workspace = true }
+aiux-protocol = { workspace = true }
+serde_json = { workspace = true }
+# UniFFI is pre-1.0 (plan §5, ADR 0005): pinned exactly, never auto-bumped
+# without compatibility CI. Recorded in bindings/README.md.
+uniffi = "=0.29.5"
+
+[features]
+default = []
+# Build-time-only codegen CLI: `cargo run -p aiux-uniffi --features cli
+# --bin uniffi-bindgen`. Keeps bindgen on the pinned UniFFI version.
+cli = ["uniffi/cli"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi_bindgen.rs"
+required-features = ["cli"]

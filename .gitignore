@@ -20,6 +20,11 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 .swiftpm/
 
+# UniFFI-generated artifacts — regenerate via bindings/{swift,kotlin}/generate.sh
+bindings/swift/Sources/AIUXCore/AIUXCore.swift
+bindings/swift/Sources/AIUXCoreFFI/include/
+bindings/swift/Sources/AIUXCoreFFI/lib/
+
 # Android / Gradle
 .gradle/
 **/build/
