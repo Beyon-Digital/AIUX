@@ -11,9 +11,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Maps the JS `AIUXThemeInput` JSON onto `AIUXTheme` roles (plan §7). Colors
@@ -32,7 +33,7 @@ internal object AIUXThemeJson {
             .getOrNull() ?: return null
 
         val base = if (dark) AIUXTheme.dark() else AIUXTheme.light()
-        val scheme = root["colorScheme"]?.jsonPrimitive?.content
+        val scheme = (root["colorScheme"] as? JsonPrimitive)?.contentOrNull
         val effectiveDark = when (scheme) {
             "light" -> false
             "dark" -> true
@@ -105,24 +106,27 @@ internal object AIUXThemeJson {
     }
 
     private fun mergeMotion(base: AIUXMotion, element: JsonElement?): AIUXMotion {
-        if (element?.jsonPrimitive?.content == "reduced") return AIUXMotion.Reduced
-        if (element?.jsonPrimitive?.content == "full") return AIUXMotion.Full
+        // `motion` may be a primitive ("reduced"/"full") or an object
+        // ({"duration": ms}); jsonPrimitive throws on objects — check first.
+        val primitive = (element as? JsonPrimitive)?.contentOrNull
+        if (primitive == "reduced") return AIUXMotion.Reduced
+        if (primitive == "full") return AIUXMotion.Full
         val obj = element as? JsonObject ?: return base
-        if (obj["duration"]?.jsonPrimitive?.doubleOrNull == 0.0) return AIUXMotion.Reduced
+        if ((obj["duration"] as? JsonPrimitive)?.doubleOrNull == 0.0) return AIUXMotion.Reduced
         return base
     }
 
     private fun mergeDensity(base: AIUXDensityMode, element: JsonElement?): AIUXDensityMode =
-        when (element?.jsonPrimitive?.content) {
+        when ((element as? JsonPrimitive)?.contentOrNull) {
             "compact" -> AIUXDensityMode.Compact
             else -> base
         }
 
     private fun JsonObject.colorOr(role: String): Color? =
-        this[role]?.jsonPrimitive?.content?.let(::parseColor)
+        (this[role] as? JsonPrimitive)?.contentOrNull?.let(::parseColor)
 
     private fun JsonObject.dpOr(key: String) =
-        this[key]?.jsonPrimitive?.doubleOrNull?.toFloat()?.dp
+        (this[key] as? JsonPrimitive)?.doubleOrNull?.toFloat()?.dp
 
     /** `#rgb` / `#rrggbb` / `#rrggbbaa` / `rgb(r,g,b)` / `rgba(r,g,b,a)`. */
     internal fun parseColor(value: String): Color? {
@@ -134,7 +138,9 @@ internal object AIUXThemeJson {
                 6, 8 -> hex
                 else -> return null
             }
-            val argb = if (long.length == 6) "FF$long" else long
+            // CSS hex alpha is trailing (#rrggbbaa); Android wants it
+            // leading (#aarrggbb) — rotate the alpha pair to the front.
+            val argb = if (long.length == 6) "FF$long" else long.substring(6, 8) + long.substring(0, 6)
             return runCatching {
                 Color(android.graphics.Color.parseColor("#$argb"))
             }.getOrNull()

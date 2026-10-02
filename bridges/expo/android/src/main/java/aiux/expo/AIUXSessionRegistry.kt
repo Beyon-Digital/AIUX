@@ -2,6 +2,8 @@ package aiux.expo
 
 import aiux.compose.AIUXSessionStore
 import aiux.compose.model.AIUXDispatchReport
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -16,6 +18,16 @@ internal object AIUXSessionRegistry {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val stores = ConcurrentHashMap<String, AIUXSessionStore>()
+
+    /**
+     * Bumped by `restore` so mounted views re-resolve the store for an id —
+     * otherwise `remember(id)` keeps the pre-restore store forever and
+     * mounted conversations never show the restored session's events.
+     */
+    private val generations = ConcurrentHashMap<String, MutableStateFlow<Long>>()
+
+    fun generationFlow(sessionId: String): StateFlow<Long> =
+        generations.getOrPut(sessionId) { MutableStateFlow(0L) }
 
     /** Returns the existing store or creates one bound to [sessionId]. */
     fun getOrCreate(sessionId: String): AIUXSessionStore =
@@ -47,6 +59,7 @@ internal object AIUXSessionRegistry {
             ?.content
             ?: error("serialized session is missing sessionId")
         stores[sessionId] = store
+        generationFlow(sessionId).let { it.value = it.value + 1 }
         return sessionId
     }
 

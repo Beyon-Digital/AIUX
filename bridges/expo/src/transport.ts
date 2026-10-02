@@ -57,27 +57,30 @@ export function createAIUXTransport(
 
   const { policy = {}, onDispatch } = options;
   const queue: string[] = [];
-  let draining = false;
+  let activeDrain: Promise<void> | undefined;
 
-  const drain = async (): Promise<void> => {
-    if (draining) return;
-    draining = true;
-    try {
-      while (queue.length > 0) {
-        const batch = queue[0]!;
-        try {
-          const report = await native.dispatchBatch(sessionId, batch);
-          queue.shift();
-          onDispatch?.(report);
-        } catch (error) {
-          // Keep the batch queued; a later push()/flush() resumes the drain.
-          policy.onFlushError?.(error);
-          break;
+  const drain = (): Promise<void> => {
+    if (activeDrain) return activeDrain;
+    const run = (async () => {
+      try {
+        while (queue.length > 0) {
+          const batch = queue[0]!;
+          try {
+            const report = await native.dispatchBatch(sessionId, batch);
+            queue.shift();
+            onDispatch?.(report);
+          } catch (error) {
+            // Keep the batch queued; a later push()/flush() resumes the drain.
+            policy.onFlushError?.(error);
+            break;
+          }
         }
+      } finally {
+        activeDrain = undefined;
       }
-    } finally {
-      draining = false;
-    }
+    })();
+    activeDrain = run;
+    return run;
   };
 
   const buffer = new EventBuffer<void>(
@@ -99,6 +102,18 @@ export function createAIUXTransport(
     },
     close: () => {
       buffer.close();
+      // `push` can no longer retrigger the drain — if it stops on a failure
+      // the final batches sit stranded, so report them to the closer via
+      // the flush-error policy (flush() still retries the queue).
+      void drain().then(() => {
+        if (queue.length > 0) {
+          policy.onFlushError?.(
+            new Error(
+              `@beyondigital/aiux-expo: closed with ${queue.length} undelivered batch(es)`,
+            ),
+          );
+        }
+      });
     },
     get pending() {
       return buffer.pending;

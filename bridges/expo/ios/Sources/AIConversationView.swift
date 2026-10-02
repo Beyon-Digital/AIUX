@@ -20,6 +20,7 @@ public final class AIConversationView: ExpoView {
 
     private var hostingController: UIHostingController<AnyView>?
     private var cancellables = Set<AnyCancellable>()
+    private var registryCancellable: AnyCancellable?
     private var boundStore: AIUXSessionStore?
 
     /// Native-side coalescing for `onSnapshot` (plan §10, §22).
@@ -53,6 +54,13 @@ public final class AIConversationView: ExpoView {
     @MainActor
     private func rebind() {
         guard let sessionId else { return }
+        // `restore` replaces the registry store for this id — rebind so the
+        // mounted conversation follows the restored session's events.
+        if registryCancellable == nil {
+            registryCancellable = AIUXSessionRegistry.shared.storeReplaced
+                .filter { [weak self] in $0 == self?.sessionId }
+                .sink { [weak self] _ in self?.rebind() }
+        }
         let store = AIUXSessionRegistry.shared.store(for: sessionId)
         boundStore = store
 
@@ -95,7 +103,12 @@ public final class AIConversationView: ExpoView {
         guard sessionId != nil, let store = boundStore else { return }
 
         var content: AnyView = AnyView(
-            AIConversation(store: store, mode: mode, composerPlaceholder: "Message…")
+            AIConversation(
+                store: store,
+                mode: mode,
+                composerPlaceholder: "Message…",
+                showsComposer: showComposer
+            )
                 .onAIUXAction { [weak self] action in
                     let payload = (try? String(
                         decoding: JSONEncoder().encode(action.payload),
@@ -109,6 +122,9 @@ public final class AIConversationView: ExpoView {
         )
         if let themeJson, let theme = AIUXThemeJSON.parse(themeJson) {
             content = AnyView(content.aiuxTheme(theme))
+        }
+        if let themeJson, let scheme = AIUXThemeJSON.colorScheme(themeJson) {
+            content = AnyView(content.preferredColorScheme(scheme))
         }
 
         if let controller = hostingController {

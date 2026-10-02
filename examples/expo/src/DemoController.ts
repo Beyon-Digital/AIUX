@@ -21,6 +21,7 @@ export class DemoController {
   private pendingApproval: ((approved: boolean) => void) | null = null;
   private activeRun: { runId: string; cancelRequested: boolean } | null = null;
   private messageN = 0;
+  private closed = false;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -38,7 +39,7 @@ export class DemoController {
     switch (action.id) {
       case "aiux.composer.send": {
         const text = action.payload["text"];
-        if (typeof text === "string" && text.trim()) void this.sendPrompt(text);
+        if (typeof text === "string" && text.trim()) void this.track(this.sendPrompt(text));
         break;
       }
       case "aiux.composer.cancel": {
@@ -62,7 +63,7 @@ export class DemoController {
       }
       case "aiux.error.retry": {
         const run = this.activeRun;
-        if (run) void this.retryRun(run.runId);
+        if (run) void this.track(this.retryRun(run.runId));
         break;
       }
       default:
@@ -73,7 +74,15 @@ export class DemoController {
   }
 
   private send(...events: AiuxEventObject[]) {
+    if (this.closed) return; // runs resumed by close() can't push into a closed transport
     for (const event of events) this.transport.push(event);
+  }
+
+  /** Watch a scripted run — swallow rejections surfacing after close(). */
+  private track(task: Promise<void>): Promise<void> {
+    return task.catch((error) => {
+      if (!this.closed) console.warn("[aiux] demo run failed", error);
+    });
   }
 
   /** user prompt → stream → tool → approval → resolve → surface result. */
@@ -95,7 +104,7 @@ export class DemoController {
       "Searching the AIUX spec for invoice matches, drafting the result card…";
     this.send(this.agent.textPart(messageId, "p1"));
     for (const word of scripted.split(" ")) {
-      if (run.cancelRequested) return;
+      if (run.cancelRequested || this.closed) return;
       await sleep(60);
       this.send(this.agent.textDelta(messageId, "p1", `${word} `));
     }
@@ -109,9 +118,10 @@ export class DemoController {
 
     this.send(this.agent.toolStarted(toolId, "search", { q: "invoice inv-9" }));
     await sleep(400);
-    if (run.cancelRequested) return;
+    if (run.cancelRequested || this.closed) return;
     this.send(this.agent.toolProgress(toolId, 1, 3, "querying"));
     await sleep(400);
+    if (this.closed) return;
     this.send(this.agent.toolProgress(toolId, 3, 3, "ranking"));
     await sleep(300);
 
@@ -140,6 +150,7 @@ export class DemoController {
     const approved = await new Promise<boolean>((resolve) => {
       this.pendingApproval = resolve;
     });
+    if (this.closed) return;
     this.pendingApproval = null;
 
     this.send(
@@ -173,12 +184,19 @@ export class DemoController {
     this.send(this.agent.assistantMessage(messageId));
     this.send(this.agent.textPart(messageId, "p1", "Retry succeeded."));
     await sleep(300);
+    if (this.closed) return;
     this.send(this.agent.messageComplete(messageId));
     this.send(this.agent.runCompleted(runId));
     if (this.activeRun === run) this.activeRun = null;
   }
 
   close(): void {
+    this.closed = true;
+    // Unblock runs waiting on the approval gate; their trailing sends
+    // no-op via `send()` instead of throwing into the closed transport.
+    this.pendingApproval?.(false);
+    this.pendingApproval = null;
+    this.activeRun = null;
     this.transport.close();
   }
 }

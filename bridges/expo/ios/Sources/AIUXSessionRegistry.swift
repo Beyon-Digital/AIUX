@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 /// sessionId → `AIUXSessionStore` registry shared by the module's session
@@ -9,6 +10,11 @@ final class AIUXSessionRegistry {
     static let shared = AIUXSessionRegistry()
 
     private var stores: [String: AIUXSessionStore] = [:]
+
+    /// Emitted with a sessionId whenever `restore` replaces its store —
+    /// mounted views rebind so they show the restored session's events
+    /// instead of the pre-restore store they captured at mount time.
+    let storeReplaced = PassthroughSubject<String, Never>()
 
     /// Existing store, or one created bound to `sessionId`.
     func store(for sessionId: String) -> AIUXSessionStore {
@@ -43,6 +49,7 @@ final class AIUXSessionRegistry {
         let store = AIUXSessionStore(backend: UniFFIBackend(session: session))
         let sessionId = store.snapshot.sessionId
         stores[sessionId] = store
+        storeReplaced.send(sessionId)
         return sessionId
     }
 
