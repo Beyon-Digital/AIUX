@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=20"
   },
+  "devDependencies": {
+    "ajv": "8.20.0"
+  },
   "scripts": {
     "build": "pnpm -r --if-present run build",
     "test": "pnpm -r --if-present run test",
