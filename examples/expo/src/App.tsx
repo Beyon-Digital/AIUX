@@ -48,9 +48,9 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     void createAIUXSession({ sessionId: SESSION_ID })
-      .then(() => {
+      .then(async () => {
         if (cancelled) return;
-        controller.current = new DemoController(SESSION_ID);
+        controller.current = await DemoController.create(SESSION_ID);
         setReady(true);
       })
       .catch((cause: unknown) => {

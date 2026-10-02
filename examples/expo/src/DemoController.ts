@@ -1,5 +1,8 @@
 import type { AIUXAction, AIUXTransport } from "@beyondigital/aiux-expo";
-import { createAIUXTransport } from "@beyondigital/aiux-expo";
+import {
+  createAIUXTransport,
+  getAIUXSnapshot,
+} from "@beyondigital/aiux-expo";
 
 import { MockAgent, type AiuxEventObject } from "./mockAgent";
 import {
@@ -71,16 +74,57 @@ export class DemoController {
   private liveHistory: ChatMessage[] = [];
   private liveHandle: StreamHandle | undefined;
   private lastPrompt = "";
+  /**
+   * Per-controller id epoch. A JS remount spawns a fresh controller while
+   * the native session persists — entity ids (`m`,`r`,`t`,`a`,`sf`,`u`,`e`)
+   * must not collide with ones already committed, or the replayed batch
+   * gets rejected and poisons the transport queue.
+   */
+  private readonly idEpoch: string;
 
-  constructor(sessionId: string) {
+  private constructor(
+    sessionId: string,
+    idEpoch: string,
+    startSequence: number,
+    fresh: boolean,
+  ) {
     this.sessionId = sessionId;
-    this.agent = new MockAgent(sessionId);
+    this.idEpoch = idEpoch;
+    this.agent = new MockAgent(sessionId, `${idEpoch}:`, startSequence);
     this.transport = createAIUXTransport(sessionId, {
       policy: {
         onFlushError: (error) => console.warn("[aiux] dispatchBatch failed", error),
       },
     });
-    this.transport.push(this.agent.sessionCreated("AIUX Expo demo"));
+    // Only a brand-new session gets the seed — re-emitting session.created
+    // into a persisted session is an InvalidEvent replay.
+    if (fresh) {
+      this.transport.push(this.agent.sessionCreated("AIUX Expo demo"));
+    }
+  }
+
+  /**
+   * Build a controller that resumes against the persisted native session:
+   * sequences continue from `next_expected_sequence`, entity ids carry a
+   * fresh epoch, and the session seed is skipped when one already exists.
+   */
+  static async create(sessionId: string): Promise<DemoController> {
+    const snapshot = await getAIUXSnapshot(sessionId).catch(
+      () => ({}) as Record<string, unknown>,
+    );
+    const nextSeq =
+      typeof snapshot.next_expected_sequence === "number"
+        ? snapshot.next_expected_sequence
+        : 0;
+    const fresh = snapshot.session == null;
+    const idEpoch = `${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 5)}`;
+    return new DemoController(sessionId, idEpoch, nextSeq, fresh);
+  }
+
+  private id(prefix: string, n: number): string {
+    return `${prefix}${this.idEpoch}-${n}`;
   }
 
   /** Toggle real-LLM mode; `key`/`model` apply on the next prompt. */
@@ -174,12 +218,12 @@ export class DemoController {
    */
   private async livePrompt(text: string): Promise<void> {
     const n = ++this.messageN;
-    const messageId = `m${n}`;
-    const runId = `r${n}`;
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
     const run: ActiveRun = { runId, cancelRequested: false, messageId };
     this.activeRun = run;
 
-    this.send(...this.agent.userMessage(`u${n}`, text));
+    this.send(...this.agent.userMessage(this.id("u", n), text));
     this.send(this.agent.runStarted(runId));
     this.send(this.agent.assistantMessage(messageId));
     this.send(this.agent.textPart(messageId, "p1"));
@@ -238,8 +282,8 @@ export class DemoController {
     messageId: string,
     calls: ToolCall[],
   ): Promise<void> {
-    const toolId = `t${this.messageN}`;
-    const approvalId = `a${this.messageN}`;
+    const toolId = this.id("t", this.messageN);
+    const approvalId = this.id("a", this.messageN);
     const call = calls[0]!;
     let args: Record<string, unknown> = {};
     try {
@@ -328,12 +372,12 @@ export class DemoController {
   /** Live retry: new run re-asking the last prompt against the same history. */
   private async liveRetry(previousRunId: string): Promise<void> {
     const n = ++this.messageN;
-    const runId = `r${n}`;
+    const runId = this.id("r", n);
     const text = this.lastPrompt;
     this.send(this.agent.runStarted(runId, previousRunId));
     // Splice the new run's ids into livePrompt bookkeeping, then run it —
     // the user message was already pushed; just re-stream the answer.
-    const messageId = `m${n}`;
+    const messageId = this.id("m", n);
     const run: ActiveRun = { runId, cancelRequested: false, messageId };
     this.activeRun = run;
     this.send(this.agent.assistantMessage(messageId));
@@ -380,15 +424,15 @@ export class DemoController {
   /** user prompt → stream → tool → approval → resolve → surface result. */
   async scriptedPrompt(text: string): Promise<void> {
     const n = ++this.messageN;
-    const messageId = `m${n}`;
-    const runId = `r${n}`;
-    const toolId = `t${n}`;
-    const approvalId = `a${n}`;
-    const surfaceId = `sf${n}`;
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
+    const toolId = this.id("t", n);
+    const approvalId = this.id("a", n);
+    const surfaceId = this.id("sf", n);
     const run = { runId, cancelRequested: false };
     this.activeRun = run;
 
-    this.send(...this.agent.userMessage(`u${n}`, text));
+    this.send(...this.agent.userMessage(this.id("u", n), text));
     this.send(this.agent.runStarted(runId));
     this.send(this.agent.assistantMessage(messageId));
 
@@ -467,8 +511,8 @@ export class DemoController {
   /** Retry branch: same message, a `retryOf` run that succeeds. */
   private async retryRun(previousRunId: string): Promise<void> {
     const n = ++this.messageN;
-    const messageId = `m${n}`;
-    const runId = `r${n}`;
+    const messageId = this.id("m", n);
+    const runId = this.id("r", n);
     const run = { runId, cancelRequested: false };
     this.activeRun = run;
 
