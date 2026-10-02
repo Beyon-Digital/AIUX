@@ -155,7 +155,15 @@ jobs:
       # AGP's on-demand SDK install is flaky on fresh runners — install the
       # components expo-modules-core needs explicitly first.
       - name: Install Android SDK components (cmake + NDK)
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmake;3.22.1" "ndk;27.1.12297006"
+        run: |
+          # pipefail is off around `yes |` so yes's expected SIGPIPE (141)
+          # doesn't mask sdkmanager's real exit status.
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            --install "cmake;3.22.1" "ndk;27.1.12297006"
+          sdk_rc=$?
+          set -o pipefail
+          [ "$sdk_rc" -eq 0 ]
       - name: Compile Android
         run: cd examples/expo/android && ./gradlew assembleDebug --no-daemon
 
