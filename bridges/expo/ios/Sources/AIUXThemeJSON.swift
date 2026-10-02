@@ -133,11 +133,11 @@ enum AIUXThemeJSON {
     ) -> AIUXSpacing {
         guard let values else { return base }
         var spacing = base
-        spacing.xs = values["xs"].map(CGFloat.init) ?? spacing.xs
-        spacing.sm = values["sm"].map(CGFloat.init) ?? spacing.sm
-        spacing.md = values["md"].map(CGFloat.init) ?? spacing.md
-        spacing.lg = values["lg"].map(CGFloat.init) ?? spacing.lg
-        spacing.xl = values["xl"].map(CGFloat.init) ?? spacing.xl
+        spacing.xs = values["xs"].map { CGFloat($0) } ?? spacing.xs
+        spacing.sm = values["sm"].map { CGFloat($0) } ?? spacing.sm
+        spacing.md = values["md"].map { CGFloat($0) } ?? spacing.md
+        spacing.lg = values["lg"].map { CGFloat($0) } ?? spacing.lg
+        spacing.xl = values["xl"].map { CGFloat($0) } ?? spacing.xl
         return spacing
     }
 
@@ -146,10 +146,10 @@ enum AIUXThemeJSON {
     ) -> AIUXRadiusTokens {
         guard let values else { return base }
         var radius = base
-        radius.sm = values["sm"].map(CGFloat.init) ?? radius.sm
-        radius.md = values["md"].map(CGFloat.init) ?? radius.md
-        radius.lg = values["lg"].map(CGFloat.init) ?? radius.lg
-        radius.full = values["full"].map(CGFloat.init) ?? radius.full
+        radius.sm = values["sm"].map { CGFloat($0) } ?? radius.sm
+        radius.md = values["md"].map { CGFloat($0) } ?? radius.md
+        radius.lg = values["lg"].map { CGFloat($0) } ?? radius.lg
+        radius.full = values["full"].map { CGFloat($0) } ?? radius.full
         return radius
     }
 
