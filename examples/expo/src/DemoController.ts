@@ -113,6 +113,11 @@ export class DemoController {
             this.transport.push(this.agent.messageComplete(run.messageId));
           }
           this.activeRun = null;
+          // Unblock a run parked on the approval gate so its continuation
+          // can observe cancelRequested and bail instead of pushing
+          // resolution/completion events after runCancelled.
+          this.pendingApproval?.(false);
+          this.pendingApproval = null;
         }
         break;
       }
@@ -444,7 +449,7 @@ export class DemoController {
     const approved = await new Promise<boolean>((resolve) => {
       this.pendingApproval = resolve;
     });
-    if (this.closed) return;
+    if (this.closed || run.cancelRequested) return;
     this.pendingApproval = null;
 
     this.send(
