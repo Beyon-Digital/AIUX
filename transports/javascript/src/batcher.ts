@@ -75,9 +75,11 @@ export async function streamToBatches(
   let buffer: AiuxEvent[] = [];
   let batches = 0;
   let events = 0;
-  // The sink error that aborted the pump, if any — lets the outer catch
-  // avoid re-reporting a sink failure as a source failure.
-  let sinkError: unknown;
+  // Whether the propagating error came from the sink — lets the outer
+  // catch avoid re-reporting a sink failure as a source failure. A boolean
+  // rather than the error value itself: a source may legitimately throw
+  // `undefined`, which would collide with an uninitialized sentinel.
+  let sinkFailed = false;
 
   const flush = async (): Promise<void> => {
     if (buffer.length === 0) return;
@@ -87,7 +89,7 @@ export async function streamToBatches(
       await sink(JSON.stringify(batch));
     } catch (error) {
       onError?.(error, "sink");
-      sinkError = error;
+      sinkFailed = true;
       throw error;
     }
     batches += 1;
@@ -148,7 +150,7 @@ export async function streamToBatches(
   } catch (error) {
     // A sink failure was already reported (and its batch cleared) inside
     // flush() — reporting it again as "source" would double-count.
-    if (error !== sinkError) {
+    if (!sinkFailed) {
       onError?.(error, "source");
       // Still deliver already-consumed events before propagating — a
       // source failure must not strand a partial batch.

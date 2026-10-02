@@ -217,6 +217,18 @@ export function createSseAdapter(options: SseAdapterOptions): SseAdapter {
     onIssue({ kind: "transport", reason, raw: error instanceof Error ? error.message : error });
   };
 
+  // On every iterator exit — clean EOF, terminal, close, abort, or error —
+  // seal buffered normalizer state (incomplete tool calls) so a truncated
+  // call still emits `tool.started` instead of disappearing mid-stream.
+  async function* withFinish(source: AsyncGenerator<AiuxEvent[]>): AsyncGenerator<AiuxEvent[]> {
+    try {
+      yield* source;
+    } finally {
+      const finishing = normalize.finish?.() ?? [];
+      if (finishing.length > 0) yield finishing;
+    }
+  }
+
   async function* iterate(): AsyncGenerator<AiuxEvent[]> {
     if (!fetchFn) throw new Error("no fetch implementation available — pass fetchFn");
     let attempt = 0;
@@ -350,7 +362,7 @@ export function createSseAdapter(options: SseAdapterOptions): SseAdapter {
       return state.lastEventId;
     },
     [Symbol.asyncIterator]() {
-      iterator ??= iterate();
+      iterator ??= withFinish(iterate());
       return iterator;
     },
     close() {

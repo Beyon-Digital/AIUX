@@ -35,8 +35,14 @@ export interface WireNormalizerOptions {
 /**
  * A parsed wire item → zero or more `AIUXEvent`s. Zero means the item was
  * skipped (reported via `onIssue`, never thrown mid-stream).
+ *
+ * `finish()` seals any state the normalizer holds across items (buffered
+ * tool calls) and emits their final events — transports must call it when
+ * their stream ends, including clean EOF with no terminal marker.
  */
-export type WireNormalizer = (item: unknown) => AiuxEvent[];
+export type WireNormalizer = ((item: unknown) => AiuxEvent[]) & {
+  finish?(): AiuxEvent[];
+};
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -112,10 +118,15 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
   }
   const pendingToolCalls = new Map<string, PendingToolCall>();
 
-  const tryParseArgs = (args: string): unknown => {
+  // `arguments` is a JSON object per the function-calling spec — a scalar
+  // prefix like `"1"` parses fine but is not a complete input (`12` can
+  // still follow). Only an object parse completes the args early; anything
+  // else seals best-effort at the slot/run boundary.
+  const tryParseArgs = (args: string): Record<string, unknown> | undefined => {
     if (args === "") return undefined;
     try {
-      return JSON.parse(args) as unknown;
+      const parsed: unknown = JSON.parse(args);
+      return isRecord(parsed) ? parsed : undefined;
     } catch {
       return undefined;
     }
@@ -145,6 +156,12 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
     for (const key of [...pendingToolCalls.keys()]) out.push(...sealPending(key));
     return out;
   };
+
+  // Id-less fallbacks must be unique per invocation, not per slot — a
+  // named fragment can legitimately replace a truncated call in the same
+  // slot, and reusing `tool-${key}` makes the reducer reject the second
+  // start as a duplicate.
+  let fallbackToolCallCounter = 0;
 
   const runId = (item: Record<string, unknown>): string =>
     firstString(item["runId"], item["run_id"]) ?? target.runId;
@@ -309,11 +326,9 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
               // best-effort before replacing.
               out.push(...sealPending(key));
               const pending: PendingToolCall = {
-                // Slot-keyed fallback id — two un-emitted pendings could
-                // peek the same sequence, minting colliding fallback ids.
                 id:
                   firstString(tc["id"], tc["toolCallId"]) ??
-                  `tool-${key}`,
+                  `tool-${fallbackToolCallCounter++}`,
                 name,
                 args: argFragment,
                 emitted: false,
@@ -362,7 +377,7 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
     return out;
   };
 
-  return (item: unknown): AiuxEvent[] => {
+  const normalize = (item: unknown): AiuxEvent[] => {
     // Raw non-JSON values (e.g. `[DONE]` sentinels) get a tiny mapping too.
     if (typeof item === "string") {
       if (item.trim() === "[DONE]")
@@ -384,4 +399,10 @@ export function createWireNormalizer(options: WireNormalizerOptions): WireNormal
     if ("choices" in item || "delta" in item) return normalizeChoices(item);
     return skip("unknown-shape", item);
   };
+
+  // Transports must call this once their stream ends — including clean EOF
+  // with no terminal marker — so pending tool calls seal (and emit) instead
+  // of disappearing silently.
+  normalize.finish = sealAllPending;
+  return normalize;
 }

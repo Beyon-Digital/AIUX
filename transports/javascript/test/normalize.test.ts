@@ -145,6 +145,48 @@ describe("createWireNormalizer", () => {
     for (const e of out) validator.assertValid(e);
   });
 
+  it("seals pending tool calls on finish() — clean EOF without a terminal", () => {
+    const { normalize } = make();
+    normalize({
+      choices: [
+        {
+          delta: {
+            tool_calls: [
+              { id: "call_1", function: { name: "f", arguments: '{"q":' } },
+            ],
+          },
+        },
+      ],
+    });
+    const out = normalize.finish?.() ?? [];
+    expect(out.map((e) => e.type)).toEqual(["tool.started"]);
+    expect(
+      (out[0]!.payload as { tool: { input: unknown } }).tool.input,
+    ).toEqual({ arguments: '{"q":' });
+    for (const e of out) validator.assertValid(e);
+  });
+
+  it("does not freeze input on a scalar-complete args prefix", () => {
+    const { normalize } = make();
+    // Fragments "1" then "2" — "1" parses as valid JSON but is not an
+    // object, so the start must wait for the real boundary.
+    const named = normalize({
+      choices: [
+        {
+          delta: {
+            tool_calls: [{ id: "call_1", function: { name: "f", arguments: "1" } }],
+          },
+        },
+      ],
+    });
+    expect(named).toEqual([]);
+    const out = normalize({ choices: [{ delta: {}, finish_reason: "stop" }] });
+    expect(out.map((e) => e.type)).toEqual(["tool.started", "run.completed"]);
+    expect(
+      (out[0]!.payload as { tool: { input: unknown } }).tool.input,
+    ).toEqual({ arguments: "1" });
+  });
+
   it("seals a truncated tool call best-effort before the terminal", () => {
     const { normalize } = make();
     normalize({
