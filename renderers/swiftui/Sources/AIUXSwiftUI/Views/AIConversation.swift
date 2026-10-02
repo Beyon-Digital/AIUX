@@ -32,15 +32,19 @@ public struct AIConversation: View {
     public var mode: AIUXConversationMode
     /// Optional override for the composer's placeholder text.
     public var composerPlaceholder: String
+    /// Whether the composer renders in fullscreen mode (default true).
+    public var showsComposer: Bool
 
     public init(
         store: AIUXSessionStore,
         mode: AIUXConversationMode = .fullscreen,
-        composerPlaceholder: String = "Message…"
+        composerPlaceholder: String = "Message…",
+        showsComposer: Bool = true
     ) {
         self.store = store
         self.mode = mode
         self.composerPlaceholder = composerPlaceholder
+        self.showsComposer = showsComposer
     }
 
     public var body: some View {
@@ -53,7 +57,7 @@ public struct AIConversation: View {
             messageStream
                 .background(colors.background)
 
-            if mode == .fullscreen {
+            if mode == .fullscreen && showsComposer {
                 AIComposer(
                     runActive: store.snapshot.activeRunId != nil,
                     placeholder: composerPlaceholder
@@ -73,7 +77,11 @@ public struct AIConversation: View {
             ScrollView {
                 LazyVStack(spacing: theme.space(.md)) {
                     if store.snapshot.messages.isEmpty {
-                        emptyState
+                        if let error = store.lastError {
+                            errorState(error)
+                        } else {
+                            emptyState
+                        }
                     }
                     ForEach(store.snapshot.messages) { message in
                         AIMessage(message: message)
@@ -105,6 +113,28 @@ public struct AIConversation: View {
         } else {
             perform()
         }
+    }
+
+    /// Backend/dispatch failure with nothing rendered — surface it instead
+    /// of a misleading empty conversation (the store keeps the error; hosts
+    /// decide on recovery).
+    private func errorState(_ error: AIUXStoreError) -> some View {
+        let colors = theme.colors(for: colorScheme)
+        return VStack(spacing: theme.space(.sm)) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(theme.typography.title)
+                .foregroundStyle(colors.destructive)
+            Text("Couldn't load the conversation")
+                .font(theme.typography.heading)
+            Text(error.localizedDescription)
+                .font(theme.typography.caption)
+                .foregroundStyle(colors.muted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(theme.space(.xl))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Conversation error: \(error.localizedDescription)")
     }
 
     private var emptyState: some View {

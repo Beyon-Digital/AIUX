@@ -19,17 +19,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate protocol JSON schemas + fixtures parse
-        run: |
-          set -e
-          shopt -s globstar nullglob
-          files=(protocol/**/*.json conformance/**/*.json)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No protocol JSON files yet — nothing to validate."
-            exit 0
-          fi
-          for f in "${files[@]}"; do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || { echo "Invalid JSON: $f"; exit 1; }; done
-          echo "Validated ${#files[@]} JSON files."
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile=false
+      - name: Validate protocol schemas, manifest + fixtures
+        # Compiles every schema (malformed definitions fail), cross-checks the
+        # v1 manifest against events/*.json, and schema-validates every
+        # conformance fixture event — not just JSON.parse.
+        run: node tools/validate-protocol.mjs
 
   rust:
     name: Rust fmt / clippy / test

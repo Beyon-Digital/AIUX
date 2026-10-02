@@ -104,15 +104,17 @@ public final class DemoController: ObservableObject {
             return
         }
 
-        let scenarioEvents = DemoScenario.preApprovalEvents(factory: &factory, turn: turn)
+        // Specs carry no sequence numbers — the factory stamps each event
+        // only as it is actually sent, so cancellation can't open a gap.
+        let scenario = DemoScenario.preApprovalEvents(turn: turn)
         runTask = Task { [weak self] in
             guard let self else { return }
             // The approval card appears before the gate is installed; mark
             // waiting now so an early tap queues instead of being ignored.
             self.waitingForApproval = true
-            for event in scenarioEvents {
+            for spec in scenario {
                 if Task.isCancelled { return }
-                await self.dispatchTrickle(event)
+                await self.dispatchTrickle(self.factory.event(spec))
             }
             // Hold for the approval decision.
             let approved: Bool
@@ -125,9 +127,9 @@ public final class DemoController: ObservableObject {
                 }
             }
             self.waitingForApproval = false
-            for event in DemoScenario.postApprovalEvents(factory: &self.factory, turn: turn, approved: approved) {
+            for spec in DemoScenario.postApprovalEvents(turn: turn, approved: approved) {
                 if Task.isCancelled { return }
-                await self.dispatchTrickle(event)
+                await self.dispatchTrickle(self.factory.event(spec))
             }
             self.runTask = nil
         }
@@ -140,12 +142,27 @@ public final class DemoController: ObservableObject {
         approvalGate = nil
         waitingForApproval = false
         queuedDecision = nil
-        let events = DemoScenario.cancelEvents(factory: &factory, turn: turn)
+        // Cancel only what the session actually holds — cancelling a run or
+        // message that was never created makes the core reject the event,
+        // which burns its stamped sequence and strands every later turn.
+        let runId = "r\(turn)"
+        let messageId = "m-agent-\(turn)"
+        let runActive = store.snapshot.runs.contains { $0.id == runId && $0.status == .running }
+        let messageStreaming = store.snapshot.messages.contains {
+            $0.id == messageId && $0.status == .streaming
+        }
+        let events = DemoScenario.cancelEvents(
+            turn: turn,
+            runActive: runActive,
+            messageStreaming: messageStreaming
+        ).map { self.factory.event($0) }
         runTask = nil
-        do {
-            _ = try store.ingest(eventsJson: "[" + events.joined(separator: ",") + "]")
-        } catch {
-            record("cancel events failed: \(error)")
+        if !events.isEmpty {
+            do {
+                _ = try store.ingest(eventsJson: "[" + events.joined(separator: ",") + "]")
+            } catch {
+                record("cancel events failed: \(error)")
+            }
         }
         record("run cancelled")
     }

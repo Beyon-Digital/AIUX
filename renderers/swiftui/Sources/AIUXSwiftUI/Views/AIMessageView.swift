@@ -240,11 +240,35 @@ struct AICodeBlock: View {
 struct AIImagePart: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxRemoteURLPolicy) private var remoteURLPolicy
 
     let attachment: AIUXAttachment
 
     var body: some View {
-        if let uri = attachment.uri, let url = URL(string: uri) {
+        if let uri = attachment.uri,
+           let url = URL(string: uri),
+           remoteURLPolicy(url) {
+            imageContent(for: url)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
+                .accessibilityLabel(attachment.name ?? attachment.uri ?? "Image")
+        } else {
+            AIAttachmentRow(attachment: attachment)
+        }
+    }
+
+    // Inline `data:image/…` decodes locally — a refused URI (oversized,
+    // malformed) degrades here instead of reaching the loader and bypassing
+    // the decode cap. Everything else AsyncImage fetches (approved-but-
+    // unfetchable schemes degrade via .failure).
+    @ViewBuilder
+    private func imageContent(for url: URL) -> some View {
+        if url.scheme?.lowercased() == "data" {
+            if let image = aiuxDecodeDataImage(url) {
+                image.resizable().scaledToFit()
+            } else {
+                AIAttachmentRow(attachment: attachment)
+            }
+        } else {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -256,10 +280,6 @@ struct AIImagePart: View {
                         .frame(maxWidth: .infinity, minHeight: 80)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
-            .accessibilityLabel(attachment.name ?? attachment.uri ?? "Image")
-        } else {
-            AIAttachmentRow(attachment: attachment)
         }
     }
 }

@@ -81,6 +81,22 @@ enum AIUXThemeJSON {
         return theme
     }
 
+    /// The payload's `colorScheme` ("light"/"dark") — decoded but applied
+    /// separately via `.preferredColorScheme`, since it forces the whole
+    /// hosted surface's appearance rather than one role color.
+    static func colorScheme(_ themeJson: String) -> ColorScheme? {
+        guard
+            let payload = try? JSONDecoder().decode(
+                Payload.self, from: Data(themeJson.utf8)
+            )
+        else { return nil }
+        switch payload.colorScheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
+
     // MARK: - Role merging
 
     private static func mergeColors(

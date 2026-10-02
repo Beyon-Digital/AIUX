@@ -61,6 +61,16 @@ public enum AIUXStoreError: Error, Equatable {
     case corruptReport(String)
 }
 
+extension AIUXStoreError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .backend(let detail): return "Backend error — \(detail)"
+        case .corruptSnapshot(let detail): return "Corrupt snapshot — \(detail)"
+        case .corruptReport(let detail): return "Corrupt dispatch report — \(detail)"
+        }
+    }
+}
+
 /// The snapshot-observing session object every AIUX view binds to.
 @MainActor
 public final class AIUXSessionStore: ObservableObject {

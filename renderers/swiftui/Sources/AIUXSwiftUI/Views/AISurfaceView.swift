@@ -231,6 +231,10 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            // Wire value is authoritative: when a surface update changes it,
+            // remount so the field's @State reseeds instead of showing stale
+            // text (the update may be server-side, not user-typed).
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .textarea(let name, let label, let placeholder, let value, let rows, let required, let disabled, let errorText, let layout):
@@ -244,6 +248,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .select(let name, let label, let options, let value, let placeholder, let required, let disabled, let errorText, let layout):
@@ -257,6 +262,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .checkbox(let name, let label, let checked, let required, let disabled, let errorText, let layout):
@@ -264,6 +270,7 @@ struct AIUXNodeView: View {
                 name: name, label: label, checked: checked,
                 required: required, disabled: disabled, errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(checked)")
             .padding(theme.padding(layout.padding))
 
         case .radio(let name, let label, let options, let value, let required, let disabled, let errorText, let layout):
@@ -276,6 +283,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .field(let children, let label, let helperText, let required, let disabled, let errorText, let layout):
@@ -641,12 +649,34 @@ struct AIBadge: View {
 /// Surface `image` node.
 struct AIUXSurfaceImage: View {
     @Environment(\.aiuxTheme) private var theme
+    @Environment(\.aiuxRemoteURLPolicy) private var remoteURLPolicy
 
     let src: String
     let alt: String?
 
     var body: some View {
-        if let url = URL(string: src) {
+        if let url = URL(string: src), remoteURLPolicy(url) {
+            imageContent(for: url)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.sm)))
+                .accessibilityLabel(alt ?? "Image")
+        } else {
+            AIUXUnsupported(kind: "image", detail: src)
+        }
+    }
+
+    // Inline `data:image/…` decodes locally — a refused URI (oversized,
+    // malformed) degrades here instead of reaching the loader and bypassing
+    // the decode cap. Everything else AsyncImage fetches (approved-but-
+    // unfetchable schemes degrade via .failure).
+    @ViewBuilder
+    private func imageContent(for url: URL) -> some View {
+        if url.scheme?.lowercased() == "data" {
+            if let image = aiuxDecodeDataImage(url) {
+                image.resizable().scaledToFit()
+            } else {
+                AIUXUnsupported(kind: "image", detail: src)
+            }
+        } else {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -658,10 +688,6 @@ struct AIUXSurfaceImage: View {
                         .frame(maxWidth: .infinity, minHeight: 60)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.sm)))
-            .accessibilityLabel(alt ?? "Image")
-        } else {
-            AIUXUnsupported(kind: "image", detail: src)
         }
     }
 }
@@ -687,6 +713,9 @@ struct AIUXInputField: View {
     var errorText: String? = nil
 
     @State private var value: String = ""
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user edit emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
@@ -700,7 +729,9 @@ struct AIUXInputField: View {
             AIUXFieldError(errorText)
         }
         .onAppear {
-            value = initialValue ?? ""
+            let seed = initialValue ?? ""
+            if value != seed { suppressNextChange = true }
+            value = seed
             publish()
         }
     }
@@ -719,8 +750,25 @@ struct AIUXInputField: View {
         .font(theme.typography.body)
         .disabled(disabled)
         .onSubmit { commit() }
-        .onChange(of: value) { _ in commit() }
+        // The wire-value .id remounts this view and the onAppear reseed fires
+        // this onChange — suppress exactly that assignment, then emit on every
+        // real user edit (including edits back to the wire value).
+        .onChange(of: value) { _ in
+            publish()
+            if suppressNextChange {
+                suppressNextChange = false
+            } else {
+                emitChange()
+            }
+        }
         .accessibilityLabel(label ?? name)
+    }
+
+    private func emitChange() {
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(value),
+        ]))
     }
 
     private func commit() {
@@ -794,6 +842,9 @@ struct AIUXTextareaField: View {
     var errorText: String? = nil
 
     @State private var value: String = ""
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user edit emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
@@ -809,14 +860,33 @@ struct AIUXTextareaField: View {
                 .font(theme.typography.body)
                 .disabled(disabled)
                 .onSubmit { commit() }
-                .onChange(of: value) { _ in commit() }
+                // The wire-value .id remounts this view and the onAppear
+                // reseed fires this onChange — suppress exactly that
+                // assignment, then emit on every real user edit.
+                .onChange(of: value) { _ in
+                    publish()
+                    if suppressNextChange {
+                        suppressNextChange = false
+                    } else {
+                        emitChange()
+                    }
+                }
                 .accessibilityLabel(label ?? name)
             AIUXFieldError(errorText)
         }
         .onAppear {
-            value = initialValue ?? ""
+            let seed = initialValue ?? ""
+            if value != seed { suppressNextChange = true }
+            value = seed
             publish()
         }
+    }
+
+    private func emitChange() {
+        emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+            "name": .string(name),
+            "value": .string(value),
+        ]))
     }
 
     private func commit() {
@@ -922,6 +992,9 @@ struct AIUXCheckboxField: View {
     var errorText: String? = nil
 
     @State private var isOn: Bool = false
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user toggle emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
@@ -931,15 +1004,20 @@ struct AIUXCheckboxField: View {
             }
             .disabled(disabled)
             .onAppear {
+                if isOn != checked { suppressNextChange = true }
                 isOn = checked
                 publish()
             }
             .onChange(of: isOn) { newValue in
                 publish(newValue)
-                emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
-                    "name": .string(name),
-                    "value": .bool(newValue),
-                ]))
+                if suppressNextChange {
+                    suppressNextChange = false
+                } else {
+                    emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
+                        "name": .string(name),
+                        "value": .bool(newValue),
+                    ]))
+                }
             }
             .accessibilityLabel(label)
             AIUXFieldError(errorText)
