@@ -2,8 +2,38 @@ import type { AIUXAction, AIUXTransport } from "@beyondigital/aiux-expo";
 import { createAIUXTransport } from "@beyondigital/aiux-expo";
 
 import { MockAgent, type AiuxEventObject } from "./mockAgent";
+import {
+  streamChatCompletion,
+  type ChatMessage,
+  type StreamHandle,
+  type ToolCall,
+} from "./openrouter";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+const LIVE_SYSTEM_PROMPT =
+  "You are the demo agent inside the AIUX protocol examples. Answer " +
+  "concisely in markdown. When the user asks to publish, send, or charge " +
+  "an invoice, call the publish_invoice tool — never claim to have " +
+  "published without calling it.";
+
+const PUBLISH_INVOICE_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "publish_invoice",
+    description:
+      "Publish an invoice to the customer — charges the amount and marks " +
+      "it sent. Requires user approval before it executes.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "e.g. inv-9" },
+      },
+      required: ["invoiceId"],
+      additionalProperties: false,
+    },
+  },
+};
 
 /**
  * Host-side driver for the mocked agent interaction (Phase 4 gate) — a port
@@ -14,17 +44,39 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * coalesces into `dispatchBatch` calls (16–50 ms flush), so streaming deltas
  * never cross the boundary per token.
  */
+type ActiveRun = {
+  runId: string;
+  cancelRequested: boolean;
+  // toolTurnPending: a live run whose stream ended in a tool_call — the
+  // tool turn owns run completion (the first stream's onDone must not
+  // complete it). messageId lets cancel close the streaming message.
+  toolTurnPending?: boolean;
+  messageId?: string;
+};
+
 export class DemoController {
+  private static instances = 0;
+  private readonly dcId = ++DemoController.instances;
   readonly sessionId: string;
   private readonly transport: AIUXTransport;
   private readonly agent: MockAgent;
   private pendingApproval: ((approved: boolean) => void) | null = null;
-  private activeRun: { runId: string; cancelRequested: boolean } | null = null;
+  private activeRun: ActiveRun | null = null;
   private messageN = 0;
   private closed = false;
+  // Live mode: real OpenRouter inference. `liveHistory` is the chat
+  // transcript the model sees (system + prior turns); `liveHandle` is the
+  // in-flight stream so cancel can abort it.
+  private live = false;
+  private liveKey: string | undefined;
+  private liveModel = "openrouter/free";
+  private liveHistory: ChatMessage[] = [];
+  private liveHandle: StreamHandle | undefined;
+  private lastPrompt = "";
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
+    console.log(`[dc${this.dcId}] ctor`);
     this.agent = new MockAgent(sessionId);
     this.transport = createAIUXTransport(sessionId, {
       policy: {
@@ -32,6 +84,14 @@ export class DemoController {
       },
     });
     this.transport.push(this.agent.sessionCreated("AIUX Expo demo"));
+  }
+
+  /** Toggle real-LLM mode; `key`/`model` apply on the next prompt. */
+  setLive(enabled: boolean, key?: string, model?: string): void {
+    console.log(`[dc${this.dcId}] setLive(${enabled}) key=${key ? "set" : "unset"}`);
+    this.live = enabled;
+    if (key !== undefined) this.liveKey = key;
+    if (model) this.liveModel = model;
   }
 
   /** Router for semantic actions emitted by the native surface. */
@@ -46,7 +106,13 @@ export class DemoController {
         const run = this.activeRun;
         if (run) {
           run.cancelRequested = true;
+          this.liveHandle?.abort();
+          this.liveHandle = undefined;
           this.transport.push(this.agent.runCancelled(run.runId));
+          if (run.messageId) {
+            this.transport.push(this.agent.messageComplete(run.messageId));
+          }
+          this.activeRun = null;
         }
         break;
       }
@@ -63,7 +129,13 @@ export class DemoController {
       }
       case "aiux.error.retry": {
         const run = this.activeRun;
-        if (run) void this.track(this.retryRun(run.runId));
+        if (run) {
+          void this.track(
+            this.live && this.liveKey
+              ? this.liveRetry(run.runId)
+              : this.retryRun(run.runId),
+          );
+        }
         break;
       }
       default:
@@ -85,8 +157,230 @@ export class DemoController {
     });
   }
 
-  /** user prompt → stream → tool → approval → resolve → surface result. */
+  /** Routes to the live model or the scripted scenario. */
   async sendPrompt(text: string): Promise<void> {
+    console.log(
+      `[dc${this.dcId}] sendPrompt live=${this.live} key=${this.liveKey ? "set" : "unset"} nextN=${this.messageN + 1} text=${JSON.stringify(text.slice(0, 40))}`,
+    );
+    if (this.live && this.liveKey) {
+      this.lastPrompt = text;
+      return this.livePrompt(text);
+    }
+    return this.scriptedPrompt(text);
+  }
+
+  /**
+   * Real OpenRouter inference: prompt → streamed markdown answer → optional
+   * real tool_call → approval → executed + follow-up summary → done.
+   * Errors surface as the protocol's retryable error part + failed run.
+   */
+  private async livePrompt(text: string): Promise<void> {
+    const n = ++this.messageN;
+    const messageId = `m${n}`;
+    const runId = `r${n}`;
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
+    this.activeRun = run;
+
+    this.send(...this.agent.userMessage(`u${n}`, text));
+    this.send(this.agent.runStarted(runId));
+    this.send(this.agent.assistantMessage(messageId));
+    this.send(this.agent.textPart(messageId, "p1"));
+
+    if (this.liveHistory.length === 0) {
+      this.liveHistory.push({ role: "system", content: LIVE_SYSTEM_PROMPT });
+    }
+    this.liveHistory.push({ role: "user", content: text });
+    let answer = "";
+    this.liveHandle = streamChatCompletion(
+      this.liveKey!,
+      this.liveModel,
+      this.liveHistory.slice(-20),
+      [PUBLISH_INVOICE_TOOL],
+      {
+        onDelta: (delta) => {
+          if (run.cancelRequested || this.closed) return;
+          answer += delta;
+          this.send(this.agent.textDelta(messageId, "p1", delta));
+        },
+        onToolCalls: (calls) => {
+          if (run.cancelRequested || this.closed) return;
+          // The stream is done; the tool turn completes the run — clear
+          // the handle and mark it so this stream's onDone stays out.
+          this.liveHandle = undefined;
+          run.toolTurnPending = true;
+          void this.track(this.liveToolTurn(run, messageId, calls));
+        },
+        onDone: () => {
+          if (run.cancelRequested || run.toolTurnPending || this.closed) return;
+          if (this.liveHandle === undefined) return;
+          this.liveHandle = undefined;
+          this.liveHistory.push({ role: "assistant", content: answer });
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runCompleted(runId));
+          if (this.activeRun === run) this.activeRun = null;
+        },
+        onError: (code, message) => {
+          if (run.cancelRequested || this.closed) return;
+          this.liveHandle = undefined;
+          this.send(this.agent.errorPart(messageId, "p2", code, message, true));
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runFailed(runId, code, message));
+          this.activeRun = run;
+        },
+      },
+    );
+  }
+
+  /**
+   * The model called `publish_invoice`: real tool card → approval gate →
+   * executed/denied → result fed back to the model for the final answer.
+   */
+  private async liveToolTurn(
+    run: ActiveRun,
+    messageId: string,
+    calls: ToolCall[],
+  ): Promise<void> {
+    const toolId = `t${this.messageN}`;
+    const approvalId = `a${this.messageN}`;
+    const call = calls[0]!;
+    let args: Record<string, unknown> = {};
+    try {
+      const parsed: unknown = JSON.parse(call.function.arguments || "{}");
+      if (typeof parsed === "object" && parsed !== null) {
+        args = parsed as Record<string, unknown>;
+      }
+    } catch {
+      /* malformed args — surface empty input */
+    }
+    this.send(this.agent.toolStarted(toolId, call.function.name || "tool", args));
+    this.send(this.agent.toolPart(messageId, "p2", toolId));
+
+    const invoiceId = typeof args["invoiceId"] === "string" ? args["invoiceId"] : "inv-9";
+    this.send(
+      this.agent.approvalRequested(
+        approvalId,
+        `Run ${call.function.name}?`,
+        `Model requested publish of ${invoiceId}.`,
+      ),
+    );
+    this.send(this.agent.approvalPart(messageId, "p3", approvalId));
+
+    const approved = await new Promise<boolean>((resolve) => {
+      this.pendingApproval = resolve;
+    });
+    this.pendingApproval = null;
+    if (this.closed || run.cancelRequested) return;
+    this.send(
+      this.agent.approvalResolved(approvalId, approved ? "approved" : "rejected", "user"),
+    );
+
+    if (approved) {
+      this.send(this.agent.approvalResolved(approvalId, "executed", "host"));
+      this.send(this.agent.toolCompleted(toolId, { invoiceId, status: "sent" }));
+      this.liveHistory.push(
+        { role: "assistant", content: null, tool_calls: [call] },
+        {
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify({ invoiceId, status: "sent" }),
+        },
+      );
+      let tail = "";
+      this.liveHandle = streamChatCompletion(
+        this.liveKey!,
+        this.liveModel,
+        this.liveHistory.slice(-20),
+        undefined,
+        {
+          onDelta: (delta) => {
+            if (run.cancelRequested || this.closed) return;
+            tail += delta;
+            this.send(this.agent.textDelta(messageId, "p1", delta));
+          },
+          onToolCalls: () => {},
+          onDone: () => {
+            if (run.cancelRequested || this.closed) return;
+            this.liveHandle = undefined;
+            this.liveHistory.push({ role: "assistant", content: tail });
+            this.send(this.agent.messageComplete(messageId));
+            this.send(this.agent.runCompleted(run.runId));
+            if (this.activeRun === run) this.activeRun = null;
+          },
+          onError: (code, message) => {
+            if (run.cancelRequested || this.closed) return;
+            this.liveHandle = undefined;
+            this.send(this.agent.errorPart(messageId, "p4", code, message, true));
+            this.send(this.agent.messageComplete(messageId));
+            this.send(this.agent.runFailed(run.runId, code, message));
+            this.activeRun = run;
+          },
+        },
+      );
+    } else {
+      this.send(this.agent.toolFailed(toolId, "DENIED", "user rejected the action"));
+      this.send(
+        this.agent.textPart(messageId, "p4", "Cancelled — invoice was not published."),
+      );
+      this.send(this.agent.messageComplete(messageId));
+      this.send(this.agent.runCompleted(run.runId));
+      if (this.activeRun === run) this.activeRun = null;
+    }
+  }
+
+  /** Live retry: new run re-asking the last prompt against the same history. */
+  private async liveRetry(previousRunId: string): Promise<void> {
+    const n = ++this.messageN;
+    const runId = `r${n}`;
+    const text = this.lastPrompt;
+    this.send(this.agent.runStarted(runId, previousRunId));
+    // Splice the new run's ids into livePrompt bookkeeping, then run it —
+    // the user message was already pushed; just re-stream the answer.
+    const messageId = `m${n}`;
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
+    this.activeRun = run;
+    this.send(this.agent.assistantMessage(messageId));
+    this.send(this.agent.textPart(messageId, "p1"));
+    let answer = "";
+    this.liveHandle = streamChatCompletion(
+      this.liveKey!,
+      this.liveModel,
+      this.liveHistory.slice(-20),
+      [PUBLISH_INVOICE_TOOL],
+      {
+        onDelta: (delta) => {
+          if (run.cancelRequested || this.closed) return;
+          answer += delta;
+          this.send(this.agent.textDelta(messageId, "p1", delta));
+        },
+        onToolCalls: (calls) => {
+          if (run.cancelRequested || this.closed) return;
+          this.liveHandle = undefined;
+          run.toolTurnPending = true;
+          void this.track(this.liveToolTurn(run, messageId, calls));
+        },
+        onDone: () => {
+          if (run.cancelRequested || run.toolTurnPending || this.closed) return;
+          if (this.liveHandle === undefined) return;
+          this.liveHandle = undefined;
+          this.liveHistory.push({ role: "assistant", content: answer });
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runCompleted(runId));
+          if (this.activeRun === run) this.activeRun = null;
+        },
+        onError: (code, message) => {
+          if (run.cancelRequested || this.closed) return;
+          this.liveHandle = undefined;
+          this.send(this.agent.errorPart(messageId, "p2", code, message, true));
+          this.send(this.agent.messageComplete(messageId));
+          this.send(this.agent.runFailed(runId, code, message));
+          this.activeRun = run;
+        },
+      },
+    );
+  }
+
+  /** user prompt → stream → tool → approval → resolve → surface result. */
+  async scriptedPrompt(text: string): Promise<void> {
     const n = ++this.messageN;
     const messageId = `m${n}`;
     const runId = `r${n}`;

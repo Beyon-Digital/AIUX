@@ -26,6 +26,16 @@ export default function App() {
   );
   const [error, setError] = useState<AIUXErrorInfo | null>(null);
   const controller = useRef<DemoController | null>(null);
+  // Live mode streams real OpenRouter completions; the key is inline-bundled
+  // by expo at build time (EXPO_PUBLIC_*), never committed.
+  const liveKey = process.env.EXPO_PUBLIC_OPEN_ROUTER;
+  const liveModel = process.env.EXPO_PUBLIC_OPENROUTER_MODEL ?? "openrouter/free";
+  const [live, setLive] = useState(false);
+
+  const toggleLive = (value: boolean) => {
+    setLive(value);
+    controller.current?.setLive(value, liveKey, liveModel);
+  };
 
   const theme = useMemo(
     () => ({
@@ -64,6 +74,18 @@ export default function App() {
     >
       <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
       <View style={[styles.header, dark && styles.headerDark]}>
+        {liveKey ? (
+          <View style={styles.toggle}>
+            <Text style={[styles.toggleLabel, dark && styles.titleDark]}>
+              Live
+            </Text>
+            <Switch
+              value={live}
+              onValueChange={toggleLive}
+              accessibilityLabel="toggle live mode"
+            />
+          </View>
+        ) : null}
         <View style={styles.toggle}>
           <Text style={[styles.toggleLabel, dark && styles.titleDark]}>
             Dark
