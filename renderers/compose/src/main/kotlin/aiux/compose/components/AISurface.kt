@@ -399,13 +399,14 @@ fun SurfaceNodeView(
 
         is AISurfaceNode.Menu -> {
             var expanded by remember { mutableStateOf(false) }
+            // Clear the remembered state too — hiding without clearing would
+            // reopen the popup when the form re-enables, without a tap.
+            LaunchedEffect(formDisabled) { if (formDisabled) expanded = false }
             Box(m) {
                 OutlinedButton(onClick = { expanded = true }, enabled = !formDisabled) {
                     Text(node.label)
                     Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
-                // Collapse rather than leave actionable items if the form
-                // disables while the menu is open.
                 DropdownMenu(expanded = expanded && !formDisabled, onDismissRequest = { expanded = false }) {
                     node.items.forEach { item ->
                         DropdownMenuItem(
@@ -517,6 +518,7 @@ fun SurfaceNodeView(
             var selected by remember(node.value) { mutableStateOf(node.value) }
             val formScope = LocalAIUXFormScope.current
             LaunchedEffect(node.name) { formScope?.set(node.name, JsonPrimitive(selected ?: "")) }
+            LaunchedEffect(formDisabled) { if (formDisabled) expanded = false }
             val current = node.options.firstOrNull { it.value == selected }
             Column(modifier = m) {
                 node.label?.let {
