@@ -117,7 +117,7 @@ enum AIUXThemeJSON {
         for role in [
             "background", "surface", "surfaceElevated", "userSurface",
             "assistantSurface", "accent", "accentForeground", "muted",
-            "border", "destructive", "success", "warning",
+            "border", "destructive", "success", "warning", "inputSurface",
         ] {
             let (light, dark) = roleColor(role)
             guard light != nil || dark != nil else { continue }
@@ -138,6 +138,7 @@ enum AIUXThemeJSON {
             case "destructive": roles.destructive = color
             case "success": roles.success = color
             case "warning": roles.warning = color
+            case "inputSurface": roles.inputSurface = color
             default: break
             }
         }

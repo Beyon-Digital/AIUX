@@ -171,11 +171,21 @@ export function streamChatCompletion(
         return;
       }
       if (aborted) return;
+      if (!sawDone) {
+        // A 2xx close without the terminal `data: [DONE]` frame means the
+        // connection ended mid-answer — surface it as retryable instead of
+        // completing a truncated run.
+        fail(
+          "STREAM_TRUNCATED",
+          "stream closed before [DONE] — answer may be incomplete, retry",
+        );
+        return;
+      }
       settled = true;
       if (toolAcc.size > 0) {
         cb.onToolCalls([...toolAcc.keys()].sort().map((i) => toolAcc.get(i)!));
       }
-      cb.onDone(sawDone ? finishReason : finishReason ?? "closed");
+      cb.onDone(finishReason ?? "stop");
     }
   };
   xhr.onerror = () => fail("NETWORK", "request failed (offline or blocked)");

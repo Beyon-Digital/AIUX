@@ -31,6 +31,10 @@ export default function App() {
   const liveKey = process.env.EXPO_PUBLIC_OPEN_ROUTER;
   const liveModel = process.env.EXPO_PUBLIC_OPENROUTER_MODEL ?? "openrouter/free";
   const [live, setLive] = useState(false);
+  // Mirror the selection in a ref — a toggle before `create` resolves has
+  // no controller yet; creation applies the latest selection after.
+  const liveRef = useRef(live);
+  liveRef.current = live;
 
   const toggleLive = (value: boolean) => {
     setLive(value);
@@ -51,6 +55,7 @@ export default function App() {
       .then(async () => {
         if (cancelled) return;
         controller.current = await DemoController.create(SESSION_ID);
+        controller.current.setLive(liveRef.current, liveKey, liveModel);
         setReady(true);
       })
       .catch((cause: unknown) => {

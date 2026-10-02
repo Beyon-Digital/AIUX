@@ -25,7 +25,10 @@ export type AIUXColorRole =
   | "destructiveForeground"
   | "success"
   | "warning"
-  | "foreground";
+  | "foreground"
+  | "inputSurface"
+  | "codeSurface"
+  | "codeForeground";
 
 /**
  * A CSS-style color string the native side parses: `#rgb`, `#rrggbb`,
