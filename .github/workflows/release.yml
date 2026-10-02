@@ -112,8 +112,14 @@ jobs:
           cargo install cargo-ndk --version "^4" --locked
           # sdkmanager isn't on PATH on current ubuntu-latest — call it via
           # ANDROID_HOME like ci.yml does, and pin CI's NDK version.
+          # pipefail is off around `yes |` so yes's expected SIGPIPE (141)
+          # doesn't mask sdkmanager's real exit status.
+          set +o pipefail
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
             --install "cmake;3.22.1" "ndk;27.1.12297006"
+          sdk_rc=$?
+          set -o pipefail
+          [ "$sdk_rc" -eq 0 ]
       - name: Generate UniFFI Kotlin bindings + NDK slices
         run: bash bindings/kotlin/generate.sh
       - name: Build AARs
