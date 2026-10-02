@@ -54,6 +54,9 @@ public struct AIUXColorRoles {
     public var warning: AIUXColor
     /// Composer/input surface — darker than elevated cards in dark mode.
     public var inputSurface: AIUXColor
+    /// Code block chrome — dark in both appearances like ChatGPT.
+    public var codeSurface: AIUXColor
+    public var codeForeground: AIUXColor
 
     /// Secondary text/icon tone derived from `muted` by default.
     public func foreground(in scheme: ColorScheme) -> Color {
@@ -192,6 +195,8 @@ public struct AIUXResolvedColors {
     public var success: Color
     public var warning: Color
     public var inputSurface: Color
+    public var codeSurface: Color
+    public var codeForeground: Color
 
     init(roles: AIUXColorRoles, scheme: ColorScheme) {
         background = roles.background.resolve(in: scheme)
@@ -207,6 +212,8 @@ public struct AIUXResolvedColors {
         success = roles.success.resolve(in: scheme)
         warning = roles.warning.resolve(in: scheme)
         inputSurface = roles.inputSurface.resolve(in: scheme)
+        codeSurface = roles.codeSurface.resolve(in: scheme)
+        codeForeground = roles.codeForeground.resolve(in: scheme)
     }
 }
 
@@ -265,6 +272,14 @@ extension AIUXTheme {
             inputSurface: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
                 dark: (0.122, 0.122, 0.122, 1.0)
+            ),
+            codeSurface: AIUXColor(
+                light: (0.09, 0.09, 0.09, 1.0),
+                dark: (0.09, 0.09, 0.09, 1.0)
+            ),
+            codeForeground: AIUXColor(
+                light: (0.925, 0.925, 0.925, 1.0),
+                dark: (0.925, 0.925, 0.925, 1.0)
             )
         ),
         typography: AIUXTypography(

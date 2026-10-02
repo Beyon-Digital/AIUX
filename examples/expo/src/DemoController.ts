@@ -59,6 +59,14 @@ type ActiveRun = {
   // holds its resolver so cancel/supersede can emit a terminal
   // `approval.resolved` instead of leaving the card `requested`.
   approvalId?: string;
+  // A tool that emitted `tool.started` but no terminal event — cancel/
+  // supersede must fail it or it renders `running` forever.
+  pendingToolId?: string;
+  // The run already reached a terminal state (completed/failed) — kept in
+  // `activeRun` only for `error.retry`. Cancel/supersede must not re-emit
+  // terminal events for it: `run.cancelled` on a non-running run and a
+  // replayed `message.complete` are InvalidEvent rejections.
+  settled?: boolean;
 };
 
 export class DemoController {
@@ -151,11 +159,20 @@ export class DemoController {
       }
       case "aiux.composer.cancel": {
         const run = this.activeRun;
-        if (run) {
+        // A settled run is kept only for `error.retry` — its terminal
+        // events already landed; re-emitting `run.cancelled` or
+        // `message.complete` would be an InvalidEvent replay.
+        if (run && !run.settled) {
           run.cancelRequested = true;
           this.liveHandle?.abort();
           this.liveHandle = undefined;
           this.transport.push(this.agent.runCancelled(run.runId));
+          if (run.pendingToolId) {
+            // Fail the open tool — otherwise its row spins forever.
+            this.transport.push(
+              this.agent.toolFailed(run.pendingToolId, "CANCELLED", "run cancelled"),
+            );
+          }
           if (run.approvalId) {
             // Terminate the parked approval — otherwise its card keeps
             // showing live buttons nobody handles.
@@ -298,6 +315,7 @@ export class DemoController {
           this.liveHistory.push({ role: "assistant", content: answer });
           this.send(this.agent.messageComplete(messageId));
           this.send(this.agent.runCompleted(runId));
+          run.settled = true;
           if (this.activeRun === run) this.activeRun = null;
         },
         onError: (code, message) => {
@@ -306,6 +324,7 @@ export class DemoController {
           this.send(this.agent.errorPart(messageId, "p2", code, message, true));
           this.send(this.agent.messageComplete(messageId));
           this.send(this.agent.runFailed(runId, code, message));
+          run.settled = true;
           this.activeRun = run;
         },
       },
@@ -324,15 +343,24 @@ export class DemoController {
     this.liveHandle = undefined;
     if (!previous) return;
     previous.cancelRequested = true;
-    if (previous.approvalId) {
-      this.send(
-        this.agent.approvalResolved(previous.approvalId, "rejected", "user"),
-      );
+    // Settled runs (failed, kept for retry) take no terminal events —
+    // `run.cancelled` on a non-running run is rejected.
+    if (!previous.settled) {
+      if (previous.pendingToolId) {
+        this.send(
+          this.agent.toolFailed(previous.pendingToolId, "CANCELLED", "run superseded"),
+        );
+      }
+      if (previous.approvalId) {
+        this.send(
+          this.agent.approvalResolved(previous.approvalId, "rejected", "user"),
+        );
+      }
+      if (previous.messageId) {
+        this.send(this.agent.messageComplete(previous.messageId));
+      }
+      this.send(this.agent.runCancelled(previous.runId));
     }
-    if (previous.messageId) {
-      this.send(this.agent.messageComplete(previous.messageId));
-    }
-    this.send(this.agent.runCancelled(previous.runId));
     this.activeRun = null;
     this.pendingApproval?.(false);
     this.pendingApproval = null;
@@ -361,6 +389,7 @@ export class DemoController {
     }
     this.send(this.agent.toolStarted(toolId, call.function.name || "tool", args));
     this.send(this.agent.toolPart(messageId, "p2", toolId));
+    run.pendingToolId = toolId;
 
     // Only `publish_invoice` is wired — a different tool name or malformed
     // args must not be presented as an executed publish.
@@ -377,6 +406,7 @@ export class DemoController {
           `unsupported call ${call.function.name || "tool"}(${JSON.stringify(args)})`,
         ),
       );
+      run.pendingToolId = undefined;
       this.send(
         this.agent.errorPart(
           messageId,
@@ -390,6 +420,7 @@ export class DemoController {
       this.send(
         this.agent.runFailed(run.runId, "UNSUPPORTED_TOOL", "unsupported tool call"),
       );
+      run.settled = true;
       this.activeRun = run;
       return;
     }
@@ -416,6 +447,7 @@ export class DemoController {
     if (approved) {
       this.send(this.agent.approvalResolved(approvalId, "executed", "host"));
       this.send(this.agent.toolCompleted(toolId, { invoiceId, status: "sent" }));
+      run.pendingToolId = undefined;
       this.liveHistory.push(
         { role: "assistant", content: null, tool_calls: [call] },
         {
@@ -444,6 +476,7 @@ export class DemoController {
             this.liveHistory.push({ role: "assistant", content: tail });
             this.send(this.agent.messageComplete(messageId));
             this.send(this.agent.runCompleted(run.runId));
+            run.settled = true;
             if (this.activeRun === run) this.activeRun = null;
           },
           onError: (code, message) => {
@@ -452,6 +485,7 @@ export class DemoController {
             this.send(this.agent.errorPart(messageId, "p4", code, message, true));
             this.send(this.agent.messageComplete(messageId));
             this.send(this.agent.runFailed(run.runId, code, message));
+            run.settled = true;
             this.activeRun = run;
           },
         },
@@ -459,11 +493,13 @@ export class DemoController {
       this.liveHandle = handle;
     } else {
       this.send(this.agent.toolFailed(toolId, "DENIED", "user rejected the action"));
+      run.pendingToolId = undefined;
       this.send(
         this.agent.textPart(messageId, "p4", "Cancelled — invoice was not published."),
       );
       this.send(this.agent.messageComplete(messageId));
       this.send(this.agent.runCompleted(run.runId));
+      run.settled = true;
       if (this.activeRun === run) this.activeRun = null;
     }
   }
@@ -507,6 +543,7 @@ export class DemoController {
           this.liveHistory.push({ role: "assistant", content: answer });
           this.send(this.agent.messageComplete(messageId));
           this.send(this.agent.runCompleted(runId));
+          run.settled = true;
           if (this.activeRun === run) this.activeRun = null;
         },
         onError: (code, message) => {
@@ -515,6 +552,7 @@ export class DemoController {
           this.send(this.agent.errorPart(messageId, "p2", code, message, true));
           this.send(this.agent.messageComplete(messageId));
           this.send(this.agent.runFailed(runId, code, message));
+          run.settled = true;
           this.activeRun = run;
         },
       },
@@ -554,6 +592,7 @@ export class DemoController {
     );
 
     this.send(this.agent.toolStarted(toolId, "search", { q: "invoice inv-9" }));
+    run.pendingToolId = toolId;
     await sleep(400);
     if (run.cancelRequested || this.closed) return;
     this.send(this.agent.toolProgress(toolId, 1, 3, "querying"));
@@ -566,13 +605,16 @@ export class DemoController {
       // Error+retry branch: tool + run fail retryable; `aiux.error.retry`
       // replays the run via retryRun().
       this.send(this.agent.toolFailed(toolId, "TIMEOUT", "search backend timed out after 30s"));
+      run.pendingToolId = undefined;
       this.send(this.agent.errorPart(messageId, "p3", "UPSTREAM_503", "backend unavailable", true));
       this.send(this.agent.messageComplete(messageId));
       this.send(this.agent.runFailed(runId, "UPSTREAM_503", "backend unavailable"));
+      run.settled = true;
       return;
     }
 
     this.send(this.agent.toolCompleted(toolId, { hits: 2, top: "inv-9" }));
+    run.pendingToolId = undefined;
     this.send(this.agent.toolPart(messageId, "p3", toolId));
 
     this.send(
@@ -608,6 +650,7 @@ export class DemoController {
     }
     this.send(this.agent.messageComplete(messageId));
     this.send(this.agent.runCompleted(runId));
+    run.settled = true;
     if (this.activeRun === run) this.activeRun = null;
   }
 
@@ -616,7 +659,7 @@ export class DemoController {
     const n = ++this.messageN;
     const messageId = this.id("m", n);
     const runId = this.id("r", n);
-    const run = { runId, cancelRequested: false };
+    const run: ActiveRun = { runId, cancelRequested: false, messageId };
     this.activeRun = run;
 
     this.send(this.agent.runStarted(runId, previousRunId));
@@ -626,6 +669,7 @@ export class DemoController {
     if (this.closed) return;
     this.send(this.agent.messageComplete(messageId));
     this.send(this.agent.runCompleted(runId));
+    run.settled = true;
     if (this.activeRun === run) this.activeRun = null;
   }
 

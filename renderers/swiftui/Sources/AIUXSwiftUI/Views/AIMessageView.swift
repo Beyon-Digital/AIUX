@@ -191,9 +191,9 @@ public struct AIPartView: View {
 // MARK: - Leaf part views
 
 /// Code block with language badge, monospace body, copy affordance.
-/// ChatGPT-style code blocks are dark in both appearances.
-private let aiuxCodeSurface = Color(.sRGB, red: 0.09, green: 0.09, blue: 0.09, opacity: 1)
-private let aiuxCodeForeground = Color(.sRGB, red: 0.925, green: 0.925, blue: 0.925, opacity: 1)
+/// ChatGPT-style code blocks are dark in both appearances; the colors
+/// come from the `codeSurface`/`codeForeground` theme roles so hosts can
+/// override them.
 
 struct AICodeBlock: View {
     @Environment(\.aiuxTheme) private var theme
@@ -221,17 +221,17 @@ struct AICodeBlock: View {
             }
             .padding(.horizontal, theme.space(.md))
             .padding(.vertical, theme.space(.xs))
-            .background(aiuxCodeSurface)
+            .background(colors.codeSurface)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(code)
                     .font(theme.typography.code)
-                    .foregroundStyle(aiuxCodeForeground)
+                    .foregroundStyle(colors.codeForeground)
                     .textSelection(.enabled)
                     .padding(theme.space(.md))
             }
         }
-        .background(aiuxCodeSurface)
+        .background(colors.codeSurface)
         .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.md)))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Code block\(language.map { ", \($0)" } ?? "")")
