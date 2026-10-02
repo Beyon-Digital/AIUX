@@ -231,6 +231,10 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            // Wire value is authoritative: when a surface update changes it,
+            // remount so the field's @State reseeds instead of showing stale
+            // text (the update may be server-side, not user-typed).
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .textarea(let name, let label, let placeholder, let value, let rows, let required, let disabled, let errorText, let layout):
@@ -244,6 +248,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .select(let name, let label, let options, let value, let placeholder, let required, let disabled, let errorText, let layout):
@@ -257,6 +262,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .checkbox(let name, let label, let checked, let required, let disabled, let errorText, let layout):
@@ -264,6 +270,7 @@ struct AIUXNodeView: View {
                 name: name, label: label, checked: checked,
                 required: required, disabled: disabled, errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(checked)")
             .padding(theme.padding(layout.padding))
 
         case .radio(let name, let label, let options, let value, let required, let disabled, let errorText, let layout):
@@ -276,6 +283,7 @@ struct AIUXNodeView: View {
                 disabled: disabled,
                 errorText: errorText
             )
+            .id("field\u{1F}\(name)\u{1F}\(value ?? "")")
             .padding(theme.padding(layout.padding))
 
         case .field(let children, let label, let helperText, let required, let disabled, let errorText, let layout):
@@ -641,12 +649,13 @@ struct AIBadge: View {
 /// Surface `image` node.
 struct AIUXSurfaceImage: View {
     @Environment(\.aiuxTheme) private var theme
+    @Environment(\.aiuxRemoteURLPolicy) private var remoteURLPolicy
 
     let src: String
     let alt: String?
 
     var body: some View {
-        if let url = URL(string: src) {
+        if let url = URL(string: src), remoteURLPolicy(url) {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):

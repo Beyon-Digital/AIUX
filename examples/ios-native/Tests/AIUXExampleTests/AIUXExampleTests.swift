@@ -39,8 +39,8 @@ final class AIUXExampleTests: XCTestCase {
             factory: &factory, messageId: "m-user-1", text: "Publish the report"
         ))
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.preApprovalEvents(factory: &factory, turn: 1)
-                .joined(separator: ",") + "]")
+            "[" + DemoScenario.preApprovalEvents(turn: 1)
+                .map { factory.event($0) }.joined(separator: ",") + "]")
 
         var snap = try snapshot(of: backend)
         XCTAssertEqual(snap.messages.count, 2)
@@ -55,8 +55,8 @@ final class AIUXExampleTests: XCTestCase {
         XCTAssertEqual(text, "Searching your workspace for the report…")
 
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.postApprovalEvents(factory: &factory, turn: 1, approved: true)
-                .joined(separator: ",") + "]")
+            "[" + DemoScenario.postApprovalEvents(turn: 1, approved: true)
+                .map { factory.event($0) }.joined(separator: ",") + "]")
 
         snap = try snapshot(of: backend)
         XCTAssertEqual(snap.approvals.first?.status, .executed)
@@ -75,11 +75,11 @@ final class AIUXExampleTests: XCTestCase {
         let backend = try UniFFIBackend.create(configJson: #"{"sessionId":"demo"}"#)
         _ = try backend.dispatch(eventJson: DemoScenario.sessionCreated(factory: &factory))
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.preApprovalEvents(factory: &factory, turn: 1)
-                .joined(separator: ",") + "]")
+            "[" + DemoScenario.preApprovalEvents(turn: 1)
+                .map { factory.event($0) }.joined(separator: ",") + "]")
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.postApprovalEvents(factory: &factory, turn: 1, approved: false)
-                .joined(separator: ",") + "]")
+            "[" + DemoScenario.postApprovalEvents(turn: 1, approved: false)
+                .map { factory.event($0) }.joined(separator: ",") + "]")
         let snap = try snapshot(of: backend)
         XCTAssertEqual(snap.approvals.first?.status, .rejected)
         XCTAssertNil(snap.activeRunId)
@@ -101,8 +101,8 @@ final class AIUXExampleTests: XCTestCase {
             ]),
         ].joined(separator: ",") + "]")
         _ = try backend.dispatchBatch(eventsJson:
-            "[" + DemoScenario.cancelEvents(factory: &factory, turn: 1)
-                .joined(separator: ",") + "]")
+            "[" + DemoScenario.cancelEvents(turn: 1)
+                .map { factory.event($0) }.joined(separator: ",") + "]")
         let snap = try snapshot(of: backend)
         XCTAssertEqual(snap.runs.first?.status, .cancelled)
         XCTAssertEqual(snap.messages.last?.status, .cancelled)

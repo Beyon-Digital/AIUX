@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 // MARK: - Action + entity environment
@@ -56,6 +57,11 @@ public final class AIUXFormStore: ObservableObject {
 /// placeholder plus their core-schema children.
 public typealias AIUXCustomNodeRenderer = (AIUXSurfaceNode) -> AnyView
 
+/// Gate for remote URLs the renderer may fetch — currently message and
+/// surface images. The wire can carry any URI; the host decides what is
+/// fetchable (default: `http`/`https` only).
+public typealias AIUXRemoteURLPolicy = @Sendable (URL) -> Bool
+
 private struct AIUXFormStoreKey: EnvironmentKey {
     static let defaultValue: AIUXFormStore? = nil
 }
@@ -74,6 +80,16 @@ private struct AIUXActionHandlerKey: EnvironmentKey {
 
 private struct AIUXRenderModelKey: EnvironmentKey {
     static let defaultValue: AIUXRenderModel = AIUXRenderModel(snapshot: AIUXSnapshot())
+}
+
+/// The default remote-URL gate: `http`/`https` only — `file:`, `data:`,
+/// custom schemes, and schemeless hosts are never fetched. Hosts install a
+/// stricter policy (e.g. a CDN allowlist) via `.aiuxRemoteURLPolicy(_:)`.
+private struct AIUXRemoteURLPolicyKey: EnvironmentKey {
+    static let defaultValue: AIUXRemoteURLPolicy = { url in
+        guard let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
 }
 
 extension EnvironmentValues {
@@ -101,6 +117,13 @@ extension EnvironmentValues {
         get { self[AIUXCustomNodesKey.self] }
         set { self[AIUXCustomNodesKey.self] = newValue }
     }
+
+    /// Which remote URLs the renderer may fetch (image parts, surface
+    /// images). Default: `http`/`https` only.
+    public var aiuxRemoteURLPolicy: AIUXRemoteURLPolicy {
+        get { self[AIUXRemoteURLPolicyKey.self] }
+        set { self[AIUXRemoteURLPolicyKey.self] = newValue }
+    }
 }
 
 extension View {
@@ -112,5 +135,12 @@ extension View {
     /// Register host renderers for `custom` surface node kinds (ADR 0007).
     public func aiuxCustomNodes(_ registry: [String: AIUXCustomNodeRenderer]) -> some View {
         environment(\.aiuxCustomNodes, registry)
+    }
+
+    /// Gate which remote URLs the renderer may fetch. Images whose URL fails
+    /// the policy degrade to their attachment row / unsupported placeholder
+    /// instead of loading.
+    public func aiuxRemoteURLPolicy(_ policy: @escaping AIUXRemoteURLPolicy) -> some View {
+        environment(\.aiuxRemoteURLPolicy, policy)
     }
 }

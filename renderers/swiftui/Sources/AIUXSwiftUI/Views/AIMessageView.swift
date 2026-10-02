@@ -240,11 +240,14 @@ struct AICodeBlock: View {
 struct AIImagePart: View {
     @Environment(\.aiuxTheme) private var theme
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.aiuxRemoteURLPolicy) private var remoteURLPolicy
 
     let attachment: AIUXAttachment
 
     var body: some View {
-        if let uri = attachment.uri, let url = URL(string: uri) {
+        if let uri = attachment.uri,
+           let url = URL(string: uri),
+           remoteURLPolicy(url) {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):

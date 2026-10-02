@@ -46,9 +46,31 @@ func aiuxByteCount(_ bytes: UInt64?) -> String? {
 }
 
 /// Compact JSON string for free-form payloads (tool input/result, metadata).
+/// Scalars render verbatim — `JSONSerialization` only accepts top-level
+/// objects/arrays, so a bare `true`, `42`, or `null` result needs its own
+/// path rather than disappearing.
 func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
     guard let value else { return nil }
-    if case .string(let s) = value { return s }
+    switch value {
+    case .string(let s):
+        return s
+    case .int(let i):
+        return String(i)
+    case .number(let n):
+        // Integral doubles print without the `.0`; below 2^53 every whole
+        // Double converts exactly and stays far inside Int64.
+        if n.truncatingRemainder(dividingBy: 1) == 0,
+           n.magnitude < 9_007_199_254_740_992 {
+            return String(Int64(n))
+        }
+        return String(n)
+    case .bool(let b):
+        return b ? "true" : "false"
+    case .null:
+        return "null"
+    case .array, .object:
+        break
+    }
     let object = value.object
     guard JSONSerialization.isValidJSONObject(object),
           let data = try? JSONSerialization.data(
