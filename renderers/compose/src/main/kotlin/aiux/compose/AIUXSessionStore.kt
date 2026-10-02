@@ -80,9 +80,24 @@ class AIUXSessionStore private constructor(
         runCatching { session.snapshot() }.mapError()
     }
 
-    fun reset() {
-        runCatching { session.reset() }
-        refresh()
+    /**
+     * Clear session state. Serialized behind any in-flight dispatch on
+     * [dispatchMutex]; returns only after the reset has applied and the
+     * snapshot re-published, so an awaiting caller never observes
+     * pre-reset state.
+     */
+    suspend fun reset() {
+        dispatchMutex.withLock {
+            withContext(ioDispatcher) {
+                runCatching { session.reset() }
+                refresh()
+            }
+        }
+    }
+
+    /** Fire-and-forget variant of [reset] for non-suspend callers. */
+    fun resetAsync() {
+        scope.launch { reset() }
     }
 
     fun refresh() {
@@ -107,10 +122,10 @@ class AIUXSessionStore private constructor(
         withContext(ioDispatcher) {
             runCatching { AIUXModelParser.parseDispatchReport(call()) }
                 .mapError()
-                .onSuccess {
-                    _lastReport.value = it
-                    refresh()
-                }
+                .onSuccess { _lastReport.value = it }
+                // Refresh on failure too: a rejected batch may still have
+                // applied earlier events in the core.
+                .also { refresh() }
         }
 
     private fun <T> Result<T>.mapError(): Result<T> = onFailure { e ->

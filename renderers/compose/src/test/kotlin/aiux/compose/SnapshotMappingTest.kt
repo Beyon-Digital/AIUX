@@ -5,10 +5,13 @@ import aiux.compose.model.AIApprovalStatus
 import aiux.compose.model.AIUXModelParser
 import aiux.compose.model.AIUXPart
 import aiux.compose.model.AISurfaceNode
+import aiux.compose.model.AIWorkspaceMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Phase 3 fixture-catalog coverage (plan §17): replay every conformance
@@ -78,6 +81,21 @@ class SnapshotMappingTest {
                 .joinToString("") { it.text }
             assertEquals("Hello, streaming world!", text)
         }
+    }
+
+    @Test
+    fun workspaceModeDefaultsToFullscreen() {
+        fun workspaceMode(workspaceJson: String) = AIUXModelParser.parseArtifact(
+            Json.parseToJsonElement(
+                """{"id":"a1","workspace":$workspaceJson}""",
+            ) as JsonObject,
+        )?.workspace?.mode
+
+        assertEquals(AIWorkspaceMode.Fullscreen, workspaceMode("{}"))
+        assertEquals(AIWorkspaceMode.Fullscreen, workspaceMode("""{"mode":"bogus"}"""))
+        assertEquals(AIWorkspaceMode.Detail, workspaceMode("""{"mode":"detail"}"""))
+        assertEquals(AIWorkspaceMode.Sheet, workspaceMode("""{"mode":"sheet"}"""))
+        assertEquals(AIWorkspaceMode.Fullscreen, workspaceMode("""{"mode":"fullscreen"}"""))
     }
 
     private fun assertNoUnknownNodes(node: AISurfaceNode, where: String) {

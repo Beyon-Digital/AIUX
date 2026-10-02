@@ -37,16 +37,21 @@ fun AIMarkdown(
         blocks.forEach { block ->
             when (block) {
                 is MarkdownBlock.Code -> AICodeBlock(code = block.code, language = block.language)
-                is MarkdownBlock.Heading -> Text(
-                    text = MarkdownParser.inline(block.text, theme),
-                    style = when (block.level) {
-                        1 -> theme.typography.heading
-                        2 -> theme.typography.title
-                        else -> theme.typography.label.copy(fontWeight = FontWeight.Bold)
-                    },
-                    color = theme.colors.foreground,
-                    modifier = Modifier.padding(top = theme.spacing.sm),
-                )
+                is MarkdownBlock.Heading -> {
+                    val annotated = MarkdownParser.inline(block.text, theme)
+                    ClickableText(
+                        text = annotated,
+                        style = when (block.level) {
+                            1 -> theme.typography.heading
+                            2 -> theme.typography.title
+                            else -> theme.typography.label.copy(fontWeight = FontWeight.Bold)
+                        }.copy(color = theme.colors.foreground),
+                        modifier = Modifier.padding(top = theme.spacing.sm),
+                    ) { offset ->
+                        annotated.getStringAnnotations("url", offset, offset)
+                            .firstOrNull()?.let { onLink(it.item) }
+                    }
+                }
                 is MarkdownBlock.BulletItem -> MarkdownListItem("•", block.text, theme, onLink)
                 is MarkdownBlock.OrderedItem -> MarkdownListItem("${block.index}.", block.text, theme, onLink)
                 is MarkdownBlock.Paragraph -> {

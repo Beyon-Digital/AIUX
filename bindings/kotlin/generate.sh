@@ -7,7 +7,7 @@
 #   build/generated/uniffi/aiux/aiux.kt   generated Kotlin API (package aiux)
 #   build/generated/jniLibs/<abi>/*.so    Android native libs, when an NDK +
 #                                         cargo-ndk are available (CI/release)
-#   target/debug/libaiux_uniffi.so        host lib used by JVM unit tests
+#   target/debug/libaiux_uniffi.{so,dylib} host lib used by JVM unit tests
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,8 +23,14 @@ OUT="$HERE/build/generated/uniffi"
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
+# Host lib extension differs per platform (.dylib on macOS, .so elsewhere).
+case "$(uname -s)" in
+    Darwin) LIB_EXT="dylib" ;;
+    *) LIB_EXT="so" ;;
+esac
+
 cargo run -q -p aiux-uniffi --features cli --bin uniffi-bindgen -- \
-    generate --library "$ROOT/target/release/libaiux_uniffi.so" \
+    generate --library "$ROOT/target/release/libaiux_uniffi.$LIB_EXT" \
     --language kotlin \
     --config bindings/uniffi/uniffi.toml \
     --out-dir "$OUT" --no-format
