@@ -6,3 +6,4 @@ license = "Proprietary"
 publish = false
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
