@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phases 4 + 6 + 7 in flight** (Expo ∥ DSL ∥ Flutter lanes) — renderers all landed
+- Current phase: **Phases 4 + 6 in flight** (Expo ∥ DSL lanes) — renderers + Flutter landed
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
@@ -18,8 +18,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
   - PR 6 `devin/phase3-compose` — AIUXCompose + Android example (green 9/9, emulator-verified)
   - PR 7 `devin/phase3-swiftui` — AIUXSwiftUI + iOS example (green 9/9, gate met on macOS CI)
   - PR 8 `devin/phase5-web` — aiux-web renderer + example (green 9/9, fixtures byte-identical via real wasm core)
-  - Lane H `devin/phase7-flutter` — Dart C-ABI bindings + `beyond_aiux` renderer (sub-agent,
-    branched off `devin/phase3-swiftui`)
+  - PR 9 `devin/phase7-flutter` — Dart C-ABI + `beyond_aiux` renderer (green 10/10,
+    22 fixtures byte-identical via C ABI, app verified on flutter run -d linux)
   - Lane I `devin/phase4-expo` — Expo SDK 57 bridge + example (sub-agent, off
     `devin/phase4-expo-base` = compose+swiftui+wasm-js)
   - Lane J `devin/phase6-dsl` — Surface DSL expansion + artifacts (sub-agent, off
