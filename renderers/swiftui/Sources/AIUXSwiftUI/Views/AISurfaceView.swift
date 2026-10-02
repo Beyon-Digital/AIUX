@@ -707,6 +707,9 @@ struct AIUXInputField: View {
     var errorText: String? = nil
 
     @State private var value: String = ""
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user edit emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
@@ -720,7 +723,9 @@ struct AIUXInputField: View {
             AIUXFieldError(errorText)
         }
         .onAppear {
-            value = initialValue ?? ""
+            let seed = initialValue ?? ""
+            if value != seed { suppressNextChange = true }
+            value = seed
             publish()
         }
     }
@@ -739,11 +744,14 @@ struct AIUXInputField: View {
         .font(theme.typography.body)
         .disabled(disabled)
         .onSubmit { commit() }
-        // Divergence from the wire value = a real edit; reseeding on remount
-        // (the field .id) must publish silently, not emit a change action.
-        .onChange(of: value) { newValue in
+        // The wire-value .id remounts this view and the onAppear reseed fires
+        // this onChange — suppress exactly that assignment, then emit on every
+        // real user edit (including edits back to the wire value).
+        .onChange(of: value) { _ in
             publish()
-            if newValue != (initialValue ?? "") {
+            if suppressNextChange {
+                suppressNextChange = false
+            } else {
                 emitChange()
             }
         }
@@ -828,6 +836,9 @@ struct AIUXTextareaField: View {
     var errorText: String? = nil
 
     @State private var value: String = ""
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user edit emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         let colors = theme.colors(for: colorScheme)
@@ -843,11 +854,14 @@ struct AIUXTextareaField: View {
                 .font(theme.typography.body)
                 .disabled(disabled)
                 .onSubmit { commit() }
-                // Divergence from the wire value = a real edit; reseeding on
-                // remount publishes silently, not a change action.
-                .onChange(of: value) { newValue in
+                // The wire-value .id remounts this view and the onAppear
+                // reseed fires this onChange — suppress exactly that
+                // assignment, then emit on every real user edit.
+                .onChange(of: value) { _ in
                     publish()
-                    if newValue != (initialValue ?? "") {
+                    if suppressNextChange {
+                        suppressNextChange = false
+                    } else {
                         emitChange()
                     }
                 }
@@ -855,7 +869,9 @@ struct AIUXTextareaField: View {
             AIUXFieldError(errorText)
         }
         .onAppear {
-            value = initialValue ?? ""
+            let seed = initialValue ?? ""
+            if value != seed { suppressNextChange = true }
+            value = seed
             publish()
         }
     }
@@ -970,6 +986,9 @@ struct AIUXCheckboxField: View {
     var errorText: String? = nil
 
     @State private var isOn: Bool = false
+    /// Armed when the onAppear reseed will fire `onChange` — the reseed
+    /// assignment is suppressed, every real user toggle emits.
+    @State private var suppressNextChange = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.space(.xs)) {
@@ -979,15 +998,15 @@ struct AIUXCheckboxField: View {
             }
             .disabled(disabled)
             .onAppear {
+                if isOn != checked { suppressNextChange = true }
                 isOn = checked
                 publish()
             }
-            // Emit only on divergence from the wire value — wire updates
-            // remount this view (the field .id), and the reseed assignment
-            // would otherwise emit a field change no user ever made.
             .onChange(of: isOn) { newValue in
                 publish(newValue)
-                if newValue != checked {
+                if suppressNextChange {
+                    suppressNextChange = false
+                } else {
                     emit(AIUXAction(id: AIUXAction.fieldChange, payload: [
                         "name": .string(name),
                         "value": .bool(newValue),

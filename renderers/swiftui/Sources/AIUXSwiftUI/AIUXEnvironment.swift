@@ -85,13 +85,14 @@ private struct AIUXRenderModelKey: EnvironmentKey {
 /// The default remote-URL gate, matching the web renderer's image surface:
 /// `https:` (TLS-only fetch — agent-supplied `http:` targets are refused,
 /// closing the cleartext/SSRF path), `aiux:` (host-resolved scheme),
-/// `data:image/…` (decoded inline, never fetched), and schemeless relative
-/// paths. `file:`, `javascript:`, `ftp:`, and other schemes are refused.
+/// `data:image/…` (decoded inline, never fetched), and true relative paths.
+/// `file:`, `javascript:`, `ftp:`, other schemes, and schemeless network-path
+/// references (`//host/…` — remote URLs, not relative paths) are refused.
 /// Hosts install a stricter policy (e.g. a CDN allowlist) via
 /// `.aiuxRemoteURLPolicy(_:)`.
 private struct AIUXRemoteURLPolicyKey: EnvironmentKey {
     static let defaultValue: AIUXRemoteURLPolicy = { url in
-        guard let scheme = url.scheme?.lowercased() else { return true }
+        guard let scheme = url.scheme?.lowercased() else { return url.host == nil }
         if scheme == "https" || scheme == "aiux" { return true }
         return url.absoluteString.lowercased().hasPrefix("data:image/")
     }

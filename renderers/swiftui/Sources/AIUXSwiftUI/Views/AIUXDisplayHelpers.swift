@@ -91,14 +91,19 @@ func aiuxJSONDescription(_ value: AIUXJSONValue?) -> String? {
 
 /// Decode an inline `data:image/…;base64,…` URI — rendered locally, never
 /// fetched (the same surface the web `<img>` gets for free). Nil for
-/// non-image, non-base64, or un-decodable URIs.
+/// non-image, non-base64, oversized, or un-decodable URIs: payloads are
+/// agent-controlled, so the source is capped at ~11 MB of base64 (~8 MB
+/// decoded) before any allocation happens.
 func aiuxDecodeDataImage(_ url: URL) -> Image? {
     let raw = url.absoluteString
     guard raw.lowercased().hasPrefix("data:image/"),
           let comma = raw.firstIndex(of: ",") else { return nil }
     let meta = raw[raw.startIndex..<comma].lowercased()
-    guard meta.hasSuffix(";base64"),
-          let data = Data(base64Encoded: String(raw[raw.index(after: comma)...]))
+    guard meta.hasSuffix(";base64") else { return nil }
+    let payload = raw[raw.index(after: comma)...]
+    guard payload.count <= 11_000_000,
+          let data = Data(base64Encoded: String(payload)),
+          data.count <= 8 * 1024 * 1024
     else { return nil }
     #if canImport(UIKit)
     guard let image = UIImage(data: data) else { return nil }
