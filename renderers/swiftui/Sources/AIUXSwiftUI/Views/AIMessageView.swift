@@ -256,12 +256,18 @@ struct AIImagePart: View {
         }
     }
 
-    // Inline `data:image/…` decodes locally; everything else AsyncImage
-    // fetches (approved-but-unfetchable schemes degrade via .failure).
+    // Inline `data:image/…` decodes locally — a refused URI (oversized,
+    // malformed) degrades here instead of reaching the loader and bypassing
+    // the decode cap. Everything else AsyncImage fetches (approved-but-
+    // unfetchable schemes degrade via .failure).
     @ViewBuilder
     private func imageContent(for url: URL) -> some View {
-        if let image = aiuxDecodeDataImage(url) {
-            image.resizable().scaledToFit()
+        if url.scheme?.lowercased() == "data" {
+            if let image = aiuxDecodeDataImage(url) {
+                image.resizable().scaledToFit()
+            } else {
+                AIAttachmentRow(attachment: attachment)
+            }
         } else {
             AsyncImage(url: url) { phase in
                 switch phase {
