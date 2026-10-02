@@ -596,6 +596,11 @@ class _AiuxTableView extends StatelessWidget {
 }
 
 /// Surface `image` node.
+///
+/// `src` comes from the agent, so the scheme is allowlisted before any
+/// fetch: `https?` loads over the network, `data:image/*` decodes inline —
+/// everything else (file:, aiux:, javascript:, …) renders as unsupported
+/// rather than letting a crafted URL make the host request it.
 class _AiuxSurfaceImage extends StatelessWidget {
   const _AiuxSurfaceImage({required this.src, this.alt});
 
@@ -605,26 +610,50 @@ class _AiuxSurfaceImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AiuxTheme.of(context);
-    if (Uri.tryParse(src) == null || src.isEmpty) {
+    final image = _resolve();
+    if (image == null) {
       return AIUXUnsupported(kind: 'image', detail: src);
     }
     return Semantics(
       label: alt ?? 'Image',
       child: ClipRRect(
         borderRadius: BorderRadius.circular(theme.radius.radius(AiuxRadius.sm)),
-        child: Image.network(
-          src,
-          fit: BoxFit.contain,
-          loadingBuilder: (context, child, progress) => progress == null
-              ? child
-              : const SizedBox(
-                  height: 60,
-                  child: Center(child: CircularProgressIndicator())),
-          errorBuilder: (context, error, stack) =>
-              AIUXUnsupported(kind: 'image', detail: src),
-        ),
+        child: image,
       ),
     );
+  }
+
+  Widget? _resolve() {
+    if (src.isEmpty) return null;
+    final uri = Uri.tryParse(src);
+    if (uri == null) return null;
+    if (uri.isScheme('http') || uri.isScheme('https')) {
+      return Image.network(
+        src,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, progress) => progress == null
+            ? child
+            : const SizedBox(
+                height: 60, child: Center(child: CircularProgressIndicator())),
+        errorBuilder: (context, error, stack) =>
+            AIUXUnsupported(kind: 'image', detail: src),
+      );
+    }
+    if (uri.isScheme('data')) {
+      try {
+        final data = UriData.parse(src);
+        if (!data.mimeType.startsWith('image/')) return null;
+        return Image.memory(
+          data.contentAsBytes(),
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stack) =>
+              AIUXUnsupported(kind: 'image', detail: src),
+        );
+      } on FormatException {
+        return null;
+      }
+    }
+    return null;
   }
 }
 
@@ -702,6 +731,22 @@ class _AiuxInputField extends StatefulWidget {
 class _AiuxInputFieldState extends State<_AiuxInputField> {
   late final TextEditingController _controller =
       TextEditingController(text: widget.initialValue ?? '');
+
+  @override
+  void didUpdateWidget(_AiuxInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // surface.updated carries a new wire value — display it; unchanged
+    // values leave any local edit (and its cursor position) alone.
+    if (widget.initialValue != oldWidget.initialValue) {
+      final next = widget.initialValue ?? '';
+      if (next != _controller.text) {
+        _controller.value = TextEditingValue(
+          text: next,
+          selection: TextSelection.collapsed(offset: next.length),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -792,6 +837,14 @@ class _AiuxSelectFieldState extends State<_AiuxSelectField> {
   late String _selected = widget.value ?? '';
 
   @override
+  void didUpdateWidget(_AiuxSelectField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _selected = widget.value ?? '';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = AiuxTheme.of(context);
     final colors = AiuxTheme.colorsOf(context);
@@ -800,6 +853,9 @@ class _AiuxSelectFieldState extends State<_AiuxSelectField> {
             .map((o) => o.label)
             .firstOrNull ??
         (_selected.isEmpty ? (widget.placeholder ?? 'Select…') : _selected);
+    // DropdownButtonFormField asserts the value names an item — a value
+    // outside `options` renders as its raw label via `hint` instead.
+    final hasOption = widget.options.any((o) => o.value == _selected);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -813,7 +869,7 @@ class _AiuxSelectFieldState extends State<_AiuxSelectField> {
         Semantics(
           label: widget.label ?? widget.name,
           child: DropdownButtonFormField<String>(
-            initialValue: _selected.isEmpty ? null : _selected,
+            initialValue: hasOption ? _selected : null,
             decoration: InputDecoration(
               isDense: true,
               filled: true,
@@ -871,6 +927,14 @@ class _AiuxCheckboxField extends StatefulWidget {
 
 class _AiuxCheckboxFieldState extends State<_AiuxCheckboxField> {
   late bool _isOn = widget.checked;
+
+  @override
+  void didUpdateWidget(_AiuxCheckboxField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.checked != oldWidget.checked) {
+      _isOn = widget.checked;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

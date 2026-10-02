@@ -149,6 +149,20 @@ void main() {
       store.dispose();
     });
 
+    testWidgets('every conformance fixture renders without errors',
+        (tester) async {
+      final fixtures = AiuxFixtureCatalog.loadAll(
+          Directory('${repo.path}/conformance/fixtures'));
+      for (final f in fixtures) {
+        final store = _storeFor(f);
+        expect(store.lastError, isNull, reason: 'fixture ${f.name}');
+        await _pumpConversation(tester, store);
+        expect(tester.takeException(), isNull, reason: 'fixture ${f.name}');
+        store.dispose();
+        (store.backend as AiuxFfiBackend).close();
+      }
+    });
+
     testWidgets('composer send emits aiux.composer.send', (tester) async {
       final actions = <AiuxAction>[];
       final store = _storeFor(fixture('basic-response'));

@@ -14,6 +14,10 @@ import 'package:beyond_aiux/beyond_aiux.dart';
 // would send.
 
 /// Builds protocol event envelopes for the demo session.
+///
+/// Every call to [event] consumes a sequence number, so scenario builders
+/// must be lazy (`sync*`) — an envelope that is generated but never
+/// dispatched leaves a gap the core buffers every later event behind.
 class DemoEventFactory {
   DemoEventFactory({required this.sessionId});
 
@@ -88,50 +92,52 @@ abstract final class DemoScenario {
 
   /// Events the agent streams *before* the approval request — run start,
   /// streaming text, tool lifecycle, then the `approval.requested` with its
-  /// in-message `approval` part.
-  static List<String> preApprovalEvents(DemoEventFactory factory, int turn) {
+  /// in-message `approval` part. Lazy: each envelope's sequence number is
+  /// consumed only when the iterator advances, so a cancelled turn leaves
+  /// no gap for `cancelEvents` to buffer behind.
+  static Iterable<String> preApprovalEvents(
+      DemoEventFactory factory, int turn) sync* {
     final runId = 'r$turn';
     final messageId = 'm-agent-$turn';
     final toolId = 't$turn';
     final approvalId = 'a$turn';
-    final events = <String>[];
 
-    events.add(factory.event('run.started', {
+    yield factory.event('run.started', {
       'protocolVersion': factory.pv,
       'run': {
         'id': runId,
         'status': 'running',
         'startedAt': '2026-01-02T00:00:01Z',
       },
-    }));
-    events.add(factory.event('message.created', {
+    });
+    yield factory.event('message.created', {
       'protocolVersion': factory.pv,
       'message': {'id': messageId, 'role': 'assistant', 'status': 'streaming'},
-    }));
-    events.add(factory.event('part.added', {
+    });
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {'id': '$messageId-text', 'type': 'text', 'text': ''},
-    }));
+    });
     for (final chunk in [
       'Searching ',
       'your workspace ',
       'for the ',
       'report…'
     ]) {
-      events.add(factory.event('text.delta', {
+      yield factory.event('text.delta', {
         'protocolVersion': factory.pv,
         'messageId': messageId,
         'partId': '$messageId-text',
         'delta': chunk,
-      }));
+      });
     }
-    events.add(factory.event('part.added', {
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {'id': '$messageId-tool', 'type': 'tool', 'toolId': toolId},
-    }));
-    events.add(factory.event('tool.started', {
+    });
+    yield factory.event('tool.started', {
       'protocolVersion': factory.pv,
       'tool': {
         'id': toolId,
@@ -139,23 +145,23 @@ abstract final class DemoScenario {
         'status': 'running',
         'input': {'q': 'quarterly report'},
       },
-    }));
-    events.add(factory.event('tool.progress', {
+    });
+    yield factory.event('tool.progress', {
       'protocolVersion': factory.pv,
       'toolId': toolId,
       'progress': {'current': 1, 'total': 3, 'label': 'querying'},
-    }));
-    events.add(factory.event('tool.progress', {
+    });
+    yield factory.event('tool.progress', {
       'protocolVersion': factory.pv,
       'toolId': toolId,
       'progress': {'current': 3, 'total': 3, 'label': 'ranking'},
-    }));
-    events.add(factory.event('tool.completed', {
+    });
+    yield factory.event('tool.completed', {
       'protocolVersion': factory.pv,
       'toolId': toolId,
       'result': {'hits': 3},
-    }));
-    events.add(factory.event('part.added', {
+    });
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {
@@ -163,8 +169,8 @@ abstract final class DemoScenario {
         'type': 'approval',
         'approvalId': approvalId,
       },
-    }));
-    events.add(factory.event('approval.requested', {
+    });
+    yield factory.event('approval.requested', {
       'protocolVersion': factory.pv,
       'approval': {
         'id': approvalId,
@@ -178,21 +184,20 @@ abstract final class DemoScenario {
           'payload': {'reportId': 'rpt-$turn'},
         },
       },
-    }));
-    return events;
+    });
   }
 
   /// Events after the approval resolves — branches on the decision:
   /// approved → executed → markdown + artifact + surface result;
-  /// rejected → rejected status + polite wrap-up.
-  static List<String> postApprovalEvents(
-      DemoEventFactory factory, int turn, bool approved) {
+  /// rejected → rejected status + polite wrap-up. Lazy like
+  /// [preApprovalEvents] so cancellation can't strand sequence numbers.
+  static Iterable<String> postApprovalEvents(
+      DemoEventFactory factory, int turn, bool approved) sync* {
     final runId = 'r$turn';
     final messageId = 'm-agent-$turn';
     final approvalId = 'a$turn';
-    final events = <String>[];
 
-    events.add(factory.event('approval.resolved', {
+    yield factory.event('approval.resolved', {
       'protocolVersion': factory.pv,
       'approvalId': approvalId,
       'resolution': {
@@ -200,10 +205,10 @@ abstract final class DemoScenario {
         'resolvedBy': 'user',
         'resolvedAt': '2026-01-02T00:00:20Z',
       },
-    }));
+    });
 
     if (!approved) {
-      events.add(factory.event('part.added', {
+      yield factory.event('part.added', {
         'protocolVersion': factory.pv,
         'messageId': messageId,
         'part': {
@@ -212,20 +217,20 @@ abstract final class DemoScenario {
           'text': 'Publication cancelled.',
           'level': 'warning',
         },
-      }));
-      events.add(factory.event('message.updated', {
+      });
+      yield factory.event('message.updated', {
         'protocolVersion': factory.pv,
         'messageId': messageId,
         'status': 'complete',
-      }));
-      events.add(factory.event('run.completed', {
+      });
+      yield factory.event('run.completed', {
         'protocolVersion': factory.pv,
         'runId': runId,
-      }));
-      return events;
+      });
+      return;
     }
 
-    events.add(factory.event('approval.resolved', {
+    yield factory.event('approval.resolved', {
       'protocolVersion': factory.pv,
       'approvalId': approvalId,
       'resolution': {
@@ -233,8 +238,8 @@ abstract final class DemoScenario {
         'resolvedBy': 'host',
         'resolvedAt': '2026-01-02T00:00:25Z',
       },
-    }));
-    events.add(factory.event('part.added', {
+    });
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {
@@ -242,8 +247,8 @@ abstract final class DemoScenario {
         'type': 'markdown',
         'markdown': '**Report published.** Summary card below.',
       },
-    }));
-    events.add(factory.event('artifact.created', {
+    });
+    yield factory.event('artifact.created', {
       'protocolVersion': factory.pv,
       'artifact': {
         'id': 'art-$turn',
@@ -253,8 +258,8 @@ abstract final class DemoScenario {
         'content':
             '# Quarterly report\n\n- Revenue: \$420.00\n- Status: published\n',
       },
-    }));
-    events.add(factory.event('part.added', {
+    });
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {
@@ -262,8 +267,8 @@ abstract final class DemoScenario {
         'type': 'artifact',
         'artifactId': 'art-$turn',
       },
-    }));
-    events.add(factory.event('surface.created', {
+    });
+    yield factory.event('surface.created', {
       'protocolVersion': factory.pv,
       'surface': {
         'id': 'sf-$turn',
@@ -312,8 +317,8 @@ abstract final class DemoScenario {
           ],
         },
       },
-    }));
-    events.add(factory.event('part.added', {
+    });
+    yield factory.event('part.added', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'part': {
@@ -321,18 +326,17 @@ abstract final class DemoScenario {
         'type': 'surface',
         'surfaceId': 'sf-$turn',
       },
-    }));
-    events.add(factory.event('message.updated', {
+    });
+    yield factory.event('message.updated', {
       'protocolVersion': factory.pv,
       'messageId': messageId,
       'status': 'complete',
-    }));
-    events.add(factory.event('run.completed', {
+    });
+    yield factory.event('run.completed', {
       'protocolVersion': factory.pv,
       'runId': runId,
       'result': {'published': true},
-    }));
-    return events;
+    });
   }
 
   /// Cancellation events when the user stops a running turn.

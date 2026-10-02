@@ -117,16 +117,20 @@ class DemoController extends ChangeNotifier {
   }
 
   Future<void> _runTurn(int turn) async {
-    for (final event in DemoScenario.preApprovalEvents(_factory, turn)) {
-      if (_turnCancelled) return;
-      await _dispatchTrickle(event);
+    // Pull envelopes lazily: each event's sequence number is consumed on
+    // moveNext(), so checking cancellation first keeps cancelEvents
+    // contiguous with what was actually dispatched.
+    final pre = DemoScenario.preApprovalEvents(_factory, turn).iterator;
+    while (!_turnCancelled && pre.moveNext()) {
+      await _dispatchTrickle(pre.current);
     }
+    if (_turnCancelled) return;
     // Hold for the approval decision.
     final approved = await _waitForApproval();
-    for (final event
-        in DemoScenario.postApprovalEvents(_factory, turn, approved)) {
-      if (_turnCancelled) return;
-      await _dispatchTrickle(event);
+    final post =
+        DemoScenario.postApprovalEvents(_factory, turn, approved).iterator;
+    while (!_turnCancelled && post.moveNext()) {
+      await _dispatchTrickle(post.current);
     }
     _runActive = false;
   }
