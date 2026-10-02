@@ -43,7 +43,7 @@ struct SessionConfigJson {
 /// An AI interaction session: owned by the core, driven by the host.
 #[derive(Debug, Default)]
 pub struct AiuxSession {
-    /// Bound session id ("" until the first accepted event binds one, or the
+    /// Bound session id ("" until the first applied event binds one, or the
     /// config supplies it).
     session_id: String,
     /// Reduced state.
@@ -75,12 +75,15 @@ impl AiuxSession {
     /// Restore a session from a `serialize()` payload.
     pub fn restore(serialized_json: &str) -> Result<Self, ProtocolError> {
         let persisted = aiux_persistence::load(serialized_json)?;
-        let reorder_buffer = persisted
-            .buffered_events
-            .iter()
-            .cloned()
-            .map(|e| (e.sequence, e))
-            .collect();
+        let mut reorder_buffer = BTreeMap::new();
+        for event in persisted.buffered_events {
+            let sequence = event.sequence;
+            if reorder_buffer.insert(sequence, event).is_some() {
+                return Err(ProtocolError::CorruptState {
+                    detail: format!("bufferedEvents contains two events at sequence {sequence}"),
+                });
+            }
+        }
         Ok(Self {
             session_id: persisted.session_id,
             state: persisted.state,
@@ -169,9 +172,9 @@ impl AiuxSession {
                 detail: "sessionId must be non-empty".to_string(),
             });
         }
-        if self.session_id.is_empty() {
-            self.session_id.clone_from(&event.session_id);
-        } else if event.session_id != self.session_id {
+        // Only an event that actually applies may bind the session
+        // identity — a rejected or merely buffered event must not pin it.
+        if !self.session_id.is_empty() && event.session_id != self.session_id {
             return Err(ProtocolError::InvalidEvent {
                 detail: format!(
                     "event sessionId \"{}\" does not match bound session \"{}\"",
@@ -189,10 +192,16 @@ impl AiuxSession {
             });
         }
         if event.sequence > self.next_expected_sequence {
-            if self.reorder_buffer.contains_key(&event.sequence) {
-                // Another unseen event already owns this slot — safely absorb.
-                report.duplicates_ignored = 1;
-                return Ok(report);
+            if let Some(parked) = self.reorder_buffer.get(&event.sequence) {
+                // A distinct event already claims this future sequence — a
+                // collision, not a replay (same-id replays were absorbed by
+                // the idempotency check above). Never silently drop one.
+                return Err(ProtocolError::InvalidEvent {
+                    detail: format!(
+                        "sequence {} is already claimed by buffered event \"{}\"",
+                        event.sequence, parked.event_id
+                    ),
+                });
             }
             if self.reorder_buffer.len() >= MAX_REORDER_BUFFER {
                 return Err(ProtocolError::SequenceGap {
@@ -211,10 +220,24 @@ impl AiuxSession {
         // only recorded as seen once the event has genuinely applied — a
         // failed dispatch never poisons a later corrected replay.
         aiux_reducer::reduce(&mut self.state, &event)?;
+        if self.session_id.is_empty() {
+            self.session_id.clone_from(&event.session_id);
+        }
         self.seen_event_ids.insert(event.event_id.clone());
         report.applied = 1;
         self.next_expected_sequence += 1;
         while let Some(next) = self.reorder_buffer.remove(&self.next_expected_sequence) {
+            // Events buffered while the session was still unbound must
+            // belong to the session the first applied event bound.
+            if next.session_id != self.session_id {
+                self.seen_event_ids.remove(&next.event_id);
+                return Err(ProtocolError::InvalidEvent {
+                    detail: format!(
+                        "buffered event sessionId \"{}\" does not match bound session \"{}\"",
+                        next.session_id, self.session_id
+                    ),
+                });
+            }
             if let Err(e) = aiux_reducer::reduce(&mut self.state, &next) {
                 // The drained event never applied: release its id so the slot
                 // can be filled by a corrected resend, and surface the error.

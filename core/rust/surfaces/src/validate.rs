@@ -171,6 +171,15 @@ fn validate_raw_node(value: &Value, depth: usize, count: &mut usize) -> Result<(
             "key \"{key}\" not allowed on \"{kind}\" node"
         )));
     }
+    // Free-form values (custom `props`, action payloads, table rows, …) are
+    // data by design (§23) but still count against the surface budget —
+    // otherwise a single `custom` node could carry an unbounded tree.
+    for (key, val) in obj {
+        if key == "children" || key == "type" {
+            continue;
+        }
+        budget_json(val, depth, count)?;
+    }
     if let Some(children) = obj.get("children") {
         let arr = children
             .as_array()
@@ -179,7 +188,33 @@ fn validate_raw_node(value: &Value, depth: usize, count: &mut usize) -> Result<(
             validate_raw_node(child, depth + 1, count)?;
         }
     }
-    // Nested action/object payloads are free-form data by design (§23).
+    Ok(())
+}
+
+/// Count an arbitrary JSON value against the same depth/size budget as
+/// nodes, so free-form payloads can't smuggle unbounded data past
+/// [`validate_raw`].
+fn budget_json(value: &Value, depth: usize, count: &mut usize) -> Result<(), SurfaceError> {
+    if depth > MAX_DEPTH {
+        return Err(SurfaceError::new(format!("nesting exceeds {MAX_DEPTH}")));
+    }
+    *count += 1;
+    if *count > MAX_NODES {
+        return Err(SurfaceError::new(format!("more than {MAX_NODES} nodes")));
+    }
+    match value {
+        Value::Array(items) => {
+            for item in items {
+                budget_json(item, depth + 1, count)?;
+            }
+        }
+        Value::Object(map) => {
+            for item in map.values() {
+                budget_json(item, depth + 1, count)?;
+            }
+        }
+        _ => {}
+    }
     Ok(())
 }
 
@@ -357,7 +392,7 @@ fn validate_node(
                 validate_action(action)?;
             }
         }
-        SurfaceNode::Custom { kind, .. } => {
+        SurfaceNode::Custom { kind, props, .. } => {
             if kind.is_empty() {
                 return Err(SurfaceError::new("custom node kind must be non-empty"));
             }
@@ -370,6 +405,14 @@ fn validate_node(
                 return Err(SurfaceError::new(format!(
                     "custom node kind \"{kind}\" uses the reserved aiux.* prefix"
                 )));
+            }
+            // `props` is free-form data but not free of the surface budget.
+            *count += 1;
+            if *count > MAX_NODES {
+                return Err(SurfaceError::new(format!("more than {MAX_NODES} nodes")));
+            }
+            for value in props.values() {
+                budget_json(value, depth + 1, count)?;
             }
         }
         SurfaceNode::Button { label, action, .. } => {
@@ -522,5 +565,70 @@ mod tests {
                {"type":"button","label":"Go","action":{"id":"has space"}}]}}"#,
         );
         assert!(validate(&tree).is_err());
+    }
+
+    #[test]
+    fn raw_rejects_deep_custom_props() {
+        // props nesting deeper than MAX_DEPTH inside a single custom node.
+        let mut props = serde_json::json!("leaf");
+        for _ in 0..=MAX_DEPTH {
+            props = serde_json::json!({"k": props});
+        }
+        let json = serde_json::json!({
+            "type": "custom", "kind": "acme.widget", "props": props
+        });
+        assert!(validate_raw(&json).is_err());
+    }
+
+    #[test]
+    fn raw_rejects_oversized_custom_props() {
+        let props: serde_json::Map<String, Value> = (0..MAX_NODES)
+            .map(|i| (format!("k{i}"), serde_json::json!(i)))
+            .collect();
+        let json = serde_json::json!({
+            "type": "custom", "kind": "acme.widget", "props": props
+        });
+        assert!(validate_raw(&json).is_err());
+    }
+
+    #[test]
+    fn raw_rejects_deep_action_payload() {
+        let mut payload = serde_json::json!("leaf");
+        for _ in 0..=MAX_DEPTH {
+            payload = serde_json::json!({"k": payload});
+        }
+        let json = serde_json::json!({
+            "type": "button", "label": "Go",
+            "action": {"id": "a1", "payload": payload}
+        });
+        assert!(validate_raw(&json).is_err());
+    }
+
+    #[test]
+    fn typed_validate_rejects_deep_custom_props() {
+        let mut inner = serde_json::json!("leaf");
+        for _ in 0..=MAX_DEPTH {
+            inner = serde_json::json!({"k": inner});
+        }
+        let tree = parse(
+            &serde_json::json!({
+                "id": "s1",
+                "root": {"type": "surface", "children": [
+                    {"type": "custom", "kind": "acme.widget", "props": {"k": inner}}
+                ]}
+            })
+            .to_string(),
+        );
+        assert!(validate(&tree).is_err());
+    }
+
+    #[test]
+    fn reasonable_custom_props_pass() {
+        let tree = parse(
+            r#"{"id":"s1","root":{"type":"surface","children":[
+               {"type":"custom","kind":"acme.sparkline",
+                "props":{"values":[1,2,3],"color":"blue"}}]}}"#,
+        );
+        validate(&tree).unwrap();
     }
 }

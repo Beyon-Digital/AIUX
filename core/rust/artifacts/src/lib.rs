@@ -66,7 +66,12 @@ pub fn updated(
     if let Some(workspace) = &patch.workspace {
         artifact.workspace = Some(workspace.clone());
     }
-    artifact.revision += 1;
+    artifact.revision = artifact.revision.checked_add(1).ok_or_else(|| {
+        invalid(format!(
+            "artifact.updated: artifact \"{}\" revision overflow",
+            patch.artifact_id
+        ))
+    })?;
     Ok(())
 }
 
@@ -120,6 +125,28 @@ mod tests {
         updated(&mut store, &patch).unwrap();
         assert_eq!(store.0["a1"].revision, 2);
         assert_eq!(store.0["a1"].content.as_deref(), Some("v2"));
+    }
+
+    #[test]
+    fn revision_overflow_is_error() {
+        let mut store = Map(BTreeMap::new());
+        created(&mut store, artifact("a1")).unwrap();
+        store.0.get_mut("a1").unwrap().revision = u64::MAX;
+        let patch = ArtifactUpdated {
+            protocol_version: aiux_protocol::PROTOCOL_VERSION.to_string(),
+            artifact_id: "a1".to_string(),
+            title: None,
+            content: None,
+            uri: None,
+            metadata: None,
+            preview: None,
+            workspace: None,
+        };
+        assert!(matches!(
+            updated(&mut store, &patch),
+            Err(ProtocolError::InvalidEvent { .. })
+        ));
+        assert_eq!(store.0["a1"].revision, u64::MAX);
     }
 
     #[test]
