@@ -80,9 +80,14 @@ const eventValidator = (type) => {
   return v;
 };
 
+const fixtureValidator = validators.get(join(schemaDir, "fixture.json"));
 for (const file of jsonFiles(fixtureDir)) {
   const fixture = JSON.parse(readFileSync(file, "utf8"));
-  for (const [i, event] of (fixture.events ?? []).entries()) {
+  if (fixtureValidator(fixture) !== true) {
+    fail(`${file}: fixture fails schema — ${JSON.stringify(fixtureValidator.errors?.slice(0, 3))}`);
+    continue;
+  }
+  for (const [i, event] of fixture.events.entries()) {
     const type = event?.type;
     if (!type || !onDisk.has(type)) {
       fail(`${file}: event[${i}] has unknown or missing type ${JSON.stringify(type)}`);
