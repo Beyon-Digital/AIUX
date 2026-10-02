@@ -27,12 +27,12 @@ initialize:
     with:
       channel: stable
       cache: true
-  - run: |
-      # Playwright chromium for examples/web e2e (test:e2e, opt-in only).
-      pnpm -C examples/web exec playwright install chromium
 # Install workspace deps incrementally.
 maintenance: |
   pnpm install --frozen-lockfile=false
+  # Playwright chromium for examples/web e2e (test:e2e, opt-in only) —
+  # must run after pnpm install so the playwright package exists.
+  pnpm -C examples/web exec playwright install chromium
   cargo fetch
   (cd bindings/dart && dart pub get)
   (cd renderers/flutter && flutter pub get)
