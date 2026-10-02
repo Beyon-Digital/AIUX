@@ -59,7 +59,7 @@ internal object AIUXSessionRegistry {
             ?.content
             ?: error("serialized session is missing sessionId")
         stores[sessionId] = store
-        generationFlow(sessionId).let { it.value = it.value + 1 }
+        generations.getOrPut(sessionId) { MutableStateFlow(0L) }.value += 1
         return sessionId
     }
 
