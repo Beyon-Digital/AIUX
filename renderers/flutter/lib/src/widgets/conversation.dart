@@ -116,6 +116,8 @@ class _AIConversationState extends State<AIConversation> {
                 if (widget.mode == AiuxConversationMode.fullscreen &&
                     snapshot.context.isNotEmpty)
                   AIContextBar(entities: snapshot.context),
+                if (widget.store.lastError != null)
+                  _errorBanner(theme, colors, widget.store.lastError!),
                 Expanded(child: _stream(theme, colors, snapshot)),
                 if (widget.mode == AiuxConversationMode.fullscreen)
                   AIComposer(
@@ -127,6 +129,28 @@ class _AIConversationState extends State<AIConversation> {
           ),
         );
       },
+    );
+  }
+
+  Widget _errorBanner(
+      AiuxThemeData theme, AiuxColors colors, AiuxStoreError error) {
+    return Container(
+      width: double.infinity,
+      color: colors.destructive.withValues(alpha: 0.12),
+      padding: EdgeInsets.symmetric(
+          horizontal: theme.space(AiuxGap.md),
+          vertical: theme.space(AiuxGap.xs)),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, size: 16, color: colors.destructive),
+          SizedBox(width: theme.space(AiuxGap.xs)),
+          Expanded(
+            child: Text(error.detail,
+                style: theme.typography.caption
+                    .copyWith(color: colors.destructive)),
+          ),
+        ],
+      ),
     );
   }
 

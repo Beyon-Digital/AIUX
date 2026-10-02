@@ -36,19 +36,26 @@ class AIFixturePlayer extends StatefulWidget {
 }
 
 class _AIFixturePlayerState extends State<AIFixturePlayer> {
+  late final AiuxSessionBackend _backend;
   late final AiuxSessionStore _store;
   String? _replayError;
 
   @override
   void initState() {
     super.initState();
-    _store = AiuxSessionStore(backend: widget.backend());
+    _backend = widget.backend();
+    _store = AiuxSessionStore(backend: _backend);
     WidgetsBinding.instance.addPostFrameCallback((_) => _replay());
   }
 
   @override
   void dispose() {
     _store.dispose();
+    // The player owns the backend it built — an FFI backend holds a native
+    // session that only its finalizer would otherwise release.
+    if (_backend is AiuxFfiBackend) {
+      _backend.close();
+    }
     super.dispose();
   }
 

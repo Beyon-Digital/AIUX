@@ -1,6 +1,8 @@
 import 'package:aiux_example/main.dart';
 import 'package:aiux_example/src/demo_controller.dart';
 import 'package:aiux_example/src/demo_scenario.dart';
+import 'package:aiux_example/src/root_view.dart';
+import 'package:beyond_aiux/beyond_aiux.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -65,5 +67,72 @@ void main() {
     expect(find.text('Quarterly report'), findsOneWidget);
     expect(find.text(r'$420.00'), findsOneWidget);
     expect(find.text('Open report'), findsOneWidget);
+  });
+
+  testWidgets('cancel mid-stream stays sequenced — later prompts advance',
+      (tester) async {
+    final controller = DemoController.bootstrap();
+    await tester.pumpWidget(AiuxTheme(
+      data: AiuxThemeData.standard(),
+      child: MaterialApp(home: AiuxExampleRootView(controller: controller)),
+    ));
+    await tester.pump();
+
+    // Send, let a few pre-approval events trickle in, then cancel before
+    // the rest were ever dispatched.
+    await tester.enterText(find.byType(TextField).first, 'go');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 1));
+    expect(controller.store.snapshot.activeRunId, 'r1');
+    await tester.tap(find.bySemanticsLabel('Cancel run'));
+    await tester.pump(const Duration(milliseconds: 16));
+
+    // The cancel events applied (no gap to buffer behind): the run shows
+    // cancelled instead of stuck streaming.
+    expect(controller.store.lastError, isNull);
+    expect(controller.store.snapshot.activeRunId, isNull);
+    expect(
+      controller.store.snapshot.runs.map((r) => r.status),
+      contains(AiuxRunStatus.cancelled),
+    );
+
+    // A new prompt still reaches the approval — events keep applying.
+    await tester.enterText(find.byType(TextField).first, 'again');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 6));
+    expect(find.text('Publish the quarterly report?'), findsOneWidget);
+  });
+
+  testWidgets('prompt sent right after cancel starts a clean turn',
+      (tester) async {
+    final controller = DemoController.bootstrap();
+    await tester.pumpWidget(AiuxTheme(
+      data: AiuxThemeData.standard(),
+      child: MaterialApp(home: AiuxExampleRootView(controller: controller)),
+    ));
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField).first, 'go');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 1));
+    await tester.tap(find.bySemanticsLabel('Cancel run'));
+
+    // Send the next prompt within the cancelled turn's in-flight 320ms
+    // delay: the old loop must stay dead instead of resuming on the
+    // reset flag and interleaving turn-1 events into turn 2.
+    await tester.enterText(find.byType(TextField).first, 'again');
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await _pumpFor(tester, const Duration(seconds: 7));
+
+    expect(controller.store.lastError, isNull);
+    // Stale turn-1 dispatches get rejected by the core (its run is
+    // cancelled) and surface as 'dispatch failed' log lines — none here.
+    expect(
+        controller.log.where((l) => l.startsWith('dispatch failed')), isEmpty);
+    expect(find.text('Publish the quarterly report?'), findsOneWidget);
   });
 }

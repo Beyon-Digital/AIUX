@@ -5,9 +5,11 @@ import 'dart:io';
 ///
 /// Resolution order:
 /// 1. `libraryPath` argument / `AIUX_CAPI_PATH` env — an explicit .so/.dylib/.dll.
-/// 2. `<repo>/target/{release,debug}/libaiux_capi.<ext>` walking ancestors of
+/// 2. Next to the executable and its `lib/` dir — the installed bundle
+///    layout (e.g. Flutter Linux `<bundle>/lib/libaiux_capi.so`).
+/// 3. `<repo>/target/{release,debug}/libaiux_capi.<ext>` walking ancestors of
 ///    the current directory for a `Cargo.toml` (the repo root).
-/// 3. `DynamicLibrary.open('libaiux_capi.<ext>')` — the platform loader path.
+/// 4. `DynamicLibrary.open('libaiux_capi.<ext>')` — the platform loader path.
 DynamicLibrary open(String? libraryPath) {
   final explicit = libraryPath ?? Platform.environment['AIUX_CAPI_PATH'];
   if (explicit != null && explicit.isNotEmpty) {
@@ -27,7 +29,12 @@ String _libName() {
 
 List<String> _candidates() {
   final name = _libName();
-  final out = <String>[];
+  final out = <String>[
+    // Bundled app: the library installs alongside the executable (lib/
+    // subdir for Flutter bundles, flat for dart compile exe output dirs).
+    '${File(Platform.resolvedExecutable).parent.path}/lib/$name',
+    '${File(Platform.resolvedExecutable).parent.path}/$name',
+  ];
   var dir = Directory.current.absolute;
   while (true) {
     if (File('${dir.path}/Cargo.toml').existsSync()) {

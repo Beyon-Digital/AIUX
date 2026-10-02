@@ -106,6 +106,18 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# The aiux-capi FFI library — built by `bash bindings/dart/generate.sh` at
+# the repo root into target/{debug,release}. Debug builds link the debug
+# library; Profile/Release link the release one.
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(AIUX_CAPI_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../../../target/debug/libaiux_capi.so")
+else()
+  set(AIUX_CAPI_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../../../target/release/libaiux_capi.so")
+endif()
+install(FILES "${AIUX_CAPI_LIBRARY}"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

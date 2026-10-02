@@ -82,7 +82,9 @@ class _AIComposerState extends State<AIComposer> {
                 maxLines: 5,
                 style: theme.typography.body,
                 onChanged: (_) => setState(() {}),
-                onSubmitted: (_) => _send(),
+                // Multiline field: Enter inserts a newline; sending goes
+                // through the arrow button.
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: widget.placeholder,
                   hintStyle:
