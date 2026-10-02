@@ -1,4 +1,5 @@
 import { AiuxIcon } from "./icons.jsx";
+import { safeUrl } from "./markdown.jsx";
 import type { ContextEntity } from "./types.js";
 
 const KIND_ICON: Record<string, string> = {
@@ -27,12 +28,13 @@ export function AIContextBar({
               <span className="aiux-context__kind">{entity.kind}</span>
             </>
           );
+          const uri = entity.uri ? safeUrl(entity.uri) : "";
           return (
             <li key={entity.id} className="aiux-context__item">
-              {entity.uri ? (
+              {uri ? (
                 <a
                   className="aiux-context__chip"
-                  href={entity.uri}
+                  href={uri}
                   title={entity.description ?? entity.label}
                 >
                   {chip}

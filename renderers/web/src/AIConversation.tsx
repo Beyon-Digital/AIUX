@@ -177,10 +177,20 @@ function AIConversationLive({
       unreferenced.artifacts.length +
       unreferenced.surfaces.length >
     0;
-  const contextEntities = [
-    ...(snapshot.session?.context ?? []),
-    ...(context ?? []),
-  ];
+  const contextEntities = useMemo(() => {
+    const seen = new Set<string>();
+    // Top-level snapshot.context is the canonical OrderedMap — context.updated
+    // rewrites it, while session.context stays at its session.started value.
+    // Dedupe keeps the first occurrence, so the live copy must come first.
+    const merged = [
+      ...(snapshot.context ?? []),
+      ...(snapshot.session?.context ?? []),
+      ...(context ?? []),
+    ];
+    return merged.filter((e) =>
+      seen.has(e.id) ? false : (seen.add(e.id), true),
+    );
+  }, [snapshot.session, snapshot.context, context]);
   const streaming = (snapshot.messages ?? []).some(
     (m) => m.status === "streaming",
   );
@@ -218,6 +228,9 @@ function AIConversationLive({
         const clamped = Math.min(Math.max(index, 0), articles.length - 1);
         articles[clamped]?.focus();
       };
+      // Keys from editable controls (surface fields, composer) stay local.
+      const target = e.target as HTMLElement;
+      if (target.closest?.("input, textarea, select, [contenteditable]")) return;
       switch (e.key) {
         case "PageDown":
           e.preventDefault();
@@ -229,9 +242,6 @@ function AIConversationLive({
           break;
         case "Home":
         case "End": {
-          // Also applies with an article focused; leave real inputs alone.
-          const target = e.target as HTMLElement;
-          if (target.closest?.("input, textarea, [contenteditable]")) break;
           e.preventDefault();
           move(e.key === "Home" ? 0 : articles.length - 1);
           break;

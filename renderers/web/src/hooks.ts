@@ -9,11 +9,12 @@ export function useSessionSnapshot(session: AiuxSessionLike): AiuxSnapshot {
   const [snapshot, setSnapshot] = useState<AiuxSnapshot>(
     () => session.snapshot() as AiuxSnapshot,
   );
-  useEffect(
-    () =>
-      session.subscribe((next) => setSnapshot(next as AiuxSnapshot)),
-    [session],
-  );
+  useEffect(() => {
+    // Re-sync on session swap: subscribe may not emit immediately, so pull the
+    // new session's current snapshot instead of showing the previous one.
+    setSnapshot(session.snapshot() as AiuxSnapshot);
+    return session.subscribe((next) => setSnapshot(next as AiuxSnapshot));
+  }, [session]);
   return snapshot;
 }
 

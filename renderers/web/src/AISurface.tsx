@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -8,7 +9,7 @@ import {
   type JSX,
 } from "react";
 import { AiuxIcon } from "./icons.jsx";
-import { AiuxMarkdown } from "./markdown.jsx";
+import { AiuxMarkdown, safeImageSrc } from "./markdown.jsx";
 import { useAiuxRenderContext } from "./context.js";
 import { CodePartView } from "./parts.jsx";
 import {
@@ -33,8 +34,10 @@ import {
 /* Per-surface form state: input/textarea/select/checkbox values keyed by
  * `name`, folded into action payloads as `fields` when a button fires. */
 interface SurfaceFieldState {
-  values: Record<string, string>;
-  setValue(name: string, value: string): void;
+  values: Record<string, string | boolean>;
+  setValue(name: string, value: string | boolean): void;
+  /* When the enclosing form is disabled, child controls render inert too. */
+  disabled?: boolean;
 }
 const FieldContext = createContext<SurfaceFieldState | null>(null);
 
@@ -89,6 +92,7 @@ function SurfaceChildren({
 
 function MenuNode({ node }: { node: SurfaceNode }) {
   const { onAction } = useAiuxRenderContext();
+  const fields = useContext(FieldContext);
   const items = (node.items ?? []) as MenuItem[];
   return (
     <details className="aiux-menu" style={layoutStyle(node)}>
@@ -105,8 +109,16 @@ function MenuNode({ node }: { node: SurfaceNode }) {
             type="button"
             role="menuitem"
             className="aiux-menu__item"
-            disabled={item.disabled || !onAction}
-            onClick={() => onAction?.(item.action)}
+            disabled={item.disabled || fields?.disabled || !onAction}
+            onClick={() => {
+              if (!onAction) return;
+              const fieldValues = fields?.values ?? {};
+              const payload =
+                Object.keys(fieldValues).length > 0
+                  ? { ...item.action.payload, fields: fieldValues }
+                  : item.action.payload;
+              onAction({ id: item.action.id, ...(payload ? { payload } : {}) });
+            }}
           >
             {item.icon ? <AiuxIcon name={item.icon} size="sm" /> : null}
             {item.label}
@@ -117,15 +129,26 @@ function MenuNode({ node }: { node: SurfaceNode }) {
   );
 }
 
-/** Field wrappers register values into the enclosing surface's field state. */
-function useField(name: string, initial: string): [string, (v: string) => void] {
+/** Field wrappers register values into the enclosing surface's field state.
+ * Defaults register on mount so untouched prefilled values still submit. */
+function useField<T extends string | boolean>(
+  name: string,
+  initial: T,
+): [T, (v: T) => void] {
   const fields = useContext(FieldContext);
   const [local, setLocal] = useState(initial);
-  const value = fields ? (fields.values[name] ?? initial) : local;
-  const setValue = (v: string) => {
+  const registered = fields && name !== "" ? fields.values[name] : undefined;
+  const value = (registered ?? local) as T;
+  const setValue = (v: T) => {
     setLocal(v);
     fields?.setValue(name, v);
   };
+  // Register the initial value whenever it is absent (mount or post-reset).
+  useEffect(() => {
+    if (fields && name !== "" && fields.values[name] === undefined) {
+      fields.setValue(name, initial);
+    }
+  }, [fields, name, initial, registered]);
   return [value, setValue];
 }
 
@@ -230,15 +253,25 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
           />
         </span>
       );
-    case "image":
+    case "image": {
+      // Scheme allowlist: agent-supplied src must be web-safe (§23).
+      const src = node.src ? safeImageSrc(node.src) : "";
+      if (!src) {
+        return (
+          <span className="aiux-missing" role="note" style={style}>
+            Blocked image source
+          </span>
+        );
+      }
       return (
         <img
           className="aiux-surf-image"
           style={style}
-          src={node.src}
+          src={src}
           alt={node.alt ?? ""}
         />
       );
+    }
     case "badge":
       return (
         <span
@@ -339,9 +372,9 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
           type="button"
           className={`aiux-btn aiux-btn--${node.variant ?? "secondary"}`}
           style={style}
-          disabled={node.disabled || !onAction}
+          disabled={fields?.disabled || node.disabled || !onAction}
           onClick={() => {
-            if (!action || !onAction) return;
+            if (!action || !onAction || fields?.disabled) return;
             const fieldValues = fields?.values ?? {};
             const payload =
               Object.keys(fieldValues).length > 0
@@ -423,6 +456,7 @@ function SurfaceNodeView({ node }: { node: SurfaceNode }): JSX.Element | null {
 /** A table cell: bare string or `{"type": text|number|badge|action}` (ADR 0007). */
 function TableCellView({ cell }: { cell: TableCell }) {
   const { onAction } = useAiuxRenderContext();
+  const fields = useContext(FieldContext);
   if (typeof cell === "string") return <>{cell}</>;
   switch (cell.type) {
     case "text":
@@ -438,8 +472,8 @@ function TableCellView({ cell }: { cell: TableCell }) {
         <button
           type="button"
           className="aiux-btn aiux-btn--ghost"
-          disabled={!onAction}
-          onClick={() => onAction?.(cell.action)}
+          disabled={fields?.disabled || !onAction}
+          onClick={() => !fields?.disabled && onAction?.(cell.action)}
         >
           {cell.label}
         </button>
@@ -482,14 +516,15 @@ function FieldBlock({
  * payload (ADR 0007). */
 function FormNode({ node, style }: { node: SurfaceNode; style: CSSProperties }) {
   const { onAction } = useAiuxRenderContext();
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string | boolean>>({});
   const fieldState = useMemo<SurfaceFieldState>(
     () => ({
       values,
       setValue: (name, value) =>
         setValues((prev) => ({ ...prev, [name]: value })),
+      ...(node.disabled ? { disabled: true } : {}),
     }),
-    [values],
+    [values, node.disabled],
   );
   const submit = node.submit;
   const onSubmit = (e: FormEvent) => {
@@ -527,6 +562,7 @@ function ListItemNode({
   style: CSSProperties;
 }) {
   const { onAction } = useAiuxRenderContext();
+  const fields = useContext(FieldContext);
   const body = (
     <>
       {node.icon ? <AiuxIcon name={node.icon} /> : null}
@@ -544,8 +580,8 @@ function ListItemNode({
         <button
           type="button"
           className="aiux-list-item__main aiux-list-item__main--action"
-          disabled={!onAction}
-          onClick={() => onAction?.(node.action as AiuxAction)}
+          disabled={fields?.disabled || !onAction}
+          onClick={() => !fields?.disabled && onAction?.(node.action as AiuxAction)}
         >
           {body}
         </button>
@@ -627,6 +663,7 @@ function InputField({
   node: SurfaceNode;
   style: CSSProperties;
 }) {
+  const fields = useContext(FieldContext);
   const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
   return (
     <span style={style}>
@@ -638,7 +675,7 @@ function InputField({
           placeholder={node.placeholder}
           value={value}
           required={node.required}
-          disabled={node.disabled}
+          disabled={fields?.disabled || node.disabled}
           aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
@@ -656,6 +693,7 @@ function TextareaField({
   node: SurfaceNode;
   style: CSSProperties;
 }) {
+  const fields = useContext(FieldContext);
   const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
   return (
     <span style={style}>
@@ -667,7 +705,7 @@ function TextareaField({
           value={value}
           rows={typeof node.rows === "number" ? node.rows : 3}
           required={node.required}
-          disabled={node.disabled}
+          disabled={fields?.disabled || node.disabled}
           aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
@@ -685,8 +723,15 @@ function SelectField({
   node: SurfaceNode;
   style: CSSProperties;
 }) {
+  const fields = useContext(FieldContext);
   const options = (node.options ?? (node.items as SelectOption[])) ?? [];
-  const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
+  // With no explicit value and no placeholder option, the browser displays
+  // the first option — register that as the initial value so the submitted
+  // fields match what the user saw selected.
+  const [value, setValue] = useField(
+    node.name ?? "",
+    String(node.value ?? (node.placeholder ? "" : options[0]?.value ?? "")),
+  );
   return (
     <span style={style}>
       <FieldLabel label={node.label}>
@@ -695,7 +740,7 @@ function SelectField({
           name={node.name}
           value={value}
           required={node.required}
-          disabled={node.disabled}
+          disabled={fields?.disabled || node.disabled}
           aria-invalid={node.errorText ? true : undefined}
           aria-label={node.label ?? node.name}
           onChange={(e) => setValue(e.target.value)}
@@ -724,21 +769,19 @@ function CheckboxField({
   node: SurfaceNode;
   style: CSSProperties;
 }) {
-  const [value, setValue] = useField(
-    node.name ?? "",
-    node.checked ? "true" : "",
-  );
+  const fields = useContext(FieldContext);
+  const [value, setValue] = useField(node.name ?? "", Boolean(node.checked));
   return (
     <span style={style}>
       <label className="aiux-checkbox">
         <input
           type="checkbox"
           name={node.name}
-          checked={value === "true"}
+          checked={value === true}
           required={node.required}
-          disabled={node.disabled}
+          disabled={fields?.disabled || node.disabled}
           aria-invalid={node.errorText ? true : undefined}
-          onChange={(e) => setValue(e.target.checked ? "true" : "")}
+          onChange={(e) => setValue(e.target.checked)}
         />
         <span>{node.label}</span>
       </label>
@@ -755,6 +798,7 @@ function RadioField({
   node: SurfaceNode;
   style: CSSProperties;
 }) {
+  const fields = useContext(FieldContext);
   const options = node.options ?? [];
   const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
   return (
@@ -773,7 +817,7 @@ function RadioField({
             value={o.value}
             checked={value === o.value}
             required={node.required}
-            disabled={node.disabled}
+            disabled={fields?.disabled || node.disabled}
             onChange={() => setValue(o.value)}
           />
           <span>{o.label}</span>
@@ -786,7 +830,11 @@ function RadioField({
 
 /** Render a session-level `Surface` (a revisioned semantic node tree). */
 export function AISurface({ surface }: { surface: SurfaceTree }) {
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string | boolean>>({});
+  // A new revision publishes fresh defaults; drop edits from the old revision.
+  useEffect(() => {
+    setValues({});
+  }, [surface.revision]);
   const fieldState = useMemo<SurfaceFieldState>(
     () => ({
       values,
@@ -803,7 +851,13 @@ export function AISurface({ surface }: { surface: SurfaceTree }) {
         data-aiux-revision={surface.revision}
         aria-label={surface.name ?? `Surface ${surface.id}`}
       >
-        <SurfaceNodeView node={surface.root} />
+        {/* Keyed remount on revision: nested FormNode/field state holds its
+            own context the outer reset cannot reach — fresh defaults per
+            revision come from remounting the whole node tree. */}
+        <SurfaceNodeView
+          key={`${surface.id}:${surface.revision}`}
+          node={surface.root}
+        />
       </div>
     </FieldContext.Provider>
   );
