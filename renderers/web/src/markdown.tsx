@@ -15,13 +15,15 @@ const SAFE_URL = /^(aiux:|https?:|mailto:|tel:|#|\/|\.\/|\.\.\/)/i;
 
 /** Drop non-web / script-capable URL schemes (`javascript:`, `data:`, `vbscript:`). */
 export function safeUrl(url: string): string {
-  return SAFE_URL.test(url.trim()) ? url : "";
+  const trimmed = url.trim();
+  return SAFE_URL.test(trimmed) ? trimmed : "";
 }
 
 /** Image sources: same allowlist plus inline `data:image/*`. */
 const SAFE_IMG = /^(data:image\/|https?:|#|\/|\.\/|\.\.\/)/i;
 export function safeImageSrc(url: string): string {
-  return SAFE_IMG.test(url.trim()) ? url : "";
+  const trimmed = url.trim();
+  return SAFE_IMG.test(trimmed) ? trimmed : "";
 }
 
 const COMPONENTS = {

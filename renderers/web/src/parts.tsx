@@ -1,5 +1,5 @@
 import { AiuxIcon } from "./icons.jsx";
-import { AiuxMarkdown, safeUrl } from "./markdown.jsx";
+import { AiuxMarkdown, safeImageSrc, safeUrl } from "./markdown.jsx";
 import { useAiuxRenderContext } from "./context.js";
 import { useCopyToClipboard } from "./hooks.js";
 import { AIApproval } from "./AIApproval.jsx";
@@ -68,10 +68,12 @@ export function ImagePartView({ attachment }: { attachment: Attachment }) {
   const meta = [attachment.mimeType, formatBytes(attachment.sizeBytes)]
     .filter(Boolean)
     .join(" · ");
+  // Same scheme allowlist as markdown images — attachments are agent data (§23).
+  const src = attachment.uri ? safeImageSrc(attachment.uri) : "";
   return (
     <figure className="aiux-image">
-      {attachment.uri ? (
-        <img className="aiux-image__img" src={attachment.uri} alt={alt} />
+      {src ? (
+        <img className="aiux-image__img" src={src} alt={alt} />
       ) : (
         <div className="aiux-image__placeholder" role="img" aria-label={alt}>
           <AiuxIcon name="image" size="lg" />

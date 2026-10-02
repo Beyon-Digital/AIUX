@@ -725,7 +725,13 @@ function SelectField({
 }) {
   const fields = useContext(FieldContext);
   const options = (node.options ?? (node.items as SelectOption[])) ?? [];
-  const [value, setValue] = useField(node.name ?? "", String(node.value ?? ""));
+  // With no explicit value and no placeholder option, the browser displays
+  // the first option — register that as the initial value so the submitted
+  // fields match what the user saw selected.
+  const [value, setValue] = useField(
+    node.name ?? "",
+    String(node.value ?? (node.placeholder ? "" : options[0]?.value ?? "")),
+  );
   return (
     <span style={style}>
       <FieldLabel label={node.label}>
@@ -845,7 +851,13 @@ export function AISurface({ surface }: { surface: SurfaceTree }) {
         data-aiux-revision={surface.revision}
         aria-label={surface.name ?? `Surface ${surface.id}`}
       >
-        <SurfaceNodeView node={surface.root} />
+        {/* Keyed remount on revision: nested FormNode/field state holds its
+            own context the outer reset cannot reach — fresh defaults per
+            revision come from remounting the whole node tree. */}
+        <SurfaceNodeView
+          key={`${surface.id}:${surface.revision}`}
+          node={surface.root}
+        />
       </div>
     </FieldContext.Provider>
   );

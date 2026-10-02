@@ -179,9 +179,12 @@ function AIConversationLive({
     0;
   const contextEntities = useMemo(() => {
     const seen = new Set<string>();
+    // Top-level snapshot.context is the canonical OrderedMap — context.updated
+    // rewrites it, while session.context stays at its session.started value.
+    // Dedupe keeps the first occurrence, so the live copy must come first.
     const merged = [
-      ...(snapshot.session?.context ?? []),
       ...(snapshot.context ?? []),
+      ...(snapshot.session?.context ?? []),
       ...(context ?? []),
     ];
     return merged.filter((e) =>
