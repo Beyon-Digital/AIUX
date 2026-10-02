@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = [
+    "core/rust/protocol",
+    "core/rust/reducer",
+    "core/rust/session",
+    "core/rust/tools",
+    "core/rust/approvals",
+    "core/rust/artifacts",
+    "core/rust/surfaces",
+    "core/rust/persistence",
+    "core/rust/tests",
+    "bindings/wasm",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false

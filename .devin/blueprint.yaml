@@ -1,0 +1,24 @@
+# AIUX dev environment: Node+pnpm for JS packages; cargo/java preinstalled on base image.
+initialize:
+  - uses: github.com/actions/setup-node@v4
+    with:
+      node-version: "22"
+  - run: npm install -g pnpm@12
+# Install workspace deps incrementally.
+maintenance: |
+  pnpm install --frozen-lockfile=false
+  cargo fetch
+knowledge:
+  - name: lint
+    contents: |
+      cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings
+  - name: test
+    contents: |
+      cargo test --workspace && pnpm test
+  - name: build
+    contents: |
+      cargo build --workspace && pnpm build && ./gradlew build --no-daemon
+  - name: notes
+    contents: |
+      Plan of record: docs/PLAN.md; progress: TASKS.md. Swift/SwiftUI cannot
+      compile on this Linux box — Apple verification happens on macOS CI runners.

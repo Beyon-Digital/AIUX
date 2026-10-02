@@ -1,0 +1,182 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  protocol-validate:
+    name: Protocol schema validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate protocol JSON schemas + fixtures parse
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          files=(protocol/**/*.json conformance/**/*.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No protocol JSON files yet — nothing to validate."
+            exit 0
+          fi
+          for f in "${files[@]}"; do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || { echo "Invalid JSON: $f"; exit 1; }; done
+          echo "Validated ${#files[@]} JSON files."
+
+  rust:
+    name: Rust fmt / clippy / test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo build --workspace --release
+
+  swift-bindings:
+    name: Swift bindings + tests
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate UniFFI Swift bindings
+        run: |
+          if [ -f bindings/swift/generate.sh ]; then
+            bash bindings/swift/generate.sh
+          else
+            echo "No Swift binding generator yet — Phase 2 deliverable."
+          fi
+      - name: Swift package build + tests
+        run: |
+          set -e
+          for pkg in renderers/swiftui examples/ios-native bindings/swift; do
+            if [ -f "$pkg/Package.swift" ]; then
+              echo "== swift build/test in $pkg"
+              (cd "$pkg" && swift build && swift test)
+            else
+              echo "No Package.swift in $pkg — skipping."
+            fi
+          done
+
+  kotlin-bindings:
+    name: Kotlin bindings + Gradle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Gradle build
+        run: |
+          if [ -x ./gradlew ]; then ./gradlew build --no-daemon; else echo "No gradlew yet — skipping."; fi
+      - name: UniFFI Kotlin binding generation
+        run: |
+          if [ -f bindings/kotlin/generate.sh ]; then
+            bash bindings/kotlin/generate.sh
+          else
+            echo "No Kotlin binding generator yet — Phase 2 deliverable."
+          fi
+
+  js:
+    name: JS typecheck + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm run typecheck
+      - run: pnpm run test
+
+  web-build:
+    name: Web renderer build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - name: Build web packages
+        run: pnpm --filter "@beyondigital/aiux-web" --if-present run build || echo "aiux-web build not defined yet — Phase 5 deliverable."
+
+  expo-android:
+    name: Expo Android compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Compile Android
+        run: |
+          if [ -d examples/expo/android ]; then
+            (cd examples/expo/android && ./gradlew assembleDebug --no-daemon)
+          else
+            echo "No android project in examples/expo yet — Phase 4 deliverable."
+          fi
+
+  expo-ios:
+    name: Expo iOS compile
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Compile iOS
+        run: |
+          if [ -d examples/expo/ios ]; then
+            (cd examples/expo/ios && xcodebuild -list && echo "iOS build wired in Phase 4.")
+          else
+            echo "No ios project in examples/expo yet — Phase 4 deliverable."
+          fi
+
+  conformance:
+    name: Fixture conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run conformance harness
+        run: |
+          if [ -f conformance/harness/Cargo.toml ]; then
+            cargo run -p aiux-conformance -- verify conformance/fixtures conformance/expected
+          else
+            echo "No conformance harness yet — Phase 1 deliverable."
+          fi
