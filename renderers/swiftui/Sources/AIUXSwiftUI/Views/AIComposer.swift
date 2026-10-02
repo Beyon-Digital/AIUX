@@ -32,48 +32,61 @@ public struct AIComposer: View {
             Button {
                 emit(AIUXAction(id: AIUXAction.composerAttach))
             } label: {
-                Image(systemName: "paperclip")
-                    .font(theme.typography.heading)
+                Image(systemName: "plus")
+                    .font(theme.typography.title)
                     .foregroundStyle(colors.muted)
+                    .frame(width: 40, height: 40)
+                    .background(colors.surface)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .strokeBorder(colors.border, lineWidth: 1)
+                    )
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Attach")
 
-            TextField(placeholder, text: $text, axis: .vertical)
-                .lineLimit(1...5)
-                .font(theme.typography.body)
-                .padding(.horizontal, theme.space(.sm))
-                .padding(.vertical, theme.space(.xs))
-                .background(colors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radius.radius(.lg)))
-                .overlay(
-                    RoundedRectangle(cornerRadius: theme.radius.radius(.lg))
-                        .strokeBorder(colors.border, lineWidth: 1)
-                )
-                .accessibilityLabel("Message input")
+            HStack(alignment: .bottom, spacing: theme.space(.xs)) {
+                TextField(placeholder, text: $text, axis: .vertical)
+                    .lineLimit(1...5)
+                    .font(theme.typography.body)
+                    .padding(.horizontal, theme.space(.sm))
+                    .padding(.vertical, theme.space(.xs))
+                    .accessibilityLabel("Message input")
 
-            if runActive {
-                Button(role: .cancel) {
-                    emit(AIUXAction(id: AIUXAction.composerCancel))
-                } label: {
-                    Image(systemName: "stop.circle.fill")
-                        .font(theme.typography.title)
-                        .foregroundStyle(colors.destructive)
+                if runActive {
+                    Button(role: .cancel) {
+                        emit(AIUXAction(id: AIUXAction.composerCancel))
+                    } label: {
+                        Image(systemName: "stop.circle.fill")
+                            .font(theme.typography.title)
+                            .foregroundStyle(colors.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Cancel run")
+                } else {
+                    Button {
+                        send()
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(theme.typography.title)
+                            .foregroundStyle(canSend ? colors.accent : colors.muted.opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSend)
+                    .accessibilityLabel("Send")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Cancel run")
-            } else {
-                Button {
-                    send()
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(theme.typography.title)
-                        .foregroundStyle(canSend ? colors.accent : colors.muted)
-                }
-                .buttonStyle(.plain)
-                .disabled(!canSend)
-                .accessibilityLabel("Send")
             }
+            .padding(.leading, theme.space(.sm))
+            .padding(.trailing, 6)
+            .padding(.vertical, 4)
+            .background(colors.surface)
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .strokeBorder(colors.border, lineWidth: 1)
+            )
+
         }
         .padding(.horizontal, theme.space(.md))
         .padding(.vertical, theme.space(.sm))

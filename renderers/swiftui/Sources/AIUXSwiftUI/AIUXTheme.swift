@@ -215,43 +215,40 @@ extension AIUXTheme {
         colors: AIUXColorRoles(
             background: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
-                dark: (0.10, 0.10, 0.11, 1.0)
+                dark: (0.129, 0.129, 0.129, 1.0)
             ),
             surface: AIUXColor(
-                light: (0.96, 0.96, 0.97, 1.0),
-                dark: (0.16, 0.16, 0.18, 1.0)
+                light: (0.957, 0.957, 0.961, 1.0),
+                dark: (0.188, 0.188, 0.188, 1.0)
             ),
             surfaceElevated: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
-                dark: (0.21, 0.21, 0.24, 1.0)
+                dark: (0.208, 0.208, 0.22, 1.0)
             ),
             userSurface: AIUXColor(
-                light: (0.88, 0.92, 1.0, 1.0),
-                dark: (0.16, 0.25, 0.44, 1.0)
+                light: (0.925, 0.925, 0.945, 1.0),
+                dark: (0.227, 0.227, 0.227, 1.0)
             ),
-            assistantSurface: AIUXColor(
-                light: (0.94, 0.94, 0.96, 1.0),
-                dark: (0.19, 0.19, 0.21, 1.0)
-            ),
+            assistantSurface: AIUXColor(.clear),
             accent: AIUXColor(
-                light: (0.20, 0.42, 0.86, 1.0),
-                dark: (0.40, 0.60, 0.98, 1.0)
+                light: (0.05, 0.05, 0.05, 1.0),
+                dark: (1.0, 1.0, 1.0, 1.0)
             ),
             accentForeground: AIUXColor(
                 light: (1.0, 1.0, 1.0, 1.0),
-                dark: (0.06, 0.09, 0.17, 1.0)
+                dark: (0.05, 0.05, 0.05, 1.0)
             ),
             muted: AIUXColor(
-                light: (0.42, 0.44, 0.48, 1.0),
-                dark: (0.62, 0.64, 0.68, 1.0)
+                light: (0.44, 0.44, 0.44, 1.0),
+                dark: (0.706, 0.706, 0.706, 1.0)
             ),
             border: AIUXColor(
-                light: (0.86, 0.87, 0.89, 1.0),
-                dark: (0.32, 0.33, 0.36, 1.0)
+                light: (0.902, 0.902, 0.902, 1.0),
+                dark: (0.259, 0.259, 0.259, 1.0)
             ),
             destructive: AIUXColor(
-                light: (0.83, 0.24, 0.21, 1.0),
-                dark: (0.94, 0.39, 0.36, 1.0)
+                light: (0.851, 0.176, 0.125, 1.0),
+                dark: (0.976, 0.439, 0.4, 1.0)
             ),
             success: AIUXColor(
                 light: (0.16, 0.60, 0.34, 1.0),

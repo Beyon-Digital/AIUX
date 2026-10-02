@@ -41,6 +41,9 @@ data class AIUXColors(
     val success: Color,
     val warning: Color,
     val foreground: Color,
+    // Code blocks render as ChatGPT-style dark cards in both themes.
+    val codeSurface: Color = Color(0xFF171717),
+    val codeForeground: Color = Color(0xFFECECEC),
 )
 
 @Immutable
@@ -97,8 +100,61 @@ data class AIUXTheme(
         private val m3Light = lightColorScheme()
         private val m3Dark = darkColorScheme()
 
-        fun light(): AIUXTheme = fromM3(m3Light)
-        fun dark(): AIUXTheme = fromM3(m3Dark)
+        /**
+         * Default palettes follow the ChatGPT mobile design language: white /
+         * near-black surfaces, gray user bubbles, flat (unbubbled) assistant
+         * messages, and a monochrome accent for send/approve actions.
+         */
+        fun light(): AIUXTheme = AIUXTheme(
+            colors = AIUXColors(
+                background = Color(0xFFFFFFFF),
+                surface = Color(0xFFFFFFFF),
+                surfaceElevated = Color(0xFFF4F4F5),
+                userSurface = Color(0xFFECECF1),
+                assistantSurface = Color.Transparent,
+                accent = Color(0xFF0D0D0D),
+                accentForeground = Color(0xFFFFFFFF),
+                muted = Color(0xFFF4F4F5),
+                mutedForeground = Color(0xFF707070),
+                border = Color(0xFFE6E6E6),
+                destructive = Color(0xFFD92D20),
+                destructiveForeground = Color(0xFFFFFFFF),
+                success = Color(0xFF2E7D32),
+                warning = Color(0xFFF9A825),
+                foreground = Color(0xFF0D0D0D),
+            ),
+            typography = defaultTypography(),
+        )
+
+        fun dark(): AIUXTheme = AIUXTheme(
+            colors = AIUXColors(
+                background = Color(0xFF212121),
+                surface = Color(0xFF212121),
+                surfaceElevated = Color(0xFF303030),
+                userSurface = Color(0xFF3A3A3A),
+                assistantSurface = Color.Transparent,
+                accent = Color(0xFFFFFFFF),
+                accentForeground = Color(0xFF0D0D0D),
+                muted = Color(0xFF2F2F2F),
+                mutedForeground = Color(0xFFB4B4B4),
+                border = Color(0xFF424242),
+                destructive = Color(0xFFF97066),
+                destructiveForeground = Color(0xFF0D0D0D),
+                success = Color(0xFF81C784),
+                warning = Color(0xFFFFD54F),
+                foreground = Color(0xFFECECEC),
+            ),
+            typography = defaultTypography(),
+        )
+
+        private fun defaultTypography() = AIUXTypography(
+            body = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
+            caption = TextStyle(fontSize = 12.sp, lineHeight = 16.sp),
+            label = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
+            heading = TextStyle(fontSize = 20.sp, lineHeight = 26.sp),
+            title = TextStyle(fontSize = 17.sp, lineHeight = 23.sp),
+            code = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 19.sp),
+        )
 
         /** Map role defaults from a Material3 color scheme (plan §7 roles). */
         fun fromM3(c: androidx.compose.material3.ColorScheme): AIUXTheme = AIUXTheme(
@@ -118,15 +174,10 @@ data class AIUXTheme(
                 success = Color(0xFF2E7D32).takeIf { c == m3Light } ?: Color(0xFF81C784),
                 warning = Color(0xFFF9A825).takeIf { c == m3Light } ?: Color(0xFFFFD54F),
                 foreground = c.onSurface,
+                codeSurface = c.inverseSurface,
+                codeForeground = c.inverseOnSurface,
             ),
-            typography = AIUXTypography(
-                body = TextStyle(fontSize = 15.sp, lineHeight = 22.sp),
-                caption = TextStyle(fontSize = 12.sp, lineHeight = 16.sp),
-                label = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
-                heading = TextStyle(fontSize = 20.sp, lineHeight = 26.sp),
-                title = TextStyle(fontSize = 17.sp, lineHeight = 23.sp),
-                code = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 19.sp),
-            ),
+            typography = defaultTypography(),
         )
     }
 }
