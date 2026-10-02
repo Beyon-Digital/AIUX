@@ -616,6 +616,12 @@ extension AIUXAction {
     public static let composerCancel = "aiux.composer.cancel"
     /// Composer attachment hook: host opens its picker.
     public static let composerAttach = "aiux.composer.attach"
+    /// Composer tools toggle: host opens its tool picker.
+    public static let composerTools = "aiux.composer.tools"
+    /// Dictation hook: host owns speech-to-text.
+    public static let composerDictate = "aiux.composer.dictate"
+    /// Voice-mode entry (the empty-input action-circle affordance).
+    public static let composerVoice = "aiux.composer.voice"
     /// Approval resolve: payload `{approvalId, decision}` (+ `action` when the
     /// request carried one).
     public static let approvalResolve = "aiux.approval.resolve"

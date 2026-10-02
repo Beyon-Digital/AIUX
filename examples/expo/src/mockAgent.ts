@@ -48,7 +48,7 @@ export class MockAgent {
   }
 
   sessionCreated(title: string): AiuxEventObject {
-    return this.event("session.created", {
+    const e = this.event("session.created", {
       protocolVersion: "0.1",
       session: {
         id: this.sessionId,
@@ -70,6 +70,11 @@ export class MockAgent {
         ],
       },
     });
+    // Deterministic eventId: a second controller racing before the first
+    // flush can re-seed the same session — core dedup must treat the replay
+    // as a no-op, not a new event at a consumed sequence.
+    e.eventId = `evt:${this.sessionId}:created`;
+    return e;
   }
 
   userMessage(id: string, text: string): AiuxEventObject[] {

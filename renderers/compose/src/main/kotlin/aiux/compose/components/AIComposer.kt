@@ -1,22 +1,29 @@
 package aiux.compose.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -42,13 +48,12 @@ import aiux.compose.model.AIUXActions
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Prompt composer (§23), styled after the ChatGPT mobile composer: a
- * floating row — standalone `+` circle beside a rounded pill containing the
- * input with a monochrome circular action button at its right edge
- * (up-arrow to send, stop-square while a run is active). The row floats
- * above the content with margins + soft elevation rather than docking as
- * a bottom bar, and its contents center-align vertically. Emits actions
- * upward only.
+ * Prompt composer (§23), styled after the current ChatGPT mobile composer:
+ * one floating rounded surface, the text input in its top region, and a
+ * controls row pinned to the bottom — `+` attach on the left, and on the
+ * right an accent-ringed tools toggle, an outline mic, and the filled
+ * action circle (waveform → voice mode while empty, up-arrow → send with
+ * text, square → stop while a run is active). Emits actions upward only.
  */
 @Composable
 fun AIComposer(
@@ -84,42 +89,35 @@ fun AIComposer(
                 top = theme.spacing.xs,
                 bottom = theme.spacing.md,
             ),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Unified floating pill: + | input | action circle — the current
-        // ChatGPT mobile composer shape (borderless, shadowed).
         Surface(
-            color = theme.colors.surfaceElevated,
-            shape = RoundedCornerShape(28.dp),
-            shadowElevation = 4.dp,
+            color = theme.colors.inputSurface,
+            shape = RoundedCornerShape(30.dp),
+            border = BorderStroke(1.dp, theme.colors.border),
+            shadowElevation = 2.dp,
             modifier = Modifier.weight(1f),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = theme.spacing.sm, end = theme.spacing.xs),
+            Column(
+                modifier = Modifier.padding(
+                    start = theme.spacing.lg,
+                    end = theme.spacing.sm,
+                    top = theme.spacing.sm,
+                    bottom = theme.spacing.sm,
+                ),
             ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "add attachment",
-                    tint = theme.colors.foreground,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable(enabled = enabled) { onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH)) }
-                        .padding(theme.spacing.sm),
-                )
                 TextField(
                     value = text,
                     onValueChange = { text = it },
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
                         .semantics { contentDescription = "message input" },
                     placeholder = {
                         Text(placeholder, style = theme.typography.body, color = theme.colors.mutedForeground)
                     },
                     textStyle = theme.typography.body,
                     enabled = enabled,
-                    maxLines = 4,
+                    maxLines = 6,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -134,48 +132,196 @@ fun AIComposer(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { send() }),
                 )
-                ComposerActionButton(
-                    running = running,
-                    canSend = canSend,
-                    onSend = { send() },
-                    onCancel = { onAction(AIUXAction(AIUXActions.COMPOSER_CANCEL)) },
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = theme.spacing.xs),
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "add attachment",
+                        tint = theme.colors.foreground,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable(enabled = enabled) {
+                                onAction(AIUXAction(AIUXActions.COMPOSER_ATTACH))
+                            }
+                            .padding(theme.spacing.sm),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    ComposerGlyphButton(
+                        enabled = enabled,
+                        contentDescription = "composer tools",
+                        onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_TOOLS)) },
+                    ) {
+                        ToolsGlyph(accent = theme.colors.accent, glyph = theme.colors.foreground)
+                    }
+                    Spacer(Modifier.width(theme.spacing.xs))
+                    ComposerGlyphButton(
+                        enabled = enabled,
+                        contentDescription = "dictate",
+                        onClick = { onAction(AIUXAction(AIUXActions.COMPOSER_DICTATE)) },
+                    ) {
+                        MicGlyph(color = theme.colors.foreground)
+                    }
+                    Spacer(Modifier.width(theme.spacing.sm))
+                    ComposerActionButton(
+                        running = running,
+                        canSend = canSend,
+                        onSend = { send() },
+                        onCancel = { onAction(AIUXAction(AIUXActions.COMPOSER_CANCEL)) },
+                        onVoice = { onAction(AIUXAction(AIUXActions.COMPOSER_VOICE)) },
+                    )
+                }
             }
         }
     }
 }
 
-/** Monochrome circular action: white-on-black up-arrow, or stop square. */
+@Composable
+private fun ComposerGlyphButton(
+    enabled: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+    glyph: @Composable () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { this.contentDescription = contentDescription },
+        contentAlignment = Alignment.Center,
+    ) { glyph() }
+}
+
+/**
+ * Filled accent action circle: waveform (voice mode) while the input is
+ * empty, up-arrow while it has text, stop square while a run is active.
+ */
 @Composable
 private fun ComposerActionButton(
     running: Boolean,
     canSend: Boolean,
     onSend: () -> Unit,
     onCancel: () -> Unit,
+    onVoice: () -> Unit,
 ) {
     val theme = AIUX.theme
-    val active = running || canSend
     Box(
         modifier = Modifier
-            .padding(vertical = theme.spacing.xs)
-            .size(36.dp)
+            .size(40.dp)
             .clip(CircleShape)
-            .background(if (active) theme.colors.accent else theme.colors.muted)
-            .clickable(enabled = active) { if (running) onCancel() else onSend() }
-            .semantics { contentDescription = if (running) "cancel run" else "send message" },
+            .background(theme.colors.accent)
+            .clickable { if (running) onCancel() else if (canSend) onSend() else onVoice() }
+            .semantics {
+                contentDescription = if (running) "cancel run" else if (canSend) "send message" else "voice mode"
+            },
         contentAlignment = Alignment.Center,
     ) {
         if (running) {
             Box(
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(13.dp)
                     .background(theme.colors.accentForeground, RoundedCornerShape(3.dp)),
             )
-        } else {
-            // ChatGPT-style solid up-arrow (icon-extended isn't a dep — drawn).
+        } else if (canSend) {
             UpArrowGlyph(
-                color = if (active) theme.colors.accentForeground else theme.colors.mutedForeground,
-                modifier = Modifier.size(16.dp),
+                color = theme.colors.accentForeground,
+                modifier = Modifier.size(18.dp),
+            )
+        } else {
+            WaveformGlyph(
+                color = theme.colors.accentForeground,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+/** Accent-ringed circle with a magnifier — the tools toggle. */
+@Composable
+private fun ToolsGlyph(accent: Color, glyph: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(28.dp)) {
+        val w = size.width
+        val ring = w * 0.075f
+        // Accent ring.
+        drawCircle(accent, radius = w * 0.46f, style = Stroke(width = ring))
+        // Magnifier lens + handle inside.
+        val lensR = w * 0.14f
+        val lensC = Offset(w * 0.44f, w * 0.44f)
+        drawCircle(glyph, radius = lensR, center = lensC, style = Stroke(width = ring * 0.9f))
+        drawLine(
+            glyph,
+            Offset(lensC.x + lensR * 0.72f, lensC.y + lensR * 0.72f),
+            Offset(w * 0.62f, w * 0.62f),
+            strokeWidth = ring * 0.9f,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+/** Outline microphone glyph (material-icons-extended isn't a dep — drawn). */
+@Composable
+private fun MicGlyph(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(22.dp)) {
+        val w = size.width
+        val h = size.height
+        val stroke = w * 0.085f
+        // Capsule body.
+        drawRoundRect(
+            color,
+            topLeft = Offset(w * 0.34f, h * 0.04f),
+            size = Size(w * 0.32f, h * 0.52f),
+            cornerRadius = CornerRadius(w * 0.16f, w * 0.16f),
+            style = Stroke(width = stroke),
+        )
+        // U-shaped stand arc.
+        drawArc(
+            color,
+            startAngle = 15f,
+            sweepAngle = 150f,
+            useCenter = false,
+            topLeft = Offset(w * 0.15f, h * 0.30f),
+            size = Size(w * 0.70f, h * 0.52f),
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+        // Stem + base.
+        drawLine(
+            color,
+            Offset(w * 0.5f, h * 0.82f),
+            Offset(w * 0.5f, h * 0.97f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color,
+            Offset(w * 0.36f, h * 0.97f),
+            Offset(w * 0.64f, h * 0.97f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+/** Voice-mode waveform: five rounded vertical bars. */
+@Composable
+private fun WaveformGlyph(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val bar = w * 0.10f
+        val heights = floatArrayOf(0.42f, 0.78f, 1f, 0.66f, 0.34f)
+        val gap = (w - bar * heights.size) / (heights.size - 1)
+        heights.forEachIndexed { i, frac ->
+            val bh = h * 0.82f * frac
+            drawRoundRect(
+                color,
+                topLeft = Offset(i * (bar + gap), (h - bh) / 2f),
+                size = Size(bar, bh),
+                cornerRadius = CornerRadius(bar / 2f, bar / 2f),
             )
         }
     }

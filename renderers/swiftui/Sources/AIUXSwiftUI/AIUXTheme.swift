@@ -52,6 +52,8 @@ public struct AIUXColorRoles {
     public var destructive: AIUXColor
     public var success: AIUXColor
     public var warning: AIUXColor
+    /// Composer/input surface — darker than elevated cards in dark mode.
+    public var inputSurface: AIUXColor
 
     /// Secondary text/icon tone derived from `muted` by default.
     public func foreground(in scheme: ColorScheme) -> Color {
@@ -189,6 +191,7 @@ public struct AIUXResolvedColors {
     public var destructive: Color
     public var success: Color
     public var warning: Color
+    public var inputSurface: Color
 
     init(roles: AIUXColorRoles, scheme: ColorScheme) {
         background = roles.background.resolve(in: scheme)
@@ -203,6 +206,7 @@ public struct AIUXResolvedColors {
         destructive = roles.destructive.resolve(in: scheme)
         success = roles.success.resolve(in: scheme)
         warning = roles.warning.resolve(in: scheme)
+        inputSurface = roles.inputSurface.resolve(in: scheme)
     }
 }
 
@@ -257,6 +261,10 @@ extension AIUXTheme {
             warning: AIUXColor(
                 light: (0.80, 0.52, 0.10, 1.0),
                 dark: (0.95, 0.70, 0.25, 1.0)
+            ),
+            inputSurface: AIUXColor(
+                light: (1.0, 1.0, 1.0, 1.0),
+                dark: (0.122, 0.122, 0.122, 1.0)
             )
         ),
         typography: AIUXTypography(

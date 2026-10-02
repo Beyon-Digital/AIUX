@@ -44,6 +44,8 @@ data class AIUXColors(
     // Code blocks render as ChatGPT-style dark cards in both themes.
     val codeSurface: Color = Color(0xFF171717),
     val codeForeground: Color = Color(0xFFECECEC),
+    // Composer/input field surface — darker than elevated cards in dark mode.
+    val inputSurface: Color = surfaceElevated,
 )
 
 @Immutable
@@ -122,6 +124,7 @@ data class AIUXTheme(
                 success = Color(0xFF2E7D32),
                 warning = Color(0xFFF9A825),
                 foreground = Color(0xFF0D0D0D),
+                inputSurface = Color(0xFFFFFFFF),
             ),
             typography = defaultTypography(),
         )
@@ -143,6 +146,7 @@ data class AIUXTheme(
                 success = Color(0xFF81C784),
                 warning = Color(0xFFFFD54F),
                 foreground = Color(0xFFECECEC),
+                inputSurface = Color(0xFF1F1F1F),
             ),
             typography = defaultTypography(),
         )
@@ -176,6 +180,7 @@ data class AIUXTheme(
                 foreground = c.onSurface,
                 codeSurface = c.inverseSurface,
                 codeForeground = c.inverseOnSurface,
+                inputSurface = c.surfaceContainer,
             ),
             typography = defaultTypography(),
         )

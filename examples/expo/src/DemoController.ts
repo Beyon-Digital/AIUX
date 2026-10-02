@@ -1,7 +1,7 @@
 import type { AIUXAction, AIUXTransport } from "@beyondigital/aiux-expo";
 import {
   createAIUXTransport,
-  getAIUXSnapshot,
+  serializeAIUXSession,
 } from "@beyondigital/aiux-expo";
 
 import { MockAgent, type AiuxEventObject } from "./mockAgent";
@@ -105,18 +105,21 @@ export class DemoController {
 
   /**
    * Build a controller that resumes against the persisted native session:
-   * sequences continue from `next_expected_sequence`, entity ids carry a
+   * sequences continue from `nextExpectedSequence`, entity ids carry a
    * fresh epoch, and the session seed is skipped when one already exists.
+   * Reads the *serialized* state — the render snapshot intentionally omits
+   * ordering bookkeeping (persistence.rs).
    */
   static async create(sessionId: string): Promise<DemoController> {
-    const snapshot = await getAIUXSnapshot(sessionId).catch(
-      () => ({}) as Record<string, unknown>,
-    );
+    const persisted = await serializeAIUXSession(sessionId)
+      .then((json) => JSON.parse(json) as Record<string, unknown>)
+      .catch(() => ({}) as Record<string, unknown>);
     const nextSeq =
-      typeof snapshot.next_expected_sequence === "number"
-        ? snapshot.next_expected_sequence
+      typeof persisted.nextExpectedSequence === "number"
+        ? persisted.nextExpectedSequence
         : 0;
-    const fresh = snapshot.session == null;
+    const state = persisted.state as Record<string, unknown> | undefined;
+    const fresh = state?.session == null;
     const idEpoch = `${Date.now().toString(36)}${Math.random()
       .toString(36)
       .slice(2, 5)}`;
