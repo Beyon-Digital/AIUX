@@ -9,7 +9,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 0 → Phase 1**
+- Current phase: **Phase 8 → PR 10** (release hardening landed; `v0.1.0` tag
+  pending merge + DoD signoff)
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM (PR 7)
@@ -140,12 +141,23 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 8 — Production/release hardening → PR 10
 
-- [ ] benchmarks (first render, 1k-msg restore, stream throughput, 100-ev
-  batch, surface render, memory)
-- [ ] large conversation tests + accessibility checks + golden tests
-- [ ] compatibility matrix + migration docs + package docs
-- [ ] release notes automation + dependency audit
-- [ ] tag `v0.1.0` internal release via `release.yml`
+- [x] benchmarks (first render, 1k-msg restore, stream throughput, 100-ev
+  batch, surface render, memory) — `benches/` + checked-in `BASELINE.md`
+- [x] large conversation tests + accessibility checks + golden tests —
+  `core/rust/tests/tests/large_conversation.rs` (1k msgs, idempotent replay,
+  reversed chunks, 5k deltas); `docs/renderers/accessibility.md` checklists
+  (manual cells open for DoD pass); web DOM goldens in CI, Flutter goldens
+  as `flutter-goldens` artifact job
+- [x] compatibility matrix + migration docs + package docs —
+  `docs/integration/compatibility-matrix.md`, `migration.md`,
+  `compatibility-policy.md`, full §24 doc set under `docs/`
+- [x] release notes automation + dependency audit — `tools/release-notes.mjs`
+  + `docs/integration/dependency-audit.md` (cargo clean; pnpm 4 fixed,
+  2 documented Expo transitives; gradle inventory + OWASP path noted)
+- [ ] tag `v0.1.0` internal release via `release.yml` — orchestrator cuts
+  after this PR merges + v0.1 DoD signoff (not part of PR 10)
+- [x] `release.yml` real pipeline bodies (bindings gen, XCFramework, AARs,
+  wasm, JS package builds, checksums, draft GitHub Release)
 - **Gate:** v0.1 DoD (plan §26) — one Expo app installs AIUX, renders
   `<AIConversation/>`, demo conversation covers streaming/markdown/code/
   tool/progress/approval/surface/context/error+retry/light+dark.

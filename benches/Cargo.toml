@@ -1,0 +1,17 @@
+[package]
+name = "aiux-benches"
+version = "0.1.0"
+edition = "2021"
+license = "Proprietary"
+publish = false
+
+[dependencies]
+aiux-session = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "session"
+harness = false

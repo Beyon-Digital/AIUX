@@ -15,9 +15,9 @@
     "@beyondigital/aiux-transport-js": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "22.18.6",
-    "ajv": "8.17.1",
+    "@types/node": "22.20.4",
+    "ajv": "8.20.0",
     "typescript": "5.9.2",
-    "vitest": "3.2.4"
+    "vitest": "^4.1.11"
   }
 }
