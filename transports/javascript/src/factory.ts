@@ -58,6 +58,12 @@ export interface EventFactory {
   readonly sessionId: string;
   /** Sequence the next minted event will get (for assertions / diagnostics). */
   peekSequence(): number;
+  /**
+   * Advance the minted sequence past `n` — used when a canonical envelope
+   * passes through untouched so a later factory-minted event can't reuse
+   * its sequence.
+   */
+  observeSequence(n: number): void;
   /** Mint an event for any wire `type` — use the typed helpers when possible. */
   emit<P extends object>(type: string, payload: P): AiuxEventOf<P>;
   sessionCreated(session: Session): AiuxEventOf<SessionCreated>;
@@ -121,6 +127,9 @@ export function createEventFactory(
   return {
     sessionId,
     peekSequence: () => sequence,
+    observeSequence: (n: number) => {
+      if (Number.isInteger(n) && n >= sequence) sequence = n + 1;
+    },
     emit,
     sessionCreated: (session) =>
       emit<SessionCreated>("session.created", { ...v, session }),

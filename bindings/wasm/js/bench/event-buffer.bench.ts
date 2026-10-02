@@ -8,8 +8,6 @@
  */
 import { bench, describe } from "vitest";
 import { EventBuffer } from "../src/buffer.js";
-import { MockCore } from "../src/mock.js";
-import { AiuxSession } from "../src/session.js";
 
 const DELTA = {
   eventId: "e",
@@ -20,39 +18,65 @@ const DELTA = {
   payload: { text: "lorem ipsum ".repeat(4) },
 };
 
-function sessionWithBuffer(policy: ConstructorParameters<typeof EventBuffer>[1]) {
-  const core = new MockCore();
-  const session = AiuxSession.create(core, { protocolVersion: "0.1" });
-  const buffer = new EventBuffer<string>(
-    (eventsJson) => {
-      session.dispatchBatch(eventsJson);
-      return eventsJson;
-    },
-    policy,
-  );
-  return { buffer, session };
+// Pass-through sink: the bench header promises JS-side overhead only, and
+// bench setup/teardown hooks run once per task (not per iteration) — a
+// dispatching sink would accumulate session state across thousands of
+// iterations and fold dispatch cost into the timed samples.
+function bufferWith(policy: ConstructorParameters<typeof EventBuffer>[1]) {
+  return new EventBuffer<string>((eventsJson) => eventsJson, policy);
 }
 
+// Buffer construction and the final close-flush live in setup/teardown so
+// the timed region measures steady-state pushes only.
 describe("EventBuffer flush policies (provisional defaults)", () => {
-  bench("default policy (32 ms / 64 events / 64 KiB) — 64-event flushes", () => {
-    const { buffer } = sessionWithBuffer({ flushIntervalMs: 32 });
-    for (let i = 0; i < 64; i++) buffer.push({ ...DELTA, sequence: i });
-    buffer.close();
-  });
+  let buffer: EventBuffer<string>;
 
-  bench("size-triggered flush — 64 events pushed then flushed", () => {
-    const { buffer } = sessionWithBuffer({ maxEvents: 64 });
-    for (let i = 0; i < 64; i++) buffer.push({ ...DELTA, sequence: i });
-    buffer.close();
-  });
+  bench(
+    "default policy (32 ms / 64 events / 64 KiB) — 64-event flushes",
+    () => {
+      for (let i = 0; i < 64; i++) buffer.push({ ...DELTA, sequence: i });
+    },
+    {
+      setup: () => {
+        buffer = bufferWith({ flushIntervalMs: 32 });
+      },
+      teardown: () => {
+        buffer.close();
+      },
+    },
+  );
 
-  bench("push overhead only (no flush in window)", () => {
-    const { buffer } = sessionWithBuffer({
-      flushIntervalMs: 50,
-      maxEvents: Number.MAX_SAFE_INTEGER,
-      maxBytes: Number.MAX_SAFE_INTEGER,
-    });
-    buffer.push({ ...DELTA, sequence: 1 });
-    buffer.close();
-  });
+  bench(
+    "size-triggered flush — 64 events pushed then flushed",
+    () => {
+      for (let i = 0; i < 64; i++) buffer.push({ ...DELTA, sequence: i });
+    },
+    {
+      setup: () => {
+        buffer = bufferWith({ maxEvents: 64 });
+      },
+      teardown: () => {
+        buffer.close();
+      },
+    },
+  );
+
+  bench(
+    "push overhead only (no flush in window)",
+    () => {
+      buffer.push({ ...DELTA, sequence: 1 });
+    },
+    {
+      setup: () => {
+        buffer = bufferWith({
+          flushIntervalMs: 50,
+          maxEvents: Number.MAX_SAFE_INTEGER,
+          maxBytes: Number.MAX_SAFE_INTEGER,
+        });
+      },
+      teardown: () => {
+        buffer.close();
+      },
+    },
+  );
 });

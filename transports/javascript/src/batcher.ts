@@ -75,6 +75,11 @@ export async function streamToBatches(
   let buffer: AiuxEvent[] = [];
   let batches = 0;
   let events = 0;
+  // Whether the propagating error came from the sink — lets the outer
+  // catch avoid re-reporting a sink failure as a source failure. A boolean
+  // rather than the error value itself: a source may legitimately throw
+  // `undefined`, which would collide with an uninitialized sentinel.
+  let sinkFailed = false;
 
   const flush = async (): Promise<void> => {
     if (buffer.length === 0) return;
@@ -84,11 +89,30 @@ export async function streamToBatches(
       await sink(JSON.stringify(batch));
     } catch (error) {
       onError?.(error, "sink");
+      sinkFailed = true;
       throw error;
     }
     batches += 1;
     events += batch.length;
   };
+
+  // Resolves once when `signal` aborts; raced against a pending `next()` so
+  // a source blocked forever still lets the pump exit. The listener is
+  // detached in `finally` — `once` only cleans up if it fires, so a
+  // normally-completing stream would otherwise leave it registered on a
+  // long-lived AbortSignal.
+  let abortListener: (() => void) | undefined;
+  const aborted: Promise<"abort" | null> | null = signal
+    ? new Promise((resolve) => {
+        if (signal.aborted) resolve("abort");
+        else {
+          abortListener = () => resolve("abort");
+          signal.addEventListener("abort", abortListener, {
+            once: true,
+          });
+        }
+      })
+    : null;
 
   let pendingNext: Promise<IteratorResult<EventOrBatch>> | null = null;
   try {
@@ -99,27 +123,48 @@ export async function streamToBatches(
         continue;
       }
       pendingNext ??= it.next();
-      let result: IteratorResult<EventOrBatch> | "flush-tick";
+      const racers: Promise<IteratorResult<EventOrBatch> | "flush-tick" | "abort" | null>[] =
+        [pendingNext];
       if (buffer.length > 0 && flushIntervalMs > 0) {
-        result = await Promise.race([pendingNext, delay(flushIntervalMs).then(() => "flush-tick" as const)]);
-      } else {
-        result = await pendingNext;
+        racers.push(delay(flushIntervalMs).then(() => "flush-tick" as const));
       }
+      if (aborted) racers.push(aborted);
+      const result = await Promise.race(racers);
+      if (result === "abort") break;
       if (result === "flush-tick") {
         // The iterator next() is still in flight — keep it for the next loop.
         await flush();
         continue;
       }
       pendingNext = null;
-      if (result.done) break;
+      if (result === null || result.done) break;
       const value = result.value;
-      if (Array.isArray(value)) buffer.push(...value);
-      else buffer.push(value as AiuxEvent);
+      const items = Array.isArray(value) ? value : [value];
+      // Push one event at a time so an oversized yield still flushes at
+      // maxBatchSize boundaries instead of producing an oversized batch.
+      for (const item of items) {
+        buffer.push(item as AiuxEvent);
+        if (buffer.length >= maxBatchSize) await flush();
+      }
     }
   } catch (error) {
-    onError?.(error, "source");
+    // A sink failure was already reported (and its batch cleared) inside
+    // flush() — reporting it again as "source" would double-count.
+    if (!sinkFailed) {
+      onError?.(error, "source");
+      // Still deliver already-consumed events before propagating — a
+      // source failure must not strand a partial batch.
+      try {
+        await flush();
+      } catch (flushError) {
+        onError?.(flushError, "sink");
+      }
+    }
     throw error;
   } finally {
+    if (abortListener !== undefined) {
+      signal?.removeEventListener("abort", abortListener);
+    }
     // Tell finite sources to release. Never block on a pending next().
     const released = it.return?.();
     if (pendingNext === null) await released?.catch(() => undefined);

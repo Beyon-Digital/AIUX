@@ -145,7 +145,12 @@ export class AiuxSession {
   subscribe(listener: SnapshotListener): () => void {
     this.#requireHandle();
     this.#listeners.add(listener);
-    this.#notifyOne(listener);
+    try {
+      this.#notifyOne(listener);
+    } catch (error) {
+      this.#listeners.delete(listener);
+      throw error;
+    }
     return () => {
       this.#listeners.delete(listener);
     };
@@ -186,16 +191,29 @@ export class AiuxSession {
   }
 
   #notifyOne(listener: SnapshotListener): void {
+    // A snapshot() failure is a core error — propagate it (the caller never
+    // got the promised initial snapshot), do not misroute it to the
+    // listener-error sink.
+    const snapshot = this.snapshot();
     try {
-      listener(this.snapshot());
+      listener(snapshot);
     } catch (error) {
       this.#reportListenerError(error, listener);
     }
   }
 
   #reportListenerError(error: unknown, listener: SnapshotListener): void {
-    if (this.#onListenerError) {
-      this.#onListenerError(error, listener);
+    const handler = this.#onListenerError;
+    if (handler) {
+      try {
+        handler(error, listener);
+      } catch (handlerError) {
+        // The error handler itself threw — report it asynchronously so a
+        // completed dispatch is never reported as failed.
+        queueMicrotask(() => {
+          throw handlerError;
+        });
+      }
       return;
     }
     // A listener bug must not corrupt or silently abort the dispatch path —

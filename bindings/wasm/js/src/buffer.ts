@@ -185,17 +185,25 @@ export class EventBuffer<T = void> {
     }
   }
 
-  /** Flush anything queued and stop accepting new events. */
+  /**
+   * Flush anything queued and stop accepting new events. Always tears down
+   * even when the final flush throws — no retry timer survives `close()`.
+   * Undelivered events stay queued (visible via {@link pending}) so the
+   * caller can retry through `flush()` and still surface the failure.
+   */
   close(): T | undefined {
     if (this.#closed) return undefined;
-    const result = this.flush();
     this.#closed = true;
-    this.#clearTimer();
-    return result;
+    try {
+      return this.flush();
+    } finally {
+      this.#clearTimer();
+    }
   }
 
   #schedule(): void {
-    if (this.#timer !== undefined || this.#pending.length === 0) return;
+    if (this.#closed || this.#timer !== undefined || this.#pending.length === 0)
+      return;
     this.#timer = setTimeout(() => {
       this.#timer = undefined;
       try {

@@ -79,29 +79,36 @@ const sleep = (ms: number): Promise<void> =>
 /** Push→pull bridge between socket callbacks and the async iterator. */
 class EventQueue {
   private items: AiuxEvent[][] = [];
-  private waiters: Array<(r: IteratorResult<AiuxEvent[]>) => void> = [];
+  private waiters: Array<{
+    resolve: (r: IteratorResult<AiuxEvent[]>) => void;
+    reject: (e: unknown) => void;
+  }> = [];
   private done = false;
   private failure: unknown;
 
   push(batch: AiuxEvent[]): void {
     if (this.done || batch.length === 0) return;
     const w = this.waiters.shift();
-    if (w) w({ value: batch, done: false });
+    if (w) w.resolve({ value: batch, done: false });
     else this.items.push(batch);
   }
 
   finish(): void {
     if (this.done) return;
     this.done = true;
-    for (const w of this.waiters.splice(0)) w({ value: undefined, done: true });
+    for (const w of this.waiters.splice(0))
+      w.resolve({ value: undefined, done: true });
   }
 
   fail(error: unknown): void {
     if (this.done) return;
     this.done = true;
     this.failure = error;
-    this.items.length = 0;
-    for (const w of this.waiters.splice(0)) w({ value: undefined, done: true });
+    // A pending read must see the transport error, not a clean completion.
+    // Buffered batches are kept: next() drains them in order before the
+    // stored failure throws once — a socket error must not discard events
+    // the server already delivered.
+    for (const w of this.waiters.splice(0)) w.reject(error);
   }
 
   async next(): Promise<IteratorResult<AiuxEvent[]>> {
@@ -115,7 +122,9 @@ class EventQueue {
       }
       return { value: undefined, done: true };
     }
-    return new Promise((resolve) => this.waiters.push(resolve));
+    return new Promise((resolve, reject) =>
+      this.waiters.push({ resolve, reject }),
+    );
   }
 }
 
@@ -182,8 +191,12 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
         return;
       }
       const events = normalize(parsed);
-      if (events.some(isTerminalEvent)) state.sawTerminal = true;
       queue.push(events);
+      if (events.some(isTerminalEvent)) {
+        state.sawTerminal = true;
+        // The run ended — close the socket instead of waiting for the server.
+        adapter.close?.();
+      }
     };
     ws.onerror = (ev: unknown) => {
       onIssue({ kind: "transport", reason: "socket-error", raw: String(ev) });
@@ -251,7 +264,50 @@ export function createWebSocketAdapter(options: WsAdapterOptions): WsAdapter {
           queue.fail(error);
         }
       }
-      return queue as unknown as AsyncIterator<AiuxEvent[]>;
+      const queueIt = queue as unknown as AsyncIterator<AiuxEvent[]>;
+      let finished = false;
+      // A consumed queue failure held while buffered starts drain — thrown
+      // on the read after they are delivered so the transport error
+      // surfaces exactly once (EventQueue clears `failure` as it throws).
+      let heldFailure: { error: unknown } | undefined;
+      const drain = (): AiuxEvent[] => {
+        finished = true;
+        return normalize.finish?.() ?? [];
+      };
+      // `for await..of` breaking early calls `return()` — route it to
+      // `close()` so the socket (and reconnect loop) tears down too.
+      return {
+        next: async () => {
+          if (heldFailure !== undefined) {
+            const { error } = heldFailure;
+            heldFailure = undefined;
+            throw error;
+          }
+          try {
+            const result = await queueIt.next();
+            if (!result.done || finished) return result;
+            // Queue drained — seal buffered tool calls so a truncated call
+            // still emits `tool.started` before the stream reports done.
+            const finishing = drain();
+            if (finishing.length > 0) return { value: finishing, done: false };
+            return result;
+          } catch (error) {
+            // A terminal socket failure must still surface buffered starts
+            // first — consumers stop iterating on the rejection.
+            if (finished) throw error;
+            const finishing = drain();
+            if (finishing.length > 0) {
+              heldFailure = { error };
+              return { value: finishing, done: false };
+            }
+            throw error;
+          }
+        },
+        return: async () => {
+          adapter.close?.();
+          return { value: undefined, done: true };
+        },
+      };
     },
     close() {
       if (state.closed) return;

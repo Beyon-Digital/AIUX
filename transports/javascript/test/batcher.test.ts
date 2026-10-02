@@ -101,6 +101,26 @@ describe("streamToBatches", () => {
     ).rejects.toThrow("stream died");
     expect(seen).toEqual(["source:stream died"]);
   });
+
+  it("reports source + flushes the buffer when the source throws undefined", async () => {
+    const { batches, sink } = collect();
+    const seen: string[] = [];
+    async function* bad() {
+      yield makeEvents(1)[0]!;
+      // eslint-disable-next-line no-throw-literal -- deliberate edge case:
+      // iterators may reject with any value, including undefined.
+      throw undefined;
+    }
+    await expect(
+      streamToBatches(bad(), sink, {
+        onError: (e, ctx) => seen.push(`${ctx}:${String(e)}`),
+      }),
+    ).rejects.toBeUndefined();
+    expect(seen).toEqual(["source:undefined"]);
+    // The buffered event must still reach the sink.
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(1);
+  });
 });
 
 describe("conformance replay", () => {
