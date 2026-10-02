@@ -222,6 +222,32 @@ jobs:
           dart analyze
           flutter test
 
+  flutter-goldens:
+    name: Flutter golden screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build aiux-capi for dart:ffi
+        run: bash bindings/dart/generate.sh
+      - name: Generate golden screenshots
+        run: |
+          set -e
+          cd renderers/flutter
+          flutter pub get
+          AIUX_GOLDENS=1 flutter test test/golden_test.dart --update-goldens
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-goldens
+          path: renderers/flutter/test/goldens/
+          retention-days: 30
+          if-no-files-found: error
+
   conformance:
     name: Fixture conformance
     runs-on: ubuntu-latest

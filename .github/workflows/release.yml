@@ -8,6 +8,9 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
+# Plan §20 — every artifact derives from the tag commit. Internal v0.x
+# targets: GitHub Releases + GitHub Packages only.
+
 jobs:
   validate-tag:
     name: Validate release tag
@@ -35,12 +38,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --release
       - name: Fixture conformance
-        run: |
-          if [ -f conformance/harness/Cargo.toml ]; then
-            cargo run -p aiux-conformance -- verify conformance/fixtures conformance/expected
-          else
-            echo "Conformance harness not present yet."
-          fi
+        run: cargo run -p aiux-conformance -- verify conformance/fixtures conformance/expected
 
   build-rust:
     name: Build Rust targets
@@ -50,11 +48,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --release
+      - name: Package native libs
+        run: |
+          mkdir -p dist/rust
+          find target/release -maxdepth 1 -type f \
+            \( -name 'libaiux_*.so' -o -name 'libaiux_*.a' \) \
+            -exec cp {} dist/rust/ \;
+          ls -la dist/rust
       - uses: actions/upload-artifact@v4
         with:
           name: rust-targets
-          path: target/release/
+          path: dist/rust/
+          if-no-files-found: error
 
   build-apple:
     name: Bindings + XCFramework
@@ -63,23 +70,63 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - name: Generate bindings + build XCFramework
-        run: echo "Wired in Phase 2 — UniFFI gen → lipo → xcframework."
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios, aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - name: Generate UniFFI Swift bindings
+        run: bash bindings/swift/generate.sh
+      - name: Build AIUXCore.xcframework
+        run: bash bindings/swift/package-xcframework.sh
+      - name: Package apple artifacts
+        run: |
+          mkdir -p dist
+          cd bindings/swift/build/xcframework
+          zip -r "$GITHUB_WORKSPACE/dist/AIUXCore.xcframework.zip" AIUXCore.xcframework
+          cd "$GITHUB_WORKSPACE"
+          tar -czf dist/aiux-swift-bindings.tar.gz \
+            -C bindings/swift Sources/AIUXCore Sources/AIUXCoreFFI Package.swift
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple-artifacts
+          path: dist/
+          if-no-files-found: error
 
   build-android:
-    name: Android artifact
+    name: Android artifacts (AARs)
     needs: conformance
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - run: |
-          if [ -x ./gradlew ]; then ./gradlew build --no-daemon; else echo "Gradle build wired in Phase 2/3."; fi
+      - name: Install cargo-ndk + Android NDK
+        run: |
+          cargo install cargo-ndk --version "^4" --locked
+          sdkmanager "ndk;27.0.12077973"
+      - name: Generate UniFFI Kotlin bindings + NDK slices
+        run: bash bindings/kotlin/generate.sh
+      - name: Build AARs
+        run: ./gradlew :bindings:kotlin:assembleRelease :renderers:compose:assembleRelease --no-daemon
+      - name: Package android artifacts
+        run: |
+          mkdir -p dist
+          cp bindings/kotlin/build/outputs/aar/*.aar dist/
+          cp renderers/compose/build/outputs/aar/*.aar dist/
+          tar -czf dist/aiux-kotlin-bindings.tar.gz -C bindings/kotlin/build/generated .
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: dist/
+          if-no-files-found: error
 
   build-js-wasm:
     name: WASM + JS packages
@@ -88,13 +135,41 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile=false
-      - run: pnpm run build
+      - name: Install wasm-bindgen-cli (must match Cargo.lock)
+        run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - name: Build wasm core
+        run: bash bindings/wasm/build.sh
+      - name: Install + build all JS packages
+        run: |
+          pnpm install --frozen-lockfile=false
+          pnpm -r --if-present run build
+      - name: Package JS artifacts
+        run: |
+          mkdir -p dist
+          tar -czf dist/aiux-wasm-pkg.tar.gz -C bindings/wasm pkg
+          # npm-ready package dirs (dist built above) for GitHub Packages
+          for p in bindings/wasm/js transports/javascript renderers/web \
+                   bridges/expo adapters/sse adapters/websocket \
+                   adapters/ai-sdk adapters/graphql adapters/shared; do
+            tar -czf "dist/js-$(basename "$p").tar.gz" \
+              --exclude=node_modules --exclude=test --exclude=src/__tests__ \
+              -C "$(dirname "$p")" "$(basename "$p")"
+          done
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: js-artifacts
+          path: dist/
+          if-no-files-found: error
 
   github-release:
     name: GitHub Release + checksums
@@ -105,7 +180,33 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Generate checksums + release
+        with:
+          fetch-depth: 0        # release-notes needs tag history
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-artifacts"
+          path: release/
+      - uses: actions/download-artifact@v4
+        with:
+          name: rust-targets
+          path: release/rust-targets
+      - name: Generate release notes
+        run: node tools/release-notes.mjs "" "${GITHUB_REF_NAME}" > release-notes.md
+      - name: Checksums
         run: |
-          echo "Collect all artifacts, sha256sum them, gh release create ${GITHUB_REF_NAME}"
-          echo "Internal v0.x: GitHub Releases + GitHub Packages only (plan §20)."
+          cd release
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > ../SHA256SUMS
+          cd ..
+          cat SHA256SUMS
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --draft \
+            --title "AIUX ${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            release/** SHA256SUMS
+          echo "Draft release created — review + publish to ship."
+          echo "JS package tarballs are ready for GitHub Packages"
+          echo "(npm.pkg.github.com, @beyondigital scope) — publish after review."

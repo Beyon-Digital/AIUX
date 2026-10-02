@@ -9,26 +9,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **ALL PHASES LANDED** — 12 draft PRs open, all CI green; awaiting merges + v0.1 DoD signoff + `v0.1.0` tag
-- Active lanes (2026-10-02):
-  - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
-  - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
-  - PR 3 `devin/phase1-core` — Phase 1 protocol + core + conformance (green, gate met: 22/22 fixtures)
-  - PR 4 `devin/phase2-bindings` — Phase 2 UniFFI Swift/Kotlin bindings (green, gate met on CI)
-  - PR 6 `devin/phase3-compose` — AIUXCompose + Android example (green 9/9, emulator-verified)
-  - PR 7 `devin/phase3-swiftui` — AIUXSwiftUI + iOS example (green 9/9, gate met on macOS CI)
-  - PR 8 `devin/phase5-web` — aiux-web renderer + example (green 9/9, fixtures byte-identical via real wasm core)
-  - PR 9 `devin/phase7-flutter` — Dart C-ABI + `beyond_aiux` renderer (green 10/10,
-    22 fixtures byte-identical via C ABI, app verified on flutter run -d linux)
-  - PR 11 `devin/phase4-expo` — Expo SDK 57 bridge + example (green 9/9, emulator-verified)
-  - PR 12 `devin/phase8-hardening` — release hardening (green 11/11; benches+1k tests,
-    goldens, a11y, §24 docs, release.yml, audits, release-notes automation)
-  - Integration branches (orchestrator-maintained): `devin/phase5-web-base`,
-    `devin/phase4-expo-base`, `devin/phase6-dsl-base`, `devin/integration`
-  - PR 10 `devin/phase6-dsl` — Surface Schema v1→31 nodes (ADR 0007) + renderer
-    updates (green 9/9, conformance 27/27, browser-verified)
-  - PR 5 `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (green)
-
+- Current phase: **COMPLETE** — all 12 PRs merged to `main` (2026-10-02);
+  `v0.1.0` tag pending DoD signoff (plan §26).
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
@@ -161,14 +143,25 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
   `conformance/expected/` (`bindings/dart` `dart test`); widget tests render
   via the real FFI backend (`renderers/flutter` `flutter test`).
 
-## Phase 8 — Production/release hardening → PR 10
+## Phase 8 — Production/release hardening → PR 12
 
-- [ ] benchmarks (first render, 1k-msg restore, stream throughput, 100-ev
-  batch, surface render, memory)
-- [ ] large conversation tests + accessibility checks + golden tests
-- [ ] compatibility matrix + migration docs + package docs
-- [ ] release notes automation + dependency audit
-- [ ] tag `v0.1.0` internal release via `release.yml`
+- [x] benchmarks (first render, 1k-msg restore, stream throughput, 100-ev
+  batch, surface render, memory) — `benches/` + checked-in `BASELINE.md`
+- [x] large conversation tests + accessibility checks + golden tests —
+  `core/rust/tests/tests/large_conversation.rs` (1k msgs, idempotent replay,
+  reversed chunks, 5k deltas); `docs/renderers/accessibility.md` checklists
+  (manual cells open for DoD pass); web DOM goldens in CI, Flutter goldens
+  as `flutter-goldens` artifact job
+- [x] compatibility matrix + migration docs + package docs —
+  `docs/integration/compatibility-matrix.md`, `migration.md`,
+  `compatibility-policy.md`, full §24 doc set under `docs/`
+- [x] release notes automation + dependency audit — `tools/release-notes.mjs`
+  + `docs/integration/dependency-audit.md` (cargo clean; pnpm 4 fixed,
+  2 documented Expo transitives; gradle inventory + OWASP path noted)
+- [ ] tag `v0.1.0` internal release via `release.yml` — orchestrator cuts
+  after this PR merges + v0.1 DoD signoff (not part of PR 12)
+- [x] `release.yml` real pipeline bodies (bindings gen, XCFramework, AARs,
+  wasm, JS package builds, checksums, draft GitHub Release)
 - **Gate:** v0.1 DoD (plan §26) — one Expo app installs AIUX, renders
   `<AIConversation/>`, demo conversation covers streaming/markdown/code/
   tool/progress/approval/surface/context/error+retry/light+dark.

@@ -2,7 +2,7 @@
   "name": "@beyondigital/aiux-example-web",
   "version": "0.1.0",
   "private": true,
-  "description": "AIUX web example \u2014 replays every conformance fixture through the real aiux-wasm core and renders it with @beyondigital/aiux-web.",
+  "description": "AIUX web example — replays every conformance fixture through the real aiux-wasm core and renders it with @beyondigital/aiux-web.",
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @beyondigital/aiux-core run build:wasm && vite",
@@ -14,12 +14,12 @@
   "dependencies": {
     "@beyondigital/aiux-core": "workspace:*",
     "@beyondigital/aiux-web": "workspace:*",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@types/node": "^22.10.0",
+    "@types/node": "22.20.4",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
