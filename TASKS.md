@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Status snapshot
 
-- Current phase: **Phase 3 in flight** (SwiftUI ∥ Compose lanes) + JS adapters lane in parallel
+- Current phase: **Phases 3 + 5 in flight** (SwiftUI ∥ Compose ∥ Web lanes)
 - Active lanes (2026-10-02):
   - PR 1 `devin/phase0-scaffold` — Phase 0 scaffold + contract freeze (green)
   - PR 2 `devin/wasm-js-core` — WASM binding + `@beyondigital/aiux-core` (green, awaits core merge)
@@ -17,7 +17,9 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
   - PR 4 `devin/phase2-bindings` — Phase 2 UniFFI Swift/Kotlin bindings (green, gate met on CI)
   - Lane E `devin/phase3-swiftui` — AIUXSwiftUI renderer + iOS example (sub-agent)
   - Lane F `devin/phase3-compose` — AIUXCompose renderer + Android example (sub-agent)
-  - Lane D `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (sub-agent)
+  - PR 5 `devin/js-adapters` — sse/websocket/ai-sdk adapters + transport helpers (green)
+  - Lane G `devin/phase5-web` — `@beyondigital/aiux-web` renderer + example (sub-agent,
+    branched off `devin/phase5-web-base` = phase1-core + wasm-js-core merged)
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
