@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 const manifest = JSON.parse(readFileSync('dist/npm/manifest.json'));
-const tag = process.env.NPM_TAG ?? 'next';
+const tag = process.env.NPM_TAG ?? 'latest';
 assert.match(tag, /^[a-z][a-z0-9-]*$/);
 function remote(pkg) {
   const result = spawnSync('npm', ['view', `${pkg.name}@${pkg.version}`, 'dist.integrity', '--json', '--registry=https://registry.npmjs.org'], {encoding:'utf8'});

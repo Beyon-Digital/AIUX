@@ -73,10 +73,13 @@ Expo view's own chrome (the JS-side wrapper adds no semantics).
 | Date | Renderer | Who | Result |
 |------|----------|-----|--------|
 | 2026-10-02 | web | Phase 8 (automated: jest-axe equivalent — golden ARIA + keyboard tests green; axe pass pending playwright wiring) | pass on covered items |
-| — | swiftui | — | pending DoD run on device |
-| — | compose | — | pending DoD run on emulator |
+| 2026-10-03 | iOS simulator (renderer unspecified) | owner report | accessibility tested; individual checklist items and screen-reader coverage not supplied |
+| — | swiftui physical device | — | pending DoD run on device |
+| 2026-10-03 | Android simulator/emulator (renderer unspecified) | owner report | accessibility tested; individual checklist items and screen-reader coverage not supplied |
 | — | flutter | — | pending DoD run |
 
-> Sign-off rule: `manual` rows must be filled before the `v0.1` tag. The
-> Phase 8 PR lands the *infrastructure* (CI-verifiable rows); the run-through
-> cells are intentionally left open for the DoD pass.
+> Release exception (2026-10-03): the owner explicitly approved v0.1.1 on npm
+> `latest` as a regular GitHub release and reported accessibility testing on iOS
+> and Android simulators. This overrides the original manual-row tag gate for
+> this release. It does not certify individual rows, physical-device testing,
+> Flutter testing or specific screen-reader results. Those cells remain open.

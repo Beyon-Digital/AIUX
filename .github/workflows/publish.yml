@@ -110,17 +110,17 @@ jobs:
         if: steps.target.outputs.auth == 'token'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TAG: next
+          NPM_TAG: latest
         run: node tools/publish-js.mjs
       - name: Subsequent publication with npm trusted publishing
         if: steps.target.outputs.auth == 'oidc'
         env:
-          NPM_TAG: next
+          NPM_TAG: latest
         run: node tools/publish-js.mjs
       - name: Independently verify published consumer installation
         run: node tools/consumer-smoke.mjs --registry
-      - name: Publish GitHub prerelease only after registry install passes
+      - name: Publish GitHub release only after registry install passes
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.target.outputs.tag }}
-        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
+        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest
