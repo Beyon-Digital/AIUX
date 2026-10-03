@@ -28,4 +28,4 @@ let package = Package(
 SWIFT
 # Validate distribution from outside the source package directories.
 (cd "$out" && swift build)
-tar -czf dist/aiux-swift-package.tar.gz -C "$out" .
+tar --exclude=.build --exclude=.swiftpm -czf dist/aiux-swift-package.tar.gz -C "$out" .
