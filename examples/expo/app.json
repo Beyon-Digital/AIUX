@@ -2,7 +2,7 @@
   "expo": {
     "name": "AIUX Expo Example",
     "slug": "aiux-example",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "sdkVersion": "57.0.0",
     "scheme": "aiux-example",
     "orientation": "portrait",

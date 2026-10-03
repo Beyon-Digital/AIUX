@@ -1,4 +1,4 @@
-import type { AiuxEvent } from "@beyondigital/aiux-protocol-types";
+import type { AiuxEvent } from "@beyond-digital/aiux-protocol-types";
 
 import type { EventBatchSink } from "./types";
 

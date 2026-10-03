@@ -1,5 +1,5 @@
 /**
- * `@beyondigital/aiux-expo` — the AIUX native surface for Expo SDK 57.
+ * `@beyond-digital/aiux-expo` — the AIUX native surface for Expo SDK 57.
  *
  * One coarse boundary (plan §10): `<AIConversation/>` hosts the platform's
  * native renderer (SwiftUI on iOS, Compose on Android) and the underlying

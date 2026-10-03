@@ -19,9 +19,9 @@ language). Output on every path is the same: JSON event batches →
 ## Canonical wiring (web)
 
 ```ts
-import { createSseAdapter } from "@beyondigital/aiux-adapter-sse";
-import { EventBuffer } from "@beyondigital/aiux-transports";
-import { AiuxSession, wasmCore } from "@beyondigital/aiux-core";
+import { createSseAdapter } from "@beyond-digital/aiux-adapter-sse";
+import { EventBuffer } from "@beyond-digital/aiux-transports";
+import { AiuxSession, wasmCore } from "@beyond-digital/aiux-core";
 
 const session = await AiuxSession.create(wasmCore(), { sessionId: "s1" });
 const buffer = new EventBuffer((batchJson) => session.dispatchBatch(batchJson));

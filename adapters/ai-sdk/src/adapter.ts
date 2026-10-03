@@ -1,4 +1,4 @@
-import type { AiuxError, AiuxEvent, Tool } from "@beyondigital/aiux-protocol-types";
+import type { AiuxError, AiuxEvent, Tool } from "@beyond-digital/aiux-protocol-types";
 import {
   createEventFactory,
   isTerminalEvent,
@@ -6,7 +6,7 @@ import {
   type EventBatchSource,
   type EventFactory,
   type NormalizeTarget,
-} from "@beyondigital/aiux-transport-js";
+} from "@beyond-digital/aiux-transport-js";
 
 /**
  * Structural shape of a Vercel AI SDK stream part — accepts both the

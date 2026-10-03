@@ -1,4 +1,4 @@
-# @beyondigital/aiux-expo
+# @beyond-digital/aiux-expo
 
 Expo SDK 57 bridge for AIUX — the complete native conversation surface behind
 one coarse boundary (docs/PLAN.md §10, ADR 0002). iOS hosts the SwiftUI
@@ -6,7 +6,7 @@ renderer; Android hosts the Compose renderer; both drive the same `AiuxSession`
 facade in the Rust core. **No message UI is ever rebuilt in React Native.**
 
 ```tsx
-import { AIConversation } from "@beyondigital/aiux-expo";
+import { AIConversation } from "@beyond-digital/aiux-expo";
 
 <AIConversation
   sessionId="s1"
@@ -18,7 +18,7 @@ import { AIConversation } from "@beyondigital/aiux-expo";
 />
 ```
 
-## JS surface (kept minimal for the future `@beyondigital/aiux-react-native`)
+## JS surface (kept minimal for the future `@beyond-digital/aiux-react-native`)
 
 - `<AIConversation/>` — native view. Props: `sessionId`, `theme`
   (`AIUXThemeInput` object or JSON string), `mode`, `showComposer`, and the
@@ -53,4 +53,4 @@ may be flat or `{ light, dark }` scoped. `spacing`, `radius`, `motion`
   app's `includeBuild` + `dependencySubstitution` (see `examples/expo/android`).
 - **iOS**: the pod compiles `renderers/swiftui` + the generated UniFFI binding
   and vendors `AIUXCore.xcframework`, staged by `scripts/prepare-ios.sh`
-  (`pnpm --filter @beyondigital/aiux-expo prepare:ios`, macOS only).
+  (`pnpm --filter @beyond-digital/aiux-expo prepare:ios`, macOS only).

@@ -1,0 +1,126 @@
+name: Publish packages
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Immutable release tag with validated npm tarballs (vX.Y.Z)'
+        required: true
+      auth_mode:
+        type: choice
+        options: [token, oidc]
+        default: token
+        description: 'Token bootstrap or configured npm trusted publisher'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: publish-${{ inputs.release_tag || github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+jobs:
+  dispatch-tag:
+    if: >-
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch publication on the tag for accurate provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+          AUTH_MODE: ${{ vars.NPM_AUTH_MODE || 'token' }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$AUTH_MODE" = token || "$AUTH_MODE" = oidc ]]
+          gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_TAG" -f release_tag="$RELEASE_TAG" -f auth_mode="$AUTH_MODE"
+
+  publish:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+    steps:
+      - name: Resolve release tag and authentication mode
+        id: target
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+          RUN_TAG: ${{ github.event.workflow_run.head_branch }}
+          INPUT_AUTH: ${{ inputs.auth_mode }}
+          CONFIGURED_AUTH: ${{ vars.NPM_AUTH_MODE }}
+        run: |
+          tag="${INPUT_TAG:-$RUN_TAG}"
+          auth="${INPUT_AUTH:-${CONFIGURED_AUTH:-token}}"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$auth" = token || "$auth" = oidc ]]
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "auth=$auth" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.target.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@12.2.0
+      - name: Require green CI and release on the exact main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          node tools/release-check.mjs "$RELEASE_TAG"
+          sha=$(git rev-parse HEAD)
+          test "$GITHUB_REF" = "refs/tags/$RELEASE_TAG" || { echo "Run this workflow on the release tag (gh workflow run --ref $RELEASE_TAG)"; exit 1; }
+          test "$sha" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$sha" origin/main
+          if [[ -n "$RUN_SHA" ]]; then test "$sha" = "$RUN_SHA"; fi
+          for workflow in ci.yml release.yml; do
+            conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$sha&status=completed" --jq '.workflow_runs[0].conclusion')
+            test "$conclusion" = success
+          done
+      - name: Download exact release tarballs and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          mkdir -p dist/npm
+          gh release download "$RELEASE_TAG" -p '*.tgz' -p manifest.json -p SHA256SUMS -D dist/npm
+          node tools/verify-release-download.mjs
+          node tools/publish-js.mjs --preflight
+      - name: Require bootstrap secret
+        if: steps.target.outputs.auth == 'token'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN" || { echo 'Add NPM_TOKEN or configure trusted publishing and NPM_AUTH_MODE=oidc'; exit 1; }
+      - name: First publication with scoped granular token
+        if: steps.target.outputs.auth == 'token'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TAG: next
+        run: node tools/publish-js.mjs
+      - name: Subsequent publication with npm trusted publishing
+        if: steps.target.outputs.auth == 'oidc'
+        env:
+          NPM_TAG: next
+        run: node tools/publish-js.mjs
+      - name: Independently verify published consumer installation
+        run: node tools/consumer-smoke.mjs --registry
+      - name: Publish GitHub prerelease only after registry install passes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false

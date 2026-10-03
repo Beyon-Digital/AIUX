@@ -15,7 +15,7 @@ One renderer per platform, each a first-class citizen:
 
 - Apple → SwiftUI (`AIUXSwiftUI`)
 - Android → Jetpack Compose (`AIUXCompose`)
-- Web → React DOM primitives (`@beyondigital/aiux-web`)
+- Web → React DOM primitives (`@beyond-digital/aiux-web`)
 - Flutter → Flutter widgets (`beyond_aiux`)
 
 Expo/React Native mounts the platform's native renderer behind a single

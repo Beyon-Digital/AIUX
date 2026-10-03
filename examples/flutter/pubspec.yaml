@@ -1,6 +1,6 @@
 name: aiux_example
 description: "AIUX example app — the mocked-agent scenario over the Dart FFI backend (docs/PLAN.md)."
-version: 0.1.0
+version: 0.1.1
 publish_to: none
 environment:
   sdk: ">=3.4.0 <4.0.0"

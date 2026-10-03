@@ -1,8 +1,8 @@
-import type { AIUXAction, AIUXTransport } from "@beyondigital/aiux-expo";
+import type { AIUXAction, AIUXTransport } from "@beyond-digital/aiux-expo";
 import {
   createAIUXTransport,
   serializeAIUXSession,
-} from "@beyondigital/aiux-expo";
+} from "@beyond-digital/aiux-expo";
 
 import { MockAgent, type AiuxEventObject } from "./mockAgent";
 import {

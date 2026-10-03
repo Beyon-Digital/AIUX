@@ -1,4 +1,4 @@
-import type { AIUXThemeInput } from "@beyondigital/aiux-expo";
+import type { AIUXThemeInput } from "@beyond-digital/aiux-expo";
 
 /** Light/dark role palettes for the example (plan §7 roles). */
 export const exampleTheme: AIUXThemeInput = {

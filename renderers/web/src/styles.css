@@ -1,9 +1,9 @@
 /**
- * @beyondigital/aiux-web — component styles.
+ * @beyond-digital/aiux-web — component styles.
  *
  * Every visual value resolves through the `--aiux-*` custom properties set
  * on the `.aiux` root by `themeCssVars()` (plan §7: roles, not literals).
- * Consumers import this file once: `import "@beyondigital/aiux-web/styles.css"`.
+ * Consumers import this file once: `import "@beyond-digital/aiux-web/styles.css"`.
  */
 
 .aiux {

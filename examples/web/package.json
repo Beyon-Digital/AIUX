@@ -1,19 +1,19 @@
 {
-  "name": "@beyondigital/aiux-example-web",
-  "version": "0.1.0",
+  "name": "@beyond-digital/aiux-example-web",
+  "version": "0.1.1",
   "private": true,
-  "description": "AIUX web example — replays every conformance fixture through the real aiux-wasm core and renders it with @beyondigital/aiux-web.",
+  "description": "AIUX web example \u2014 replays every conformance fixture through the real aiux-wasm core and renders it with @beyond-digital/aiux-web.",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @beyondigital/aiux-core run build:wasm && vite",
-    "build": "pnpm --filter @beyondigital/aiux-core run build:wasm && vite build",
+    "dev": "pnpm --filter @beyond-digital/aiux-core run build:wasm && vite",
+    "build": "pnpm --filter @beyond-digital/aiux-core run build:wasm && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@beyondigital/aiux-core": "workspace:*",
-    "@beyondigital/aiux-web": "workspace:*",
+    "@beyond-digital/aiux-core": "workspace:*",
+    "@beyond-digital/aiux-web": "workspace:*",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -25,5 +25,6 @@
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.0"
-  }
+  },
+  "license": "MIT"
 }

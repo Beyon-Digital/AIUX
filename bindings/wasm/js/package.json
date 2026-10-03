@@ -1,8 +1,7 @@
 {
-  "name": "@beyondigital/aiux-core",
-  "version": "0.1.0",
-  "private": true,
-  "description": "JS session package over the AIUX WASM core — AiuxSession wrapper, streaming EventBuffer, snapshot subscriptions, MockCore.",
+  "name": "@beyond-digital/aiux-core",
+  "version": "0.1.1",
+  "description": "JS session package over the AIUX WASM core \u2014 AiuxSession wrapper, streaming EventBuffer, snapshot subscriptions, MockCore.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,16 +13,19 @@
     "./wasm": "./wasm/aiux_wasm.js",
     "./wasm/aiux_wasm_bg.wasm": "./wasm/aiux_wasm_bg.wasm",
     "./buffer": {
-      "types": "./src/buffer.ts",
-      "default": "./src/buffer.ts"
+      "types": "./dist/buffer.d.ts",
+      "default": "./dist/buffer.js"
     }
   },
   "files": [
     "dist",
-    "wasm"
+    "LICENSE",
+    "README.md",
+    "wasm",
+    "LICENSES"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node ../../../tools/finalize-js.mjs .",
     "build:wasm": "node ../scripts/build-wasm.mjs && node ./scripts/copy-wasm.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
@@ -32,5 +34,15 @@
   "devDependencies": {
     "typescript": "^5.9.2",
     "vitest": "^4.1.11"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Beyon-Digital/AIUX.git",
+    "directory": "bindings/wasm/js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }

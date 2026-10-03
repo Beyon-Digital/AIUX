@@ -1,6 +1,6 @@
 name: aiux_ffi
 description: "Dart FFI wrapper over the AIUX C ABI (aiux-capi)."
-version: 0.1.0
+version: 0.1.1
 publish_to: none
 
 environment:

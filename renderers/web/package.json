@@ -1,8 +1,7 @@
 {
-  "name": "@beyondigital/aiux-web",
-  "version": "0.1.0",
-  "private": true,
-  "description": "React DOM renderer for AIUX surfaces (plan §12) — session subscription → DOM/ARIA, theme roles → CSS custom properties, every protocol part + Surface Schema primitive.",
+  "name": "@beyond-digital/aiux-web",
+  "version": "0.1.1",
+  "description": "React DOM renderer for AIUX surfaces (plan \u00a712) \u2014 session subscription \u2192 DOM/ARIA, theme roles \u2192 CSS custom properties, every protocol part + Surface Schema primitive.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,15 +13,17 @@
     "./styles.css": "./dist/styles.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node ./scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node ./scripts/copy-assets.mjs && node ../../tools/finalize-js.mjs .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@beyondigital/aiux-core": "workspace:*",
+    "@beyond-digital/aiux-core": "workspace:*",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
   },
@@ -43,5 +44,15 @@
     "react-dom": "19.2.3",
     "typescript": "^5.9.2",
     "vitest": "^4.1.11"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Beyon-Digital/AIUX.git",
+    "directory": "renderers/web"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }

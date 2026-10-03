@@ -16,7 +16,7 @@ fragile glue or unmaintainable generated code.
   no dozens of exposed internal types. UniFFI is pre-1.0 — upgrades require
   compatibility CI, never automatic bumps.
 - **JS/Web: dedicated WASM/JS binding** (`aiux-wasm`), consumed by
-  `@beyondigital/aiux-core` and `@beyondigital/aiux-web`. JS is never routed
+  `@beyond-digital/aiux-core` and `@beyond-digital/aiux-web`. JS is never routed
   through UniFFI.
 - **Dart: narrow C-compatible ABI** + a Dart FFI wrapper. No fake UniFFI Dart
   generator. Bridge-generation tooling may be evaluated, but the C ABI is the

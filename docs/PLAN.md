@@ -353,8 +353,8 @@ Use a dedicated WASM/JS binding.
 
 Primary consumers:
 
-- `@beyondigital/aiux-core`
-- `@beyondigital/aiux-web`
+- `@beyond-digital/aiux-core`
+- `@beyond-digital/aiux-web`
 
 Do not try to route JS through UniFFI.
 
@@ -442,7 +442,7 @@ Again: semantic parity, not pixel parity.
 
 This is the first major end-to-end milestone.
 
-Target Expo SDK 57. Create `@beyondigital/aiux-expo`.
+Target Expo SDK 57. Create `@beyond-digital/aiux-expo`.
 
 Expo SDK 57 currently maps to React Native 0.86 and React Native Web 0.21.
 Use current SDK-57-specific official Expo documentation when implementing
@@ -497,12 +497,12 @@ permanently selecting a value.
 
 Do this after Expo integration works.
 
-Expose `@beyondigital/aiux-react-native`.
+Expose `@beyond-digital/aiux-react-native`.
 
 Use a Fabric Native Component / Codegen-compatible interface. Keep its public
 JS API aligned with the Expo package.
 
-Where practical, `@beyondigital/aiux` can provide platform exports that route
+Where practical, `@beyond-digital/aiux` can provide platform exports that route
 consumers automatically.
 
 Do not compromise the native architecture purely to make Expo and plain RN
@@ -513,7 +513,7 @@ implementations may differ.
 
 ## 12. Web renderer
 
-Create `@beyondigital/aiux-web`.
+Create `@beyond-digital/aiux-web`.
 
 Architecture:
 
@@ -601,7 +601,7 @@ next.
 - 100 DSL components
 - native networking stack
 - model/provider-specific SDKs
-- fully public package registry releases
+- fully public package registry releases (superseded by the OSS release amendment below)
 
 Keep scope disciplined.
 
@@ -756,12 +756,14 @@ build WASM/JS → build JS packages → generate checksums →
 GitHub Release → package registry publishing
 ```
 
-For internal v0.x releases, prioritize GitHub Releases + GitHub Packages before
-adding unnecessary public-registry complexity.
+OSS release amendment (2026-10-03, approved by owner): first-party code is MIT.
+Publish implemented JS clients to npmjs after confirming scope ownership and
+registry authentication. GitHub Releases distribute native artifacts. Scaffolds
+are excluded; native accessibility/device sign-off remains a separate gate.
 
-Potential artifacts: `@beyondigital/aiux` `@beyondigital/aiux-core`
-`@beyondigital/aiux-expo` `@beyondigital/aiux-react-native`
-`@beyondigital/aiux-web` `BeyondAIUX` Swift Package
+Potential artifacts: `@beyond-digital/aiux` `@beyond-digital/aiux-core`
+`@beyond-digital/aiux-expo` `@beyond-digital/aiux-react-native`
+`@beyond-digital/aiux-web` `BeyondAIUX` Swift Package
 `in.beyondigital.aiux:core` `in.beyondigital.aiux:compose` `beyond_aiux`.
 
 All official artifacts for a release must derive from the same Git tag/commit.

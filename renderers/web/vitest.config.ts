@@ -10,7 +10,7 @@ export default defineConfig({
     alias: {
       // Resolve the workspace package to source so tests run without a prior
       // `aiux-core` dist build (mirrors tsconfig paths).
-      "@beyondigital/aiux-core": coreSrc,
+      "@beyond-digital/aiux-core": coreSrc,
     },
   },
   test: {

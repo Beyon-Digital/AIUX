@@ -59,3 +59,11 @@ bindings/wasm/js/wasm/*
 !bindings/wasm/js/wasm/*.d.ts
 test-results/
 playwright-report/
+
+# Native release staging (CI-produced)
+bridges/expo/ios/vendor/
+bridges/expo/android/vendor/
+
+# Generated third-party notices/source bundles
+bindings/wasm/js/LICENSES/
+bridges/expo/LICENSES/

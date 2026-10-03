@@ -1,5 +1,5 @@
-import { EventBuffer } from "@beyondigital/aiux-core/buffer";
-import type { EventBufferPolicy } from "@beyondigital/aiux-core/buffer";
+import { EventBuffer } from "@beyond-digital/aiux-core/buffer";
+import type { EventBufferPolicy } from "@beyond-digital/aiux-core/buffer";
 
 import { getNativeModule } from "./AIUXNative";
 import type { AIUXDispatchReport, AIUXEventLike } from "./types";
@@ -63,7 +63,7 @@ export function createAIUXTransport(
   const native = getNativeModule();
   if (!native) {
     throw new Error(
-      "@beyondigital/aiux-expo: native module not linked. " +
+      "@beyond-digital/aiux-expo: native module not linked. " +
         "Run `expo prebuild` (or open the app in a dev client build).",
     );
   }
@@ -123,7 +123,7 @@ export function createAIUXTransport(
             headAttempts = 0;
             policy.onFlushError?.(
               new Error(
-                `@beyondigital/aiux-expo: dropped permanently-rejected batch after ${maxBatchRetries} attempts (last: ${
+                `@beyond-digital/aiux-expo: dropped permanently-rejected batch after ${maxBatchRetries} attempts (last: ${
                   error instanceof Error ? error.message : String(error)
                 })`,
               ),
@@ -164,7 +164,7 @@ export function createAIUXTransport(
       await drain();
       if (queue.length > 0) {
         const error = new Error(
-          `@beyondigital/aiux-expo: closed with ${queue.length} undelivered batch(es)`,
+          `@beyond-digital/aiux-expo: closed with ${queue.length} undelivered batch(es)`,
         );
         policy.onFlushError?.(error);
         throw error;

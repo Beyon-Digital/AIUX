@@ -1,33 +1,58 @@
 {
-  "name": "@beyondigital/aiux-expo",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Expo SDK 57 bridge — the complete AIUX surface behind one native boundary (plan §10).",
+  "name": "@beyond-digital/aiux-expo",
+  "version": "0.1.1",
+  "description": "Expo SDK 57 bridge \u2014 the complete AIUX surface behind one native boundary (plan \u00a710).",
   "keywords": [
     "aiux",
     "expo",
     "expo-module"
   ],
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node ../../tools/finalize-js.mjs .",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepare:ios": "bash scripts/prepare-ios.sh"
   },
   "dependencies": {
-    "@beyondigital/aiux-core": "workspace:*"
+    "@beyond-digital/aiux-core": "workspace:*"
   },
   "peerDependencies": {
-    "expo": ">=57.0.0",
+    "expo": ">=57.0.0 <58",
     "react": ">=19.0.0",
-    "react-native": ">=0.86.0"
+    "react-native": ">=0.86.0 <0.87"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
     "typescript": "^5.9.2",
     "vitest": "^4.1.11"
-  }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Beyon-Digital/AIUX.git",
+    "directory": "bridges/expo"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "android",
+    "ios",
+    "expo-module.config.json",
+    "LICENSES"
+  ]
 }

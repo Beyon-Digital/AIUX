@@ -12,7 +12,7 @@ There is no earlier AIUX release — this guide covers (a) moving an app
    `text.delta`; tool calls → `tool.*`; human-in-loop → `approval.*`;
    rich UI → `surface.*`. Give every event a stable `eventId` +
    session-monotonic `sequence`.
-2. **Pick the boundary.** JS/TS host → `@beyondigital/aiux-core` (wasm) or
+2. **Pick the boundary.** JS/TS host → `@beyond-digital/aiux-core` (wasm) or
    the adapters in `adapters/*`; native host → the language binding +
    `dispatchBatch`.
 3. **Mount the renderer.** `AIConversation` in your platform's idiom

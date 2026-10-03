@@ -5,11 +5,11 @@ import type { JsonString } from "./types.js";
  * Shape of the wasm-bindgen module produced by the `aiux-wasm` build
  * (`bindings/wasm/pkg/aiux_wasm.js`, `--target web`), vendored into this
  * package by `scripts/copy-wasm.mjs` as the `./wasm` export. Consumers run
- * `pnpm --filter @beyondigital/aiux-core build:wasm`, then `init()` the
+ * `pnpm --filter @beyond-digital/aiux-core build:wasm`, then `init()` the
  * generated module and hand it to {@link wasmCore}:
  *
  * ```ts
- * import init, * as wasm from "@beyondigital/aiux-core/wasm";
+ * import init, * as wasm from "@beyond-digital/aiux-core/wasm";
  * await init();
  * const core = wasmCore(wasm);
  * const session = AiuxSession.create(core, config);

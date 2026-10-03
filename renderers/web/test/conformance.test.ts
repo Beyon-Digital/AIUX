@@ -3,10 +3,10 @@
  * SAME wasm core the browser renderer ships — `serialize()` must byte-match
  * `conformance/expected/<name>.json`. This is the same check the Rust
  * `aiux-conformance verify` harness runs, through the exact JS path
- * (`@beyondigital/aiux-core` → `aiux-wasm`) the renderer uses.
+ * (`@beyond-digital/aiux-core` → `aiux-wasm`) the renderer uses.
  *
  * Requires `bindings/wasm/pkg/` — build with
- * `pnpm --filter @beyondigital/aiux-core build:wasm`. Skips loudly when the
+ * `pnpm --filter @beyond-digital/aiux-core build:wasm`. Skips loudly when the
  * artifacts are absent (e.g. the Rust-less CI `js` job).
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -17,7 +17,7 @@ import {
   AiuxSession,
   wasmCore,
   type AiuxWasmModule,
-} from "@beyondigital/aiux-core";
+} from "@beyond-digital/aiux-core";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..", "..");

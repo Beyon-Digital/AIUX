@@ -1,5 +1,5 @@
 // Monorepo-aware Metro config: watch the workspace root so the linked
-// @beyondigital/aiux-expo / @beyondigital/aiux-core sources resolve.
+// @beyond-digital/aiux-expo / @beyond-digital/aiux-core sources resolve.
 const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 

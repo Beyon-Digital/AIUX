@@ -1,15 +1,20 @@
-# @beyondigital/aiux-core
+# @beyond-digital/aiux-core
 
 JS session package over the AIUX WASM core (docs/PLAN.md §5/§10/§12, ADR 0005).
-Consumed by `@beyondigital/aiux-web` and the JS transport adapters.
+Consumed by `@beyond-digital/aiux-web` and the JS transport adapters.
+
+MIT. `npm install @beyond-digital/aiux-core@0.1.1` after registry publication.
+The release package includes compiled JS/types and WASM; consumers need no Rust
+toolchain. See [availability and installation](https://github.com/Beyon-Digital/AIUX/blob/main/docs/integration/install.md).
 
 ```ts
-import { AiuxSession, EventBuffer, MockCore, wasmCore } from "@beyondigital/aiux-core";
-import init, * as wasm from "aiux-wasm/pkg/aiux_wasm.js"; // built by ../build.sh
+import { AiuxSession, EventBuffer, MockCore, wasmCore } from "@beyond-digital/aiux-core";
+import init, * as wasm from "@beyond-digital/aiux-core/wasm";
+import wasmUrl from "@beyond-digital/aiux-core/wasm/aiux_wasm_bg.wasm?url"; // Vite
 
-await init();
+await init({ module_or_path: wasmUrl });
 const core = wasmCore(wasm);              // or new MockCore() in tests
-const session = AiuxSession.create(core, config);
+const session = AiuxSession.create(core, "{}");
 const unsub = session.subscribe((snapshot) => render(snapshot));
 
 const buffer = new EventBuffer((eventsJson) => session.dispatchBatch(eventsJson));

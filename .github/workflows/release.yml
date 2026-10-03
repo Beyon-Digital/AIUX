@@ -1,15 +1,16 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags: ["v*.*.*"]
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
-# Plan §20 — every artifact derives from the tag commit. Internal v0.x
-# targets: GitHub Releases + GitHub Packages only.
+# MIT OSS release — artifacts derive from the tag commit; registry publishing
+# is a separate explicitly dispatched job after release evidence is reviewed.
 
 jobs:
   validate-tag:
@@ -19,9 +20,19 @@ jobs:
     outputs:
       version: ${{ steps.parse.outputs.version }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/release-check.mjs
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: node tools/release-check.mjs "${GITHUB_REF_NAME}"
       - id: parse
         run: |
           tag="${GITHUB_REF_NAME}"
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+            tag="v$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')"
+          fi
           if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Tag '$tag' does not match vX.Y.Z"; exit 1
           fi
@@ -50,12 +61,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --release
+      - run: node tools/third-party-notices.mjs
       - name: Package native libs
         run: |
           mkdir -p dist/rust
           find target/release -maxdepth 1 -type f \
             \( -name 'libaiux_*.so' -o -name 'libaiux_*.a' \) \
             -exec cp {} dist/rust/ \;
+          cp dist/aiux-third-party.tar.gz dist/rust/
+          cp LICENSE dist/rust/
           ls -la dist/rust
       - uses: actions/upload-artifact@v4
         with:
@@ -78,6 +92,8 @@ jobs:
         run: bash bindings/swift/generate.sh
       - name: Build AIUXCore.xcframework
         run: bash bindings/swift/package-xcframework.sh
+      - name: Package standalone Swift distribution
+        run: bash tools/swift-release-package.sh
       - name: Package apple artifacts
         run: |
           mkdir -p dist
@@ -90,8 +106,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: apple-artifacts
-          path: dist/
+          path: dist/*.gz
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple-xcframework-artifacts
+          path: dist/*.zip
 
   build-android:
     name: Android artifacts (AARs)
@@ -124,22 +144,30 @@ jobs:
         run: bash bindings/kotlin/generate.sh
       - name: Build AARs
         run: ./gradlew :bindings:kotlin:assembleRelease :renderers:compose:assembleRelease --no-daemon
+      - name: Publish local Maven repository (AARs + dependency POMs)
+        run: ./gradlew :bindings:kotlin:publishReleasePublicationToReleaseRepository :renderers:compose:publishReleasePublicationToReleaseRepository --no-daemon
+      - run: node tools/third-party-notices.mjs
       - name: Package android artifacts
         run: |
           mkdir -p dist
           cp bindings/kotlin/build/outputs/aar/*.aar dist/
           cp renderers/compose/build/outputs/aar/*.aar dist/
           tar -czf dist/aiux-kotlin-bindings.tar.gz -C bindings/kotlin/build/generated .
+          cp -R dist/third-party dist/maven/LICENSES
+          cp LICENSE dist/maven/
+          tar -czf dist/aiux-android-maven.tar.gz -C dist maven
           ls -la dist
       - uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
-          path: dist/
+          path: |
+            dist/*.aar
+            dist/*.gz
           if-no-files-found: error
 
   build-js-wasm:
     name: WASM + JS packages
-    needs: conformance
+    needs: [conformance, build-apple, build-android]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -161,28 +189,61 @@ jobs:
         run: |
           pnpm install --frozen-lockfile=false
           pnpm -r --if-present run build
-      - name: Package JS artifacts
+      - run: node bindings/wasm/js/scripts/copy-wasm.mjs
+      - run: node tools/third-party-notices.mjs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: apple*-artifacts
+          merge-multiple: true
+          path: native/apple
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-artifacts
+          path: native/android
+      - run: node tools/stage-native.mjs native/apple native/android
+      - name: Pack + verify isolated JS consumer
         run: |
-          mkdir -p dist
-          tar -czf dist/aiux-wasm-pkg.tar.gz -C bindings/wasm pkg
-          # npm-ready package dirs (dist built above) for GitHub Packages
-          for p in bindings/wasm/js transports/javascript renderers/web \
-                   bridges/expo adapters/sse adapters/websocket \
-                   adapters/ai-sdk adapters/graphql adapters/shared; do
-            tar -czf "dist/js-$(basename "$p").tar.gz" \
-              --exclude=node_modules --exclude=test --exclude=src/__tests__ \
-              -C "$(dirname "$p")" "$(basename "$p")"
-          done
-          ls -la dist
+          pnpm release:pack
+          pnpm release:smoke
+      - name: Package raw WASM artifact
+        run: tar -czf dist/aiux-wasm-pkg.tar.gz -C bindings/wasm pkg
       - uses: actions/upload-artifact@v4
         with:
           name: js-artifacts
-          path: dist/
+          path: |
+            dist/npm/*
+            dist/aiux-wasm-pkg.tar.gz
           if-no-files-found: error
 
+  native-consumers:
+    name: Clean Expo consumer (${{ matrix.os }})
+    needs: build-js-wasm
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/download-artifact@v4
+        with:
+          name: js-artifacts
+          path: dist/
+      - name: Verify clean Expo app builds from packed native payload
+        run: node tools/consumer-smoke.mjs --native
+
   github-release:
+    if: startsWith(github.ref, 'refs/tags/')
     name: GitHub Release + checksums
-    needs: [build-rust, build-apple, build-android, build-js-wasm]
+    needs: [build-rust, build-apple, build-android, build-js-wasm, native-consumers]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -214,11 +275,16 @@ jobs:
           # upload files only — `release/**` also matches artifact dirs and
           # `gh release create` fails with "is a directory" on those
           mapfile -t assets < <(find release -type f | sort)
+          # Existing release assets are immutable. Retry publication instead of
+          # regenerating/overwriting a successfully assembled draft.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release already exists; preserving its original assets."
+            exit 0
+          fi
           gh release create "${GITHUB_REF_NAME}" \
             --draft \
             --title "AIUX ${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
             "${assets[@]}" SHA256SUMS
           echo "Draft release created — review + publish to ship."
-          echo "JS package tarballs are ready for GitHub Packages"
-          echo "(npm.pkg.github.com, @beyondigital scope) — publish after review."
+          echo "npm tarballs validated; dispatch Publish packages after review and scope setup."

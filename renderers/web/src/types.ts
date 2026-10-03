@@ -452,7 +452,7 @@ export interface AiuxSnapshot {
 }
 
 /**
- * The slice of `AiuxSession` (`@beyondigital/aiux-core`) the renderer needs.
+ * The slice of `AiuxSession` (`@beyond-digital/aiux-core`) the renderer needs.
  * Kept `unknown`-typed at the boundary — `AiuxSession.snapshot()` returns the
  * opaque `JsonObject`, which callers narrow to `AiuxSnapshot` here.
  * `AiuxSession` satisfies this structurally, as do test doubles.

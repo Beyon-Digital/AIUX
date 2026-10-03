@@ -3,7 +3,7 @@ import { defineConfig } from "@playwright/test";
 /**
  * Smoke config — builds the example (which first produces bindings/wasm/pkg
  * via aiux-core build:wasm), serves `vite preview`, and drives real Chromium
- * end to end. Run: `pnpm --filter @beyondigital/aiux-example-web test:e2e`
+ * end to end. Run: `pnpm --filter @beyond-digital/aiux-example-web test:e2e`
  * (requires `pnpm dlx playwright install chromium` — not in default test runs).
  */
 export default defineConfig({
