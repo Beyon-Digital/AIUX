@@ -2,7 +2,7 @@
 
 First-party code is MIT. The approved npm scope is `@beyond-digital`; this
 supersedes the original internal-only plan. The immutable v0.1.0 tag/draft is
-preserved; 0.1.1 is the installable candidate. See [consumer installation](install.md).
+preserved; 0.1.1 is the first installable release. See [consumer installation](install.md).
 
 ## Executable gates
 
@@ -35,7 +35,8 @@ preserved; 0.1.1 is the installable candidate. See [consumer installation](insta
    distribution artifacts. Branch runs upload artifacts and do not create a release.
 4. Review [native accessibility/device gates](../renderers/accessibility.md).
    Record actual results; do not infer sign-off from native compilation. Use an
-   explicitly labelled prerelease if those manual gates remain incomplete.
+   explicitly labelled prerelease if those manual gates remain incomplete, unless
+   the owner approves a release exception and its evidence limits are recorded.
 5. Merge the reviewed PR through the normal GitHub process. Create `v0.1.1`
    at the exact green commit; tag-triggered Release builds every artifact and
    creates a draft GitHub Release with notes, manifest and SHA256SUMS.
@@ -43,10 +44,12 @@ preserved; 0.1.1 is the installable candidate. See [consumer installation](insta
    `NPM_TOKEN` for the first release, then tokenless npm trusted publishing.
    The successful tag build triggers `publish.yml` automatically.
 7. Publication checks exact-commit CI/checksums, immutable registry integrity and
-   clean installs. Only then does CI publish the GitHub prerelease. Credential
+   clean installs. Only then does CI publish the regular GitHub release. Credential
    failures leave the release draft and can be recovered with workflow_dispatch.
-8. Keep npm `next` / GitHub prerelease status until manual native sign-offs pass.
-   Registry installation is not proof of device or accessibility readiness.
+8. v0.1.1 uses npm `latest` and a regular GitHub release by explicit owner approval
+   on 2026-10-03. The owner reports iOS/Android simulator accessibility testing.
+   Physical-device, Flutter and specific screen-reader coverage remain unverified;
+   registry installation is not proof of those manual results.
 
 ## Third-party licenses
 

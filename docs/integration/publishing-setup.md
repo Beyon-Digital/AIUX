@@ -66,8 +66,9 @@ The built-in token can trigger `workflow_dispatch` without a PAT ([GitHub docs](
 For the Actions UI, choose the release tag in the run selector, not `main`. Publication
 requires green CI for that exact main commit, validates release checksums,
 publishes in dependency order, verifies exact registry integrity and clean
-consumer installation, then publishes the GitHub **prerelease**. npm uses
-**`next`** until manual native accessibility/device sign-off is complete.
+consumer installation, then publishes a regular GitHub release and npm **`latest`**.
+The owner approved this channel for v0.1.1 on 2026-10-03 and reported iOS/Android
+simulator accessibility testing; see the [evidence limits](../renderers/accessibility.md#manual-run-throughs-performed).
 
 After fixing credentials, rerun explicitly:
 

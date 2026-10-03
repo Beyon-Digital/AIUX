@@ -68,6 +68,14 @@ const tagName = head === "HEAD" ? sh("git describe --tags --exact-match HEAD 2>/
 
 console.log(`## AIUX ${tagName}`);
 console.log("");
+if (tagName === "v0.1.1") {
+  console.log("First installable release: eight public npm packages under `@beyond-digital` on `latest`, plus Swift/Android distribution bundles. Rust and Flutter use Git dependencies; crates.io, pub.dev, Maven Central and CocoaPods registry publication are not configured. Plain React Native Fabric and GraphQL remain private scaffolds.");
+  console.log("");
+  console.log("The owner approved a regular release on 2026-10-03 and reports accessibility testing on iOS and Android simulators. Individual checklist items, physical devices, Flutter accessibility and specific screen-reader results remain unverified. CI validates package contents, clean JS/WASM installs and native consumer compilation; compilation does not establish manual accessibility coverage.");
+  console.log("");
+  console.log("Install: `npm install @beyond-digital/aiux-web@0.1.1 @beyond-digital/aiux-core@0.1.1` or `npx expo install @beyond-digital/aiux-expo@0.1.1`. See [all consumer commands](https://github.com/Beyon-Digital/AIUX/blob/v0.1.1/docs/integration/install.md).");
+  console.log("");
+}
 if (base) console.log(`Changes since ${base} (${lines.length} commits).`);
 else console.log(`First release — full history (${lines.length} commits).`);
 console.log("");
