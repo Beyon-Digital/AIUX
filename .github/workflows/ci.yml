@@ -42,6 +42,9 @@ jobs:
       - run: cargo test --workspace
       - run: cargo build --workspace --release
       - name: Clean Rust Git consumer
+        env:
+          AIUX_CONSUMER_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          AIUX_CONSUMER_REPOSITORY: ${{ github.event.pull_request.head.repo.clone_url || format('https://github.com/{0}', github.repository) }}
         run: bash tools/git-consumers.sh rust
 
   swift-bindings:
@@ -223,6 +226,8 @@ jobs:
           dart test
       - name: Clean Flutter Git consumer with real C ABI
         env:
+          AIUX_CONSUMER_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          AIUX_CONSUMER_REPOSITORY: ${{ github.event.pull_request.head.repo.clone_url || format('https://github.com/{0}', github.repository) }}
           AIUX_CAPI_PATH: ${{ github.workspace }}/target/release/libaiux_capi.so
         run: bash tools/git-consumers.sh flutter
       - name: Flutter renderer analyze + test

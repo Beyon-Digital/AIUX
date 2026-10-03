@@ -3,8 +3,8 @@
 # Rust delivery artifacts on the operator's machine.
 set -euo pipefail
 kind="$1"
-ref="${GITHUB_SHA:?exact pushed commit required}"
-repo="https://github.com/Beyon-Digital/AIUX"
+ref="${AIUX_CONSUMER_REF:-${GITHUB_SHA:?exact pushed commit required}}"
+repo="${AIUX_CONSUMER_REPOSITORY:-https://github.com/Beyon-Digital/AIUX}"
 consumer="$(mktemp -d)"
 if [ "$kind" = rust ]; then
   cargo init --name aiux-consumer --bin "$consumer"
