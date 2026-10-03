@@ -262,29 +262,25 @@ jobs:
           path: release/rust-targets
       - name: Generate release notes
         run: node tools/release-notes.mjs "" "${GITHUB_REF_NAME}" > release-notes.md
-      - name: Checksums
-        run: |
-          cd release
-          find . -type f -print0 | sort -z | xargs -0 sha256sum > ../SHA256SUMS
-          cd ..
-          cat SHA256SUMS
+      - name: Assemble unique release assets and checksums
+        run: node tools/assemble-release.mjs release release-assets
       - name: Create draft GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # upload files only — `release/**` also matches artifact dirs and
           # `gh release create` fails with "is a directory" on those
-          mapfile -t assets < <(find release -type f | sort)
+          mapfile -t assets < <(find release-assets -type f | sort)
           # Existing release assets are immutable. Retry publication instead of
           # regenerating/overwriting a successfully assembled draft.
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "Release already exists; preserving its original assets."
+            node tools/complete-release.mjs "$GITHUB_REF_NAME" release-assets
             exit 0
           fi
           gh release create "${GITHUB_REF_NAME}" \
             --draft \
             --title "AIUX ${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
-            "${assets[@]}" SHA256SUMS
+            "${assets[@]}"
           echo "Draft release created — review + publish to ship."
           echo "npm tarballs validated; dispatch Publish packages after review and scope setup."
