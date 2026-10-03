@@ -28,7 +28,9 @@ use this as bootstrap, then migrate to OIDC. [npm token policy](https://docs.npm
 
 `GITHUB_TOKEN` is created automatically by Actions. The workflow grants only
 `contents: write` for release publication, `actions: read` for validation evidence,
-and `id-token: write` for provenance/OIDC. No GitHub PAT secret is needed.
+and `id-token: write` for provenance/OIDC. Its small dispatcher job uses
+`actions: write` only to dispatch the same workflow on the immutable tag, keeping
+provenance tied to the actual release commit. No GitHub PAT secret is needed.
 
 ## Later releases without an npm token
 
@@ -59,7 +61,9 @@ git push origin v0.1.1
 
 `Release` builds native/WASM/JS artifacts from that commit, validates tarballs and
 fresh native consumers, then creates a draft release with checksums. Its
-successful tag run automatically triggers **Publish packages**. Publication
+successful tag run automatically dispatches **Publish packages** on that tag.
+The built-in token can trigger `workflow_dispatch` without a PAT ([GitHub docs](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)).
+For the Actions UI, choose the release tag in the run selector, not `main`. Publication
 requires green CI for that exact main commit, validates release checksums,
 publishes in dependency order, verifies exact registry integrity and clean
 consumer installation, then publishes the GitHub **prerelease**. npm uses
@@ -68,9 +72,9 @@ consumer installation, then publishes the GitHub **prerelease**. npm uses
 After fixing credentials, rerun explicitly:
 
 ```sh
-gh workflow run publish.yml -R Beyon-Digital/AIUX -f release_tag=v0.1.1 -f auth_mode=token
+gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.1.1 -f release_tag=v0.1.1 -f auth_mode=token
 # After trusted publishing is configured:
-gh workflow run publish.yml -R Beyon-Digital/AIUX -f release_tag=v0.1.2 -f auth_mode=oidc
+gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.1.2 -f release_tag=v0.1.2 -f auth_mode=oidc
 ```
 
 Reruns skip identical already-published versions and reject mismatched bytes.
