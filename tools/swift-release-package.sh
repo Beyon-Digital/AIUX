@@ -7,6 +7,8 @@ cp -R bindings/swift/build/xcframework/AIUXCore.xcframework "$out/"
 cp -R bindings/swift/build/xcframework/Sources/AIUXCore "$out/Sources/"
 cp -R renderers/swiftui/Sources/AIUXSwiftUI "$out/Sources/"
 cp LICENSE "$out/"
+node tools/third-party-notices.mjs
+cp -R dist/third-party "$out/LICENSES"
 cat > "$out/Package.swift" <<'SWIFT'
 // swift-tools-version:5.9
 import PackageDescription

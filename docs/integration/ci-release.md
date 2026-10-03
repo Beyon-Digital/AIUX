@@ -39,16 +39,22 @@ preserved; 0.1.1 is the installable candidate. See [consumer installation](insta
 5. Merge the reviewed PR through the normal GitHub process. Create `v0.1.1`
    at the exact green commit; tag-triggered Release builds every artifact and
    creates a draft GitHub Release with notes, manifest and SHA256SUMS.
-6. Authenticate npm securely. First publication requires an authorized npm
-   account with access to `@beyond-digital`. Run `npm login` interactively;
-   never paste credentials into chat or commit them. Publish the validated
-   tarballs in manifest order with `npm publish <tarball> --access public`.
-7. For later CI publication configure npm trusted publishing for this repository
-   and `publish.yml` for each package. No npm credential is committed. Dispatch
-   Publish packages with the release tag; it downloads the release's tarballs,
-   checks checksum/CI evidence, publishes using OIDC and tests registry installs.
-8. Independently verify every exact version and consumer install. Publish the
-   GitHub draft only after artifacts and registry availability are confirmed.
+6. Configure CI publication using [publishing setup](publishing-setup.md):
+   `NPM_TOKEN` for the first release, then tokenless npm trusted publishing.
+   The successful tag build triggers `publish.yml` automatically.
+7. Publication checks exact-commit CI/checksums, immutable registry integrity and
+   clean installs. Only then does CI publish the GitHub prerelease. Credential
+   failures leave the release draft and can be recovered with workflow_dispatch.
+8. Keep npm `next` / GitHub prerelease status until manual native sign-offs pass.
+   Registry installation is not proof of device or accessibility readiness.
+
+## Third-party licenses
+
+MIT covers first-party code. `third-party-notices.mjs` preserves upstream license
+and copyright files in native/WASM distributions. UniFFI remains MPL-2.0; its
+unmodified source crates and license text are included alongside source URLs.
+This meets the source-availability requirement described by [Mozilla](https://www.mozilla.org/en-US/MPL/2.0/FAQ/#q8-i-want-to-distribute-outside-my-organization-executable-programs-or-libraries-that-i-have-compiled-from-someone-elses-unchanged-mpl-licensed-source-code-either-standalone-or-part-of-a-larger-work-what-do-i-have-to-do).
+Do not relabel upstream code as MIT or discard bundled notices.
 
 ## Availability boundaries
 

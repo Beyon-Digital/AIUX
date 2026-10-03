@@ -21,7 +21,8 @@
     "dist",
     "LICENSE",
     "README.md",
-    "wasm"
+    "wasm",
+    "LICENSES"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node ../../../tools/finalize-js.mjs .",

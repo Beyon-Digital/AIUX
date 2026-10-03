@@ -5,10 +5,11 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 const manifest = JSON.parse(readFileSync('dist/npm/manifest.json'));
+const hasExpo = manifest.some(p => p.name.endsWith('/aiux-expo'));
 const dir = mkdtempSync(join(tmpdir(), 'aiux-consumer-'));
 const packages = Object.fromEntries(manifest.map(p => [p.name, process.argv.includes('--registry') ? p.version : `file:${resolve('dist/npm', p.filename)}`]));
-writeFileSync(join(dir, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { ...packages, react: '19.2.3', 'react-dom': '19.2.3', expo: '57.0.0', 'react-native': '0.86.0', typescript: '5.9.2', '@types/react': '^19.2.2', '@types/node': '22.20.4', vite: '^7.1.0' } }, null, 2));
-const run = (cmd, args) => execFileSync(cmd, args, { cwd: dir, stdio: 'inherit' });
+writeFileSync(join(dir, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { ...packages, react: '19.2.3', 'react-dom': '19.2.3', ...(hasExpo ? {expo: '57.0.0', 'react-native': '0.86.0'} : {}), typescript: '5.9.2', '@types/react': '^19.2.2', '@types/node': '22.20.4', vite: '^7.1.0' } }, null, 2));
+const run = (cmd, args) => execFileSync(cmd, args, { cwd: dir, stdio: 'inherit', env: {...process.env, npm_config_cache: join(dir, '.npm-cache')} });
 run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org']);
 writeFileSync(join(dir, 'smoke.mjs'), `
 import assert from 'node:assert/strict';
@@ -35,9 +36,9 @@ writeFileSync(join(dir, 'check.tsx'), `
 import { AiuxSession, wasmCore } from '@beyond-digital/aiux-core';
 import { EventBuffer } from '@beyond-digital/aiux-core/buffer';
 import { AIConversation as Web } from '@beyond-digital/aiux-web';
-import { AIConversation as Native, createAIUXTransport } from '@beyond-digital/aiux-expo';
+${hasExpo ? "import { AIConversation as Native, createAIUXTransport } from '@beyond-digital/aiux-expo';" : ''}
 import { createSseAdapter } from '@beyond-digital/aiux-adapter-sse';
-void [AiuxSession, wasmCore, EventBuffer, Web, Native, createAIUXTransport, createSseAdapter];
+void [AiuxSession, wasmCore, EventBuffer, Web, ${hasExpo ? 'Native, createAIUXTransport,' : ''} createSseAdapter];
 `);
 writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true, jsx: 'react-jsx', skipLibCheck: true, noEmit: true }, include: ['check.tsx'] }));
 run('npx', ['tsc']);

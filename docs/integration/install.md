@@ -104,9 +104,10 @@ native libraries are Linux artifacts, not universal binaries.
 Use the Git repository with `ref: v0.1.1` and `path: bindings/dart` for
 `aiux_ffi`; use `path: renderers/flutter` for `beyond_aiux`. For local
 checkout development the Flutter renderer's relative path dependency is
-intentional. A published pub.dev package is not yet available.
+intentional. A Git consumer must override that dependency to the same Git tag: A published pub.dev package is not yet available.
 
 ```sh
+flutter pub add --override 'aiux_ffi:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.1.1, path: bindings/dart}}'
 flutter pub add 'beyond_aiux:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.1.1, path: renderers/flutter}}'
 ```
 

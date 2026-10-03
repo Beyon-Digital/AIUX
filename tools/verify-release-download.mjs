@@ -1,8 +1,13 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { jsPackages } from './js-packages.mjs';
+import assert from 'node:assert/strict';
 import { basename, resolve } from 'node:path';
 const dir = resolve(process.argv[2] ?? 'dist/npm');
 const manifest = JSON.parse(readFileSync(`${dir}/manifest.json`));
+const expected = jsPackages.map(dir => JSON.parse(readFileSync(`${dir}/package.json`)));
+assert.equal(manifest.length, expected.length, 'release package count');
+manifest.forEach((p, i) => { assert.equal(p.name, expected[i].name); assert.equal(p.version, expected[i].version); assert.equal(p.filename, `${p.name.slice(1).replace('/', '-')}-${p.version}.tgz`); });
 const checksums = new Map(readFileSync(`${dir}/SHA256SUMS`, 'utf8').trim().split('\n').map(line => { const [hash, path] = line.split(/\s+/); return [basename(path), hash]; }));
 for (const file of ['manifest.json', ...manifest.map(p => p.filename)]) {
   const actual = createHash('sha256').update(readFileSync(`${dir}/${file}`)).digest('hex');

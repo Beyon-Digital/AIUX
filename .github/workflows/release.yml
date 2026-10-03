@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 # MIT OSS release — artifacts derive from the tag commit; registry publishing
 # is a separate explicitly dispatched job after release evidence is reviewed.
@@ -61,12 +61,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --release
+      - run: node tools/third-party-notices.mjs
       - name: Package native libs
         run: |
           mkdir -p dist/rust
           find target/release -maxdepth 1 -type f \
             \( -name 'libaiux_*.so' -o -name 'libaiux_*.a' \) \
             -exec cp {} dist/rust/ \;
+          cp dist/aiux-third-party.tar.gz dist/rust/
+          cp LICENSE dist/rust/
           ls -la dist/rust
       - uses: actions/upload-artifact@v4
         with:
@@ -143,12 +146,15 @@ jobs:
         run: ./gradlew :bindings:kotlin:assembleRelease :renderers:compose:assembleRelease --no-daemon
       - name: Publish local Maven repository (AARs + dependency POMs)
         run: ./gradlew :bindings:kotlin:publishReleasePublicationToReleaseRepository :renderers:compose:publishReleasePublicationToReleaseRepository --no-daemon
+      - run: node tools/third-party-notices.mjs
       - name: Package android artifacts
         run: |
           mkdir -p dist
           cp bindings/kotlin/build/outputs/aar/*.aar dist/
           cp renderers/compose/build/outputs/aar/*.aar dist/
           tar -czf dist/aiux-kotlin-bindings.tar.gz -C bindings/kotlin/build/generated .
+          cp -R dist/third-party dist/maven/LICENSES
+          cp LICENSE dist/maven/
           tar -czf dist/aiux-android-maven.tar.gz -C dist maven
           ls -la dist
       - uses: actions/upload-artifact@v4
@@ -184,6 +190,7 @@ jobs:
           pnpm install --frozen-lockfile=false
           pnpm -r --if-present run build
       - run: node bindings/wasm/js/scripts/copy-wasm.mjs
+      - run: node tools/third-party-notices.mjs
       - uses: actions/download-artifact@v4
         with:
           pattern: apple*-artifacts
@@ -268,6 +275,12 @@ jobs:
           # upload files only — `release/**` also matches artifact dirs and
           # `gh release create` fails with "is a directory" on those
           mapfile -t assets < <(find release -type f | sort)
+          # Existing release assets are immutable. Retry publication instead of
+          # regenerating/overwriting a successfully assembled draft.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release already exists; preserving its original assets."
+            exit 0
+          fi
           gh release create "${GITHUB_REF_NAME}" \
             --draft \
             --title "AIUX ${GITHUB_REF_NAME}" \

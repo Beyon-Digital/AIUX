@@ -41,6 +41,8 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
       - run: cargo build --workspace --release
+      - name: Clean Rust Git consumer
+        run: bash tools/git-consumers.sh rust
 
   swift-bindings:
     name: Swift bindings + tests
@@ -218,6 +220,10 @@ jobs:
           dart pub get
           dart analyze
           dart test
+      - name: Clean Flutter Git consumer with real C ABI
+        env:
+          AIUX_CAPI_PATH: ${{ github.workspace }}/target/release/libaiux_capi.so
+        run: bash tools/git-consumers.sh flutter
       - name: Flutter renderer analyze + test
         run: |
           set -e

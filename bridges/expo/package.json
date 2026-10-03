@@ -52,6 +52,7 @@
     "README.md",
     "android",
     "ios",
-    "expo-module.config.json"
+    "expo-module.config.json",
+    "LICENSES"
   ]
 }
