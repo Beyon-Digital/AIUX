@@ -1,4 +1,4 @@
-import type { AiuxEvent } from "@beyondigital/aiux-protocol-types";
+import type { AiuxEvent } from "@beyond-digital/aiux-protocol-types";
 
 /**
  * Minimal dispatch sink a host provides — one serialized `AIUXEvent[]` batch
@@ -9,7 +9,7 @@ export type EventBatchSink = (eventsJson: string) => Promise<void> | void;
 
 /**
  * The wire-adapter contract: an async-iterable source of `AIUXEvent[]`
- * batches. Adapters (`@beyondigital/aiux-adapter-*`) implement this; hosts may
+ * batches. Adapters (`@beyond-digital/aiux-adapter-*`) implement this; hosts may
  * also roll their own source and still use `streamToBatches`.
  */
 export interface EventBatchSource extends AsyncIterable<AiuxEvent[]> {

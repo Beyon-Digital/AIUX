@@ -1,8 +1,8 @@
 {
   "name": "aiux-monorepo",
   "private": true,
-  "version": "0.1.0",
-  "packageManager": "pnpm@12.8.1",
+  "version": "0.1.1",
+  "packageManager": "pnpm@10.27.0",
   "engines": {
     "node": ">=20"
   },
@@ -13,6 +13,10 @@
     "build": "pnpm -r --if-present run build",
     "test": "pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
-    "lint": "pnpm -r --if-present run lint"
-  }
+    "lint": "pnpm -r --if-present run lint",
+    "release:check": "node tools/release-check.mjs",
+    "release:pack": "node tools/pack-js.mjs",
+    "release:smoke": "node tools/consumer-smoke.mjs"
+  },
+  "license": "MIT"
 }

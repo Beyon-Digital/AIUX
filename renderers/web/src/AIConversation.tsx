@@ -34,7 +34,7 @@ import {
 export type AIConversationMode = "fullscreen" | "embedded";
 
 export interface AIConversationProps {
-  /** Live session object (from `@beyondigital/aiux-core`). */
+  /** Live session object (from `@beyond-digital/aiux-core`). */
   session?: AiuxSessionLike | undefined;
   /** Or a session id resolved via `AiuxSessionProvider`. */
   sessionId?: string | undefined;

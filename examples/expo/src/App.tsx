@@ -12,7 +12,7 @@ import {
   AIConversation,
   createAIUXSession,
   type AIUXErrorInfo,
-} from "@beyondigital/aiux-expo";
+} from "@beyond-digital/aiux-expo";
 
 import { DemoController } from "./DemoController";
 import { exampleTheme } from "./theme";

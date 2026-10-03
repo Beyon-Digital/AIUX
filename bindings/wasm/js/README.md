@@ -1,10 +1,10 @@
-# @beyondigital/aiux-core
+# @beyond-digital/aiux-core
 
 JS session package over the AIUX WASM core (docs/PLAN.md §5/§10/§12, ADR 0005).
-Consumed by `@beyondigital/aiux-web` and the JS transport adapters.
+Consumed by `@beyond-digital/aiux-web` and the JS transport adapters.
 
 ```ts
-import { AiuxSession, EventBuffer, MockCore, wasmCore } from "@beyondigital/aiux-core";
+import { AiuxSession, EventBuffer, MockCore, wasmCore } from "@beyond-digital/aiux-core";
 import init, * as wasm from "aiux-wasm/pkg/aiux_wasm.js"; // built by ../build.sh
 
 await init();

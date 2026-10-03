@@ -1,4 +1,4 @@
-import type { AiuxEvent } from "@beyondigital/aiux-protocol-types";
+import type { AiuxEvent } from "@beyond-digital/aiux-protocol-types";
 import {
   createEventFactory,
   createWireNormalizer,
@@ -8,7 +8,7 @@ import {
   type EventFactory,
   type NormalizeTarget,
   type WireNormalizer,
-} from "@beyondigital/aiux-transport-js";
+} from "@beyond-digital/aiux-transport-js";
 
 export interface SseReconnectPolicy {
   /** Max reconnect attempts after a drop/failure. Default Infinity. */

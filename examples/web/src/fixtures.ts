@@ -1,5 +1,5 @@
 /** Canonical fixtures + expected serializations, bundled by Vite. */
-import type { AiuxEvent } from "@beyondigital/aiux-core";
+import type { AiuxEvent } from "@beyond-digital/aiux-core";
 
 interface FixtureFile {
   name?: string;

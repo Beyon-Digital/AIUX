@@ -1,6 +1,6 @@
 // GENERATED FILE — DO NOT EDIT.
 // Source: protocol/schemas/v1 (+ protocol/versions/v1.json).
-// Regenerate with: pnpm --filter @beyondigital/aiux-protocol-types generate
+// Regenerate with: pnpm --filter @beyond-digital/aiux-protocol-types generate
 /* eslint-disable */
 
 /**

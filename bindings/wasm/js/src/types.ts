@@ -1,5 +1,5 @@
 /**
- * Public types for `@beyondigital/aiux-core`.
+ * Public types for `@beyond-digital/aiux-core`.
  *
  * The wire contract is JSON end-to-end (docs/PLAN.md §4, ADR 0001): the Rust
  * core owns every semantic, and no internal core type ever crosses the

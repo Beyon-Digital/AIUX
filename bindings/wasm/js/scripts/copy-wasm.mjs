@@ -1,5 +1,5 @@
 // Copy the wasm-bindgen artifacts (bindings/wasm/pkg/) next to the JS package
-// so `import "@beyondigital/aiux-core/wasm"` resolves to real, pinned bytes.
+// so `import "@beyond-digital/aiux-core/wasm"` resolves to real, pinned bytes.
 // `pkg/` is gitignored — this script runs inside `aiux-core`'s build so CI
 // produces it from source before packing. Fails loudly when pkg/ is absent:
 // run `bindings/wasm/scripts/build-wasm.mjs` first.

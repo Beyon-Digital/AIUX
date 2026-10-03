@@ -14,9 +14,9 @@
     "noEmit": true,
     "types": ["vite/client"],
     "paths": {
-      "@beyondigital/aiux-core": ["../../bindings/wasm/js/src/index.ts"],
-      "@beyondigital/aiux-web": ["../../renderers/web/src/index.ts"],
-      "@beyondigital/aiux-web/styles.css": [
+      "@beyond-digital/aiux-core": ["../../bindings/wasm/js/src/index.ts"],
+      "@beyond-digital/aiux-web": ["../../renderers/web/src/index.ts"],
+      "@beyond-digital/aiux-web/styles.css": [
         "../../renderers/web/src/styles.css"
       ]
     }

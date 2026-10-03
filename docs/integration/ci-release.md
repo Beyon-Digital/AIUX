@@ -1,65 +1,66 @@
-# CI / Release Guide
+# CI and release checklist
 
-## CI (`ci.yml` — every PR + main push)
+First-party code is MIT. The approved npm scope is `@beyond-digital`; this
+supersedes the original internal-only plan. The immutable v0.1.0 tag/draft is
+preserved; 0.1.1 is the installable candidate. See [consumer installation](install.md).
 
-Guardrails (§19): top-level concurrency group `ci-${{github.workflow}}-
-${{github.ref}}` with `cancel-in-progress: true`; **every** job has
-`timeout-minutes`.
+## Executable gates
 
-| Job | Runs on | Covers |
-|-----|---------|--------|
-| `protocol-validate` | ubuntu | schema drift: `cargo run -p aiux-protocol --bin gen-schemas` + `git diff --exit-code protocol/schemas` — edit Rust types, regenerate, commit |
-| `rust` | ubuntu | fmt, `clippy --workspace --all-targets -D warnings`, `cargo test --workspace`, release build — benches are compiled+smoked here (`cargo bench --bench session -- --test`) |
-| `swift-bindings` | macos | UniFFI gen + SwiftPM build+test of `bindings/swift` & `renderers/swiftui` |
-| `kotlin-bindings` | ubuntu | UniFFI gen + `gradle build test` of `bindings/kotlin` & `renderers/compose` |
-| `js` | ubuntu | `pnpm -r typecheck` + `pnpm -r test` (adapters, transports, wasm JS wrapper, web renderer incl. golden DOM snapshots) |
-| `web-build` | ubuntu | `pnpm --filter @beyondigital/aiux-web build` + examples/web build against real wasm |
-| `expo-android` | ubuntu | gradle `assembleDebug` of `bridges/expo/android` + example app |
-| `expo-ios` | macos | pod install + xcodebuild of example app (staged XCFramework) |
-| `flutter` | ubuntu | dart ffi build, `dart analyze/test`, `flutter analyze/test` (renderer + example) |
-| `flutter-goldens` | ubuntu | `AIUX_GOLDENS=1 flutter test test/golden_test.dart --update-goldens` → PNG artifact (`flutter-goldens`, 30d) for human review |
-| `conformance` | ubuntu | 27/27 fixtures through the Rust runner |
+- `pnpm install --frozen-lockfile` uses the committed real workspace lockfile.
+- `pnpm release:check` verifies allowlisted implementations, license, versions,
+  repository association and non-placeholder build/test/typecheck commands.
+- `pnpm -r --if-present build` compiles JS. `finalize-js.mjs` makes emitted ESM
+  imports resolve outside the workspace, including Node and Metro consumers.
+- Build WASM on CI, then `node bindings/wasm/js/scripts/copy-wasm.mjs` copies
+  generated JS, declarations and WASM into the package's declared exports.
+- CI builds Apple/Android artifacts from the same commit. `stage-native.mjs`
+  assembles Expo's complete native payload. The Android Maven repository includes
+  dependency POMs; the Swift distribution uses a binary target without unsafe
+  repo-relative linker flags.
+- `pnpm release:pack` creates actual npm `.tgz` packages with `pnpm pack`, checks
+  every entrypoint/export, rejects unresolved workspace dependencies, and requires
+  Expo's native payload. Scaffolds are excluded from the allowlist.
+- `pnpm release:smoke` installs those tarballs into an isolated npm project,
+  runs real WASM lifecycle/imports, checks NodeNext declarations, builds Vite
+  with shipped CSS/WASM, and resolves Expo JS declarations without repo links.
+- `pnpm release:smoke -- --registry` / `node tools/consumer-smoke.mjs --registry`
+  repeats installation against exact published registry versions.
 
-## Release (`release.yml` — tag `v*`)
+## Operator checklist
 
-Pipeline per §20; every artifact derives from the **same tag commit**:
+1. Confirm scope ownership, MIT license and version. Never move an existing tag.
+2. Run the PR's exact commit through CI: schema checks, Rust fmt/clippy/tests,
+   Swift/Android builds, JS tests, Expo native compiles and Flutter tests.
+3. Run the Release workflow on the candidate branch to produce and validate
+   distribution artifacts. Branch runs upload artifacts and do not create a release.
+4. Review [native accessibility/device gates](../renderers/accessibility.md).
+   Record actual results; do not infer sign-off from native compilation. Use an
+   explicitly labelled prerelease if those manual gates remain incomplete.
+5. Merge the reviewed PR through the normal GitHub process. Create `v0.1.1`
+   at the exact green commit; tag-triggered Release builds every artifact and
+   creates a draft GitHub Release with notes, manifest and SHA256SUMS.
+6. Authenticate npm securely. First publication requires an authorized npm
+   account with access to `@beyond-digital`. Run `npm login` interactively;
+   never paste credentials into chat or commit them. Publish the validated
+   tarballs in manifest order with `npm publish <tarball> --access public`.
+7. For later CI publication configure npm trusted publishing for this repository
+   and `publish.yml` for each package. No npm credential is committed. Dispatch
+   Publish packages with the release tag; it downloads the release's tarballs,
+   checks checksum/CI evidence, publishes using OIDC and tests registry installs.
+8. Independently verify every exact version and consumer install. Publish the
+   GitHub draft only after artifacts and registry availability are confirmed.
 
-```
-validate-tag → conformance → build-rust (per-target libs) →
-build-apple (macos: XCFramework+swift bindings) →
-build-android (kotlin gen + AAR) → build-js-wasm (wasm-pack + pnpm builds)
-→ checksums → GitHub Release (draft w/ generated notes)
-```
+## Availability boundaries
 
-- `generate-notes` runs `node tools/release-notes.mjs <prev-tag> <tag>`
-  (conventional-commit changelog, grouped).
-- Artifacts: `AIUXCore.xcframework.zip`, `aiux-compose-*.aar`,
-  `aiux-bindings-kotlin-*.jar`, `aiux-wasm/pkg` tarball, per-target Rust
-  libs, npm-ready JS package dirs (publishable to **GitHub Packages** —
-  internal v0.x scope per §20; public registries deferred).
-- `SHA256SUMS` covers every uploaded asset.
+Rust is supported via Git dependencies; crates.io credentials and publishing are
+not configured. Swift/Android ship self-contained GitHub distribution bundles.
+Dart/Flutter are source/Git clients; pub.dev and multi-platform mobile C ABI
+packaging remain pending. Plain RN Fabric and GraphQL are scaffolds and stay
+private. Echo-only example scripts are not native-test evidence; CI has real
+Expo Android/iOS compilation jobs.
 
-### Cutting a release (operator checklist)
+## Evidence
 
-1. Green `ci.yml` on the release commit.
-2. `git tag v0.1.0 <commit> && git push origin v0.1.0`.
-3. `release.yml` runs; the GitHub Release is created **draft** — attach
-   review, then publish.
-4. Optional: publish JS packages to GitHub Packages
-   (`npm publish --registry https://npm.pkg.github.com` with the repo
-   `@beyondigital` scope) — bodies are wired in `release.yml` but gated
-   behind `workflow_dispatch`/manual step until registry auth is set.
-
-## Local equivalents
-
-| Task | Command |
-|------|---------|
-| Conformance | `cargo run -p aiux-conformance` (see `conformance/README.md`) |
-| Benches | `cargo bench -p aiux-benches --bench session` |
-| Schema regen | `cargo run -p aiux-protocol --bin gen-schemas` |
-| Swift bindings | `bash bindings/swift/generate.sh` (macOS) |
-| XCFramework | `bash bindings/swift/package-xcframework.sh` (macOS) |
-| Kotlin bindings | `bash bindings/kotlin/generate.sh` |
-| wasm/JS core | `bash bindings/wasm/build.sh` |
-| JS workspace | `pnpm install && pnpm -r typecheck && pnpm -r test` |
-| Dep audits | `cargo audit`; `pnpm audit`; `gradle :renderers:compose:dependencies` + OWASP dep-check (see `docs/integration/dependency-audit.md`) |
+Save commit SHA, exact CI run URLs, consumer logs, package manifest and hashes,
+registry version/integrity results and manual native sign-offs alongside release
+notes. A green old commit or an old draft release cannot validate new packages.

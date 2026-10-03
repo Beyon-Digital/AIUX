@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 22
       - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - name: Validate protocol schemas, manifest + fixtures
         # Compiles every schema (malformed definitions fail), cross-checks the
         # v1 manifest against events/*.json, and schema-validates every
@@ -100,7 +100,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --filter '!@beyond-digital/aiux-example-*' --if-present build
+      - run: node tools/release-check.mjs
       - run: pnpm run typecheck
       - run: pnpm run test
 
@@ -120,13 +122,14 @@ jobs:
           targets: wasm32-unknown-unknown
       - name: Install wasm-bindgen-cli (must match Cargo.lock)
         run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - name: Build web packages
         # aiux-web dist + the example's vite build; the example wires
         # aiux-wasm → bindings/wasm/pkg → aiux-core ./wasm export.
         run: pnpm -r run build
+      - run: node bindings/wasm/js/scripts/copy-wasm.mjs
       - name: Web renderer tests (incl. wasm conformance gate)
-        run: pnpm --filter "@beyondigital/aiux-web" run test
+        run: pnpm --filter "@beyond-digital/aiux-web" run test
 
   expo-android:
     name: Expo Android compile
@@ -151,7 +154,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       # Expo autolinking resolves the workspace module via Node during
       # settings evaluation — the JS deps must exist before Gradle runs.
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       # AGP's on-demand SDK install is flaky on fresh runners — install the
       # components expo-modules-core needs explicitly first.
       - name: Install Android SDK components (cmake + NDK)
@@ -180,7 +183,7 @@ jobs:
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - name: Stage UniFFI Swift bindings + AIUXCore.xcframework
         run: bash bridges/expo/scripts/prepare-ios.sh
       - name: Pods

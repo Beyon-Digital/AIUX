@@ -4,7 +4,7 @@ import {
   type AIConversationMode,
   type AiuxAction,
   type AiuxTheme,
-} from "@beyondigital/aiux-web";
+} from "@beyond-digital/aiux-web";
 import { FIXTURES, type FixtureEntry } from "./fixtures.js";
 import {
   createActionHandler,

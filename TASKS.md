@@ -93,7 +93,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 ## Phase 4 — Expo SDK 57 bridge → PR 6
 
-- [x] `@beyondigital/aiux-expo` — Expo Modules native view
+- [x] `@beyond-digital/aiux-expo` — Expo Modules native view
 - [x] `<AIConversation sessionId theme context capabilities onAction />`
 - [x] iOS: Expo view → SwiftUI hosting → AIUXSwiftUI → core
 - [x] Android: Expo view → ComposeView → AIUXCompose → core
@@ -110,8 +110,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 - [x] `aiux-wasm` — wasm-bindgen surface over core (`scripts/build-wasm.mjs`
       → `bindings/wasm/pkg/` → vendored as aiux-core `./wasm` export)
-- [x] `@beyondigital/aiux-core` (JS session wrapper + subscriptions)
-- [x] `@beyondigital/aiux-web` React DOM renderer (fullscreen + embedded modes)
+- [x] `@beyond-digital/aiux-core` (JS session wrapper + subscriptions)
+- [x] `@beyond-digital/aiux-web` React DOM renderer (fullscreen + embedded modes)
       — `AIConversation`, all 13 part types, all 26 surface primitives, ARIA
       + keyboard/feed pattern, theme roles → scoped CSS vars (light/dark)
 - [x] Web adapter + examples/web fixture playback — `createEventDriver`
@@ -170,3 +170,17 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 
 Flutter, full web artifact workspace, voice, video, complex charts, 100 DSL
 components, native networking stack, provider SDKs, public registry publishing.
+
+## OSS installable release amendment (0.1.1)
+
+- [x] Owner approved MIT and npm scope `@beyond-digital`.
+- [x] Compiled JS exports, ESM import resolution and package allowlist; scaffold
+  GraphQL and plain RN remain private.
+- [x] Executable metadata/tarball gates and isolated consumer validation scripts.
+- [x] Native distribution assembly and npm trusted-publishing workflow prepared.
+- [ ] Exact candidate commit passes all CI + distribution consumer builds.
+- [ ] Manual native accessibility/device sign-off (see renderer checklist).
+- [ ] npm account authenticated / trusted publishers configured.
+- [ ] Reviewed PR merged, immutable 0.1.1 tag built, registry packages published
+  and independently installed; GitHub release published.
+- [ ] pub.dev/crates.io registry releases and mobile Flutter native payloads.

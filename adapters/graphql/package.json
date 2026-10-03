@@ -1,12 +1,13 @@
 {
-  "name": "@beyondigital/aiux-adapter-graphql",
-  "version": "0.1.0",
+  "name": "@beyond-digital/aiux-adapter-graphql",
+  "version": "0.1.1",
   "private": true,
-  "description": "Adapter: GraphQL transport → AIUXEvent[].",
+  "description": "Adapter: GraphQL transport \u2192 AIUXEvent[].",
   "main": "src/index.ts",
   "scripts": {
-    "build": "echo '@beyondigital/aiux-adapter-graphql: build lands in a later phase (docs/PLAN.md)'",
-    "test": "echo '@beyondigital/aiux-adapter-graphql: tests land in a later phase'",
-    "typecheck": "echo '@beyondigital/aiux-adapter-graphql: typecheck lands in a later phase'"
-  }
+    "build": "echo '@beyond-digital/aiux-adapter-graphql: build lands in a later phase (docs/PLAN.md)'",
+    "test": "echo '@beyond-digital/aiux-adapter-graphql: tests land in a later phase'",
+    "typecheck": "echo '@beyond-digital/aiux-adapter-graphql: typecheck lands in a later phase'"
+  },
+  "license": "MIT"
 }

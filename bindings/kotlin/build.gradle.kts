@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("maven-publish")
     id("com.android.library")
     kotlin("android")
 }
@@ -81,4 +82,26 @@ dependencies {
     testImplementation(kotlin("test"))
     // JVM-only JSON for reading conformance fixtures in unit tests.
     testImplementation("org.json:json:20250517")
+}
+
+// A local Maven repository is shipped inside native/Expo release artifacts.
+// POMs preserve transitive dependencies that loose AAR files cannot express.
+group = "in.beyondigital.aiux"
+version = "0.1.1"
+android { publishing { singleVariant("release") } }
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                artifactId = "bindings"
+                pom {
+                    name.set("AIUX bindings")
+                    url.set("https://github.com/Beyon-Digital/AIUX")
+                    licenses { license { name.set("MIT"); url.set("https://opensource.org/licenses/MIT") } }
+                }
+            }
+        }
+        repositories { maven { name = "Release"; url = uri("${rootDir}/dist/maven") } }
+    }
 }

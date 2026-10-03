@@ -1,5 +1,5 @@
 /**
- * Public types for `@beyondigital/aiux-expo` (plan §10).
+ * Public types for `@beyond-digital/aiux-expo` (plan §10).
  *
  * The wire contract across the JS↔native boundary is JSON: protocol payloads
  * (context entities, capabilities, snapshots, action payloads) stay opaque

@@ -4,7 +4,7 @@ import {
   type DispatchReport,
   type EventBufferPolicy,
   type JsonString,
-} from "@beyondigital/aiux-core";
+} from "@beyond-digital/aiux-core";
 
 /**
  * Web transport adapter (plan §12): the bridge between a host event source

@@ -10,9 +10,9 @@ Pod::Spec.new do |s|
   s.license        = 'MIT'
   s.author         = 'Beyon Digital'
   s.homepage       = 'https://github.com/Beyon-Digital/AIUX'
-  s.platforms      = { :ios => '15.1' }
+  s.platforms      = { :ios => '16.0' }
   s.swift_version  = '5.9'
-  s.source         = { git: '' }
+  s.source         = { git: 'https://github.com/Beyon-Digital/AIUX.git', tag: "v#{package['version']}" }
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'

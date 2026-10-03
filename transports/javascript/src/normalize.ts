@@ -9,7 +9,7 @@ import type {
   Run,
   Session,
   Tool,
-} from "@beyondigital/aiux-protocol-types";
+} from "@beyond-digital/aiux-protocol-types";
 
 import type { EventFactory } from "./factory";
 import type { AdapterIssue } from "./types";

@@ -1,6 +1,6 @@
 # aiux-wasm
 
-wasm-bindgen surface over the Rust core for `@beyondigital/aiux-core` (plan §5,
+wasm-bindgen surface over the Rust core for `@beyond-digital/aiux-core` (plan §5,
 ADR 0005). Phase 5.
 
 The crate exports the frozen session facade as free functions — JSON strings
@@ -28,6 +28,6 @@ cargo install wasm-bindgen-cli   # must match Cargo.lock's wasm-bindgen version
 
 ## JS package
 
-`js/` contains `@beyondigital/aiux-core`: the `AiuxSession` wrapper, the
+`js/` contains `@beyond-digital/aiux-core`: the `AiuxSession` wrapper, the
 streaming `EventBuffer` (plan §10/§22), `MockCore`, and vitest tests. It is a
 pnpm workspace member; `pnpm install && pnpm -r test` from the repo root.

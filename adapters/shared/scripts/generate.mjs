@@ -9,7 +9,7 @@
  *   src/generated/constants.ts         — protocolVersion / eventTypes / entities
  *   src/generated/index.ts             — dedup'd barrel (first definition wins)
  *
- * Regenerate: `pnpm --filter @beyondigital/aiux-protocol-types generate`.
+ * Regenerate: `pnpm --filter @beyond-digital/aiux-protocol-types generate`.
  */
 import { compile } from "json-schema-to-typescript";
 import {
@@ -32,7 +32,7 @@ const outEventsDir = join(outDir, "events");
 
 const BANNER = `// GENERATED FILE — DO NOT EDIT.
 // Source: protocol/schemas/v1 (+ protocol/versions/v1.json).
-// Regenerate with: pnpm --filter @beyondigital/aiux-protocol-types generate
+// Regenerate with: pnpm --filter @beyond-digital/aiux-protocol-types generate
 /* eslint-disable */
 `;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { AdapterIssue } from "@beyondigital/aiux-transport-js";
+import type { AdapterIssue } from "@beyond-digital/aiux-transport-js";
 
 import type { AiuxEvent } from "../../shared/src/index";
 import { createEventValidator } from "../../shared/src/testing";
@@ -9,7 +9,7 @@ import {
   mapAiSdkPart,
   type AiSdkStreamPart,
 } from "../src/index";
-import { createEventFactory } from "@beyondigital/aiux-transport-js";
+import { createEventFactory } from "@beyond-digital/aiux-transport-js";
 
 const validator = createEventValidator();
 

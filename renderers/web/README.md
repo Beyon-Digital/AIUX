@@ -1,4 +1,4 @@
-# @beyondigital/aiux-web
+# @beyond-digital/aiux-web
 
 The AIUX web renderer (plan §12): a React DOM adapter over the frozen session
 facade. Reads the session snapshot → DOM/ARIA output; every user interaction
@@ -6,11 +6,11 @@ emits a semantic action the host resolves — the component never mutates state
 directly (§23).
 
 ```tsx
-import { AiuxSession, wasmCore } from "@beyondigital/aiux-core";
-import init, * as wasm from "@beyondigital/aiux-core/wasm";
-import wasmUrl from "@beyondigital/aiux-core/wasm/aiux_wasm_bg.wasm?url";
-import { AIConversation } from "@beyondigital/aiux-web";
-import "@beyondigital/aiux-web/styles.css";
+import { AiuxSession, wasmCore } from "@beyond-digital/aiux-core";
+import init, * as wasm from "@beyond-digital/aiux-core/wasm";
+import wasmUrl from "@beyond-digital/aiux-core/wasm/aiux_wasm_bg.wasm?url";
+import { AIConversation } from "@beyond-digital/aiux-web";
+import "@beyond-digital/aiux-web/styles.css";
 
 await init({ module_or_path: wasmUrl });
 const session = AiuxSession.create(wasmCore(wasm), "{}");
@@ -50,10 +50,10 @@ const session = AiuxSession.create(wasmCore(wasm), "{}");
 
 ## Tests
 
-`pnpm --filter @beyondigital/aiux-web test` — vitest + Testing Library for
+`pnpm --filter @beyond-digital/aiux-web test` — vitest + Testing Library for
 every part renderer, surface primitive, keyboard/focus behaviors, and the
 Phase-5 conformance gate: all fixtures replayed through the real wasm core
 with byte-identical `serialize()` (skipped when `bindings/wasm/pkg/` is
-absent — build it with `pnpm --filter @beyondigital/aiux-core build:wasm`).
+absent — build it with `pnpm --filter @beyond-digital/aiux-core build:wasm`).
 
 See `examples/web` for the full fixture-replay app.

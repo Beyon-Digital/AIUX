@@ -8,15 +8,15 @@ import {
   AiuxSession,
   wasmCore,
   type AiuxEvent,
-} from "@beyondigital/aiux-core";
+} from "@beyond-digital/aiux-core";
 import {
   AIUX_ACTIONS,
   createEventDriver,
   type AiuxAction,
   type AiuxEventDriver,
-} from "@beyondigital/aiux-web";
-import init, * as wasm from "@beyondigital/aiux-core/wasm";
-import wasmUrl from "@beyondigital/aiux-core/wasm/aiux_wasm_bg.wasm?url";
+} from "@beyond-digital/aiux-web";
+import init, * as wasm from "@beyond-digital/aiux-core/wasm";
+import wasmUrl from "@beyond-digital/aiux-core/wasm/aiux_wasm_bg.wasm?url";
 
 let coreReady: Promise<ReturnType<typeof wasmCore>> | undefined;
 

@@ -10,7 +10,7 @@ function requireNative() {
   const native = getNativeModule();
   if (!native) {
     throw new Error(
-      "@beyondigital/aiux-expo: native module not linked. " +
+      "@beyond-digital/aiux-expo: native module not linked. " +
         "Run `expo prebuild` (or open the app in a dev client build).",
     );
   }

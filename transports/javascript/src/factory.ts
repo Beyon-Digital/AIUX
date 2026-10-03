@@ -36,7 +36,7 @@ import {
   type ToolFailed,
   type ToolProgress,
   type ToolStarted,
-} from "@beyondigital/aiux-protocol-types";
+} from "@beyond-digital/aiux-protocol-types";
 
 export interface EventFactoryOptions {
   /** Clock; defaults to `new Date().toISOString()`. Inject for deterministic tests. */

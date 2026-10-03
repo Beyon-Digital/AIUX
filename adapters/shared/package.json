@@ -1,13 +1,12 @@
 {
-  "name": "@beyondigital/aiux-protocol-types",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@beyond-digital/aiux-protocol-types",
+  "version": "0.1.1",
   "description": "AIUX Protocol v1 TypeScript types, generated from protocol/schemas/v1.",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "generate": "node scripts/generate.mjs",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node ../../tools/finalize-js.mjs .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -17,5 +16,27 @@
     "json-schema-to-typescript": "15.0.4",
     "typescript": "5.9.2",
     "vitest": "^4.1.11"
-  }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Beyon-Digital/AIUX.git",
+    "directory": "adapters/shared"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ]
 }

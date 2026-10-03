@@ -1,7 +1,7 @@
 /**
  * AIUX Protocol v1 types — generated from `protocol/schemas/v1`.
  * Nothing here is hand-maintained except the tiny helpers below; regenerate
- * via `pnpm --filter @beyondigital/aiux-protocol-types generate`.
+ * via `pnpm --filter @beyond-digital/aiux-protocol-types generate`.
  */
 export * from "./generated";
 

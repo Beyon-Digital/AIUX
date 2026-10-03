@@ -14,7 +14,7 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@beyondigital/aiux-core": ["../../bindings/wasm/js/src/index.ts"]
+      "@beyond-digital/aiux-core": ["../../bindings/wasm/js/src/index.ts"]
     }
   },
   "include": ["src", "test", "vitest.config.ts"]

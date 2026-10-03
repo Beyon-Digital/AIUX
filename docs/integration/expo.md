@@ -1,6 +1,6 @@
 # Expo SDK 57 Integration
 
-`@beyondigital/aiux-expo` mounts the **real** SwiftUI (iOS) and Compose
+`@beyond-digital/aiux-expo` mounts the **real** SwiftUI (iOS) and Compose
 (Android) renderers behind one coarse native boundary — no message UI is
 rebuilt in React Native (§1/§10, ADR 0002). Full API reference:
 `bridges/expo/README.md`; runnable demo: `examples/expo`.
@@ -8,8 +8,8 @@ rebuilt in React Native (§1/§10, ADR 0002). Full API reference:
 ## Install & link
 
 ```bash
-pnpm add @beyondigital/aiux-expo
-pnpm --filter @beyondigital/aiux-expo prepare:ios   # macOS: stage XCFramework + bindings
+pnpm add @beyond-digital/aiux-expo
+pnpm --filter @beyond-digital/aiux-expo prepare:ios   # macOS: stage XCFramework + bindings
 ```
 
 - **iOS**: the pod compiles `renderers/swiftui` + generated UniFFI sources
@@ -24,7 +24,7 @@ pnpm --filter @beyondigital/aiux-expo prepare:ios   # macOS: stage XCFramework +
 ## Usage
 
 ```tsx
-import { AIConversation, createAIUXSession, createAIUXTransport } from "@beyondigital/aiux-expo";
+import { AIConversation, createAIUXSession, createAIUXTransport } from "@beyond-digital/aiux-expo";
 
 // one session per conversation
 await createAIUXSession({ sessionId: "s1", title: "Demo", context, capabilities });

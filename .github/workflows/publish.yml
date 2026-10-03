@@ -1,0 +1,69 @@
+name: Publish packages
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Immutable release tag with validated npm tarballs (vX.Y.Z)'
+        required: true
+      npm_tag:
+        description: 'npm dist-tag; next until manual native sign-off is complete'
+        default: next
+        required: true
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+concurrency:
+  group: publish-${{ inputs.release_tag }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate input syntax
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          NPM_TAG: ${{ inputs.npm_tag }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$NPM_TAG" =~ ^[a-z][a-z0-9-]*$ ]]
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global npm@latest
+      - name: Require green CI and release on the exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          node tools/release-check.mjs "$RELEASE_TAG"
+          sha=$(git rev-parse HEAD)
+          for workflow in ci.yml release.yml; do
+            conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$sha&status=completed" --jq '.workflow_runs[0].conclusion')
+            test "$conclusion" = success
+          done
+      - name: Download exact release tarballs and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          mkdir -p dist/npm
+          gh release download "$RELEASE_TAG" -p '*.tgz' -p manifest.json -p SHA256SUMS -D dist/npm
+          node tools/verify-release-download.mjs
+      - name: Publish with npm trusted publishing (OIDC)
+        env:
+          NPM_TAG: ${{ inputs.npm_tag }}
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          for (const p of JSON.parse(readFileSync('dist/npm/manifest.json'))) {
+            execFileSync('npm', ['publish', `dist/npm/${p.filename}`, '--access=public', '--provenance', `--tag=${process.env.NPM_TAG}`, '--registry=https://registry.npmjs.org'], {stdio:'inherit'});
+          }
+          JS
+      - name: Independently verify published consumer installation
+        run: node tools/consumer-smoke.mjs --registry

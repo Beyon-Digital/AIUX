@@ -19,7 +19,7 @@ Host transport → AIUXEvent[] → Rust Core → AIUXSnapshot → Renderer
 | `core/rust/` | Rust workspace: protocol, reducer, session, tools, approvals, artifacts, surfaces, persistence |
 | `bindings/` | UniFFI (swift/kotlin), WASM (js), C ABI (dart) |
 | `renderers/` | `swiftui`, `compose`, `web`, `flutter` |
-| `bridges/` | `expo` (`@beyondigital/aiux-expo`), `react-native` |
+| `bridges/` | `expo` (`@beyond-digital/aiux-expo`), `react-native` |
 | `transports/` | Host-side transport helpers per language |
 | `adapters/` | Wire adapters (ai-sdk, sse, websocket, graphql) |
 | `examples/` | Example app per renderer/bridge |
@@ -32,7 +32,13 @@ Host transport → AIUXEvent[] → Rust Core → AIUXSnapshot → Renderer
 - **Execution tracker:** [TASKS.md](TASKS.md)
 - **Decisions:** [docs/adr/](docs/adr/)
 
-## Quick start
+## Install and availability
+
+See [consumer installation](docs/integration/install.md) for versioned commands,
+native prerequisites, and the availability of each client. The existing v0.1.0
+draft is not a registry release. v0.1.1 is the first installable release candidate.
+
+## Build from source
 
 ```bash
 cargo test --workspace        # Rust core
@@ -43,4 +49,4 @@ swift build                   # inside renderers/swiftui (macOS)
 
 ## License
 
-Proprietary — Beyondigital.
+[MIT](LICENSE).

@@ -17,10 +17,10 @@ export default defineConfig({
   resolve: {
     alias: [
       // Anchored exact matches — string finds prefix-match, which would
-      // rewrite `@beyondigital/aiux-core/wasm` subpath imports as well.
+      // rewrite `@beyond-digital/aiux-core/wasm` subpath imports as well.
       // styles.css is aliased to src/ because the package export points at
       // dist/, which may not be built in dev.
-      { find: "@beyondigital/aiux-web/styles.css", replacement: webStyles },
+      { find: "@beyond-digital/aiux-web/styles.css", replacement: webStyles },
       { find: /^@beyondigital\/aiux-web$/, replacement: webSrc },
       { find: /^@beyondigital\/aiux-core$/, replacement: coreSrc },
     ],
@@ -28,6 +28,6 @@ export default defineConfig({
   optimizeDeps: {
     // The wasm-bindgen glue and fixture JSON are imported dynamically/excluded
     // from prebundling so dev always sees the freshest pkg/ artifacts.
-    exclude: ["@beyondigital/aiux-core"],
+    exclude: ["@beyond-digital/aiux-core"],
   },
 });

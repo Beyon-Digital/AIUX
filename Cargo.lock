@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-approvals"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "serde_json",
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-artifacts"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "serde_json",
@@ -29,7 +29,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-benches"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-session",
  "criterion",
@@ -38,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-capi"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-session",
@@ -47,7 +47,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-conformance"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-session",
@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-persistence"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-reducer",
@@ -67,7 +67,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-protocol"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-surfaces",
  "schemars",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-reducer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-approvals",
  "aiux-artifacts",
@@ -90,7 +90,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-session"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-persistence",
  "aiux-protocol",
@@ -101,7 +101,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-surfaces"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "schemars",
  "serde",
@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-tests"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-session",
@@ -120,7 +120,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-tools"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "serde_json",
@@ -128,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-uniffi"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-session",
@@ -138,7 +138,7 @@ dependencies = [
 
 [[package]]
 name = "aiux-wasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "aiux-protocol",
  "aiux-session",
