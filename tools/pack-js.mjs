@@ -24,4 +24,4 @@ for (const dir of jsPackages.filter(p => !process.argv.includes('--js-only') || 
   manifest.push({ name: pkg.name, version: pkg.version, filename });
 }
 writeFileSync(resolve(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-console.log('All tarball exports, workspace dependencies, licenses and Expo native assets verified');
+console.log('Selected tarball exports, workspace dependencies, licenses and native payloads verified');

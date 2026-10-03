@@ -9,7 +9,7 @@ const hasExpo = manifest.some(p => p.name.endsWith('/aiux-expo'));
 const dir = mkdtempSync(join(tmpdir(), 'aiux-consumer-'));
 const packages = Object.fromEntries(manifest.map(p => [p.name, process.argv.includes('--registry') ? p.version : `file:${resolve('dist/npm', p.filename)}`]));
 writeFileSync(join(dir, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { ...packages, react: '19.2.3', 'react-dom': '19.2.3', ...(hasExpo ? {expo: '57.0.0', 'react-native': '0.86.0'} : {}), typescript: '5.9.2', '@types/react': '^19.2.2', '@types/node': '22.20.4', vite: '^7.1.0' } }, null, 2));
-const run = (cmd, args) => execFileSync(cmd, args, { cwd: dir, stdio: 'inherit', env: {...process.env, npm_config_cache: join(dir, '.npm-cache')} });
+const run = (cmd, args) => execFileSync(cmd, args, { cwd: dir, stdio: 'inherit', env: {...process.env, npm_config_cache: join(dir, '.npm-cache'), npm_config_userconfig: join(dir, '.npmrc')} });
 run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org']);
 writeFileSync(join(dir, 'smoke.mjs'), `
 import assert from 'node:assert/strict';
