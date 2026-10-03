@@ -80,7 +80,14 @@ Apple, Android and Rust may supply notice archives with the same basename.
 `assemble-release.mjs` gives differing payloads unique names, reuses identical
 bytes and writes checksums using the actual downloadable filenames.
 
-If an upload fails after creating a draft, recover from the **original** tagged
+Prefer CI recovery to avoid downloading large archives locally:
+
+```sh
+gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.1.1
+```
+
+CI verifies every original build/consumer gate and the tag SHA before completing
+the draft and resuming its failed assembly job. For local recovery, recover from the **original** tagged
 run's artifacts; never rebuild or move the tag to replace uploaded bytes:
 
 ```sh
