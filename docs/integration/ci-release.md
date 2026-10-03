@@ -73,3 +73,24 @@ Expo Android/iOS compilation jobs.
 Save commit SHA, exact CI run URLs, consumer logs, package manifest and hashes,
 registry version/integrity results and manual native sign-offs alongside release
 notes. A green old commit or an old draft release cannot validate new packages.
+
+## Interrupted draft uploads
+
+Apple, Android and Rust may supply notice archives with the same basename.
+`assemble-release.mjs` gives differing payloads unique names, reuses identical
+bytes and writes checksums using the actual downloadable filenames.
+
+If an upload fails after creating a draft, recover from the **original** tagged
+run's artifacts; never rebuild or move the tag to replace uploaded bytes:
+
+```sh
+gh run download <original-tagged-run-id> -D original-artifacts
+node tools/assemble-release.mjs original-artifacts release-assets
+node tools/complete-release.mjs v0.1.1 release-assets
+gh run rerun <original-tagged-run-id> --failed
+```
+
+Completion checks every existing GitHub digest before any upload, preserves
+matching files and uploads only missing files. A digest mismatch stops recovery.
+The failed assembly job may then be rerun; normal publication still checks the
+original tag commit, CI, checksums and immutable npm integrity.
