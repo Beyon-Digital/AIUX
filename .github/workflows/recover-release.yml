@@ -8,6 +8,10 @@ on:
       release_tag:
         description: 'Existing immutable tag and partial draft (vX.Y.Z)'
         required: true
+      finalize_publication:
+        description: 'Verify already published bytes and anonymous install, then finalize release'
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: write
@@ -36,7 +40,7 @@ jobs:
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           node tools/release-check.mjs "$RELEASE_TAG"
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ORIGINAL_RUN" > original-run.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ORIGINAL_RUN/jobs?per_page=100" > original-jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ORIGINAL_RUN/jobs?per_page=100&filter=all" > original-jobs.json
           node --input-type=module <<'JS'
           import {readFileSync} from 'node:fs';
           import {execFileSync} from 'node:child_process';
@@ -63,7 +67,21 @@ jobs:
           node tools/assemble-release.mjs original-artifacts release-assets
           node tools/verify-release-download.mjs release-assets
           node tools/complete-release.mjs "$RELEASE_TAG" release-assets
+      - name: Verify existing registry packages and anonymous consumer
+        if: inputs.finalize_publication
+        run: |
+          mkdir -p dist/npm
+          cp release-assets/*.tgz release-assets/manifest.json dist/npm/
+          node tools/publish-js.mjs --verify-only
+          node tools/consumer-smoke.mjs --registry
+      - name: Finalize regular release after independent registry verification
+        if: inputs.finalize_publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest
       - name: Resume original assembly job and normal publishing
+        if: ${{ !inputs.finalize_publication }}
         env:
           GH_TOKEN: ${{ github.token }}
           ORIGINAL_RUN: ${{ inputs.original_run }}

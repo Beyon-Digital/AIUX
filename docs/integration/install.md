@@ -1,14 +1,14 @@
 # Consumer installation
 
-AIUX first-party code is MIT. The first installable candidate is **0.1.1** under
-npm scope **@beyond-digital**. Until publication completes, the commands below
-are release targets, not a claim of registry availability. v0.1.0 remains an
-older draft; its source archives are not npm packages. Check the [releases](https://github.com/Beyon-Digital/AIUX/releases)
-and `npm view @beyond-digital/aiux-core@0.1.1 version` before installing.
+AIUX first-party code is MIT. All eight **0.1.1** npm packages are public under
+scope **@beyond-digital**, with npm `latest` pointing to 0.1.1. The release
+workflow verifies exact tarball bytes and anonymous consumer installation before
+finalizing the [GitHub release](https://github.com/Beyon-Digital/AIUX/releases/tag/v0.1.1).
+v0.1.0 remains an older draft; its source archives are not npm packages.
 
 | Client | Distribution / availability |
 | --- | --- |
-| JS/WASM + React DOM | Seven implemented packages; versioned npm tarballs and npmjs after publication |
+| JS/WASM + React DOM | Seven implemented packages; public npmjs packages and versioned release tarballs |
 | Expo SDK 57 | Native bridge exists for iOS/Android; npm tarball must contain both platform artifacts; development build required |
 | Plain React Native Fabric bridge | Scaffold only; private and excluded from release. Use Expo modules in an RN app with compatible Expo modules installed |
 | GraphQL adapter | Scaffold only; private and excluded. SSE, WebSocket and AI SDK adapters are implemented |

@@ -101,3 +101,19 @@ Completion checks every existing GitHub digest before any upload, preserves
 matching files and uploads only missing files. A digest mismatch stops recovery.
 The failed assembly job may then be rerun; normal publication still checks the
 original tag commit, CI, checksums and immutable npm integrity.
+
+New package indices may return cached 404s after npm accepts publication. The
+publisher requests fresh metadata and waits up to ten minutes for exact
+integrity. npm may return integrity as a string or a one-element array; both
+are normalized, while ambiguous results fail closed.
+
+If all versions were accepted but an older immutable tag's verifier fails,
+complete the release without republishing:
+
+```sh
+gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.1.1 -f finalize_publication=true
+```
+
+This path has no npm publication credentials, requires every existing registry
+integrity to equal the original tarball, and builds a clean registry consumer
+before publishing the regular GitHub release.
