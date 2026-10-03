@@ -8,7 +8,9 @@ const [tag,dir]=process.argv.slice(2);
 assert.match(tag??'',/^v\d+\.\d+\.\d+$/);
 const gh=args=>execFileSync('gh',args,{encoding:'utf8'}).trim();
 const repository=JSON.parse(gh(['repo','view','--json','nameWithOwner'])).nameWithOwner;
-const release=JSON.parse(gh(['api',`repos/${repository}/releases/tags/${tag}`]));
+// GitHub's by-tag endpoint hides drafts; the CLI resolves drafts from listings.
+const id=JSON.parse(gh(['release','view',tag,'--json','databaseId'])).databaseId;
+const release=JSON.parse(gh(['api',`repos/${repository}/releases/${id}`]));
 assert.equal(release.tag_name,tag);
 const files=readdirSync(dir).sort();
 // Preflight all existing files before any write. GitHub digests attest uploaded bytes.
@@ -26,6 +28,6 @@ for(const name of files) {
   if(release.assets.some(a=>a.name===name)) {console.log(`Preserve identical ${name}`);continue;}
   gh(['release','upload',tag,join(dir,name)]); console.log(`Uploaded missing ${name}`);
 }
-const complete=JSON.parse(gh(['api',`repos/${repository}/releases/tags/${tag}`]));
+const complete=JSON.parse(gh(['api',`repos/${repository}/releases/${id}`]));
 for(const name of files) assert.equal(complete.assets.find(a=>a.name===name)?.digest,`sha256:${sha256(join(dir,name))}`,`Final asset: ${name}`);
 console.log('All draft assets independently match original CI bytes');

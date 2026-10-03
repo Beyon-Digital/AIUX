@@ -108,7 +108,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r --filter '!@beyond-digital/aiux-example-*' --if-present build
       - run: node tools/release-check.mjs
-      - run: node --test tools/publish-js.test.mjs tools/assemble-release.test.mjs
+      - run: node --test tools/publish-js.test.mjs tools/assemble-release.test.mjs tools/complete-release.test.mjs
       - run: pnpm run typecheck
       - run: pnpm run test
 
