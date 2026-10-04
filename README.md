@@ -31,6 +31,8 @@ Host transport → AIUXEvent[] → Rust Core → AIUXSnapshot → Renderer
 - **Plan of record:** [docs/PLAN.md](docs/PLAN.md)
 - **Execution tracker:** [TASKS.md](TASKS.md)
 - **Decisions:** [docs/adr/](docs/adr/)
+- **Usage guide:** [docs/integration/usage.md](docs/integration/usage.md)
+- **API reference:** [docs/protocol/api-reference.md](docs/protocol/api-reference.md)
 
 ## Install and availability
 
