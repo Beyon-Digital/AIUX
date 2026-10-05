@@ -196,7 +196,7 @@ components, native networking stack, provider SDKs, public registry publishing.
   surfaces, persistence, connecting-a-model, testing
 - [x] docs/troubleshooting.md — dispatch/web/expo/native/sim failure atlas
 - [x] getting-started/quickstart.md — per-platform end-to-end quickstarts
-- [ ] docs/assets/ screenshots + videos captured live on iOS sim +
-  Android emulator (this session) — iOS captures done (conversation,
-  approval, surface, error-retry, dark + full-flow video); Android pending
-  on TCG-only emulation (no nested virtualization on this box)
+- [x] docs/assets/ screenshots + videos captured live on iOS sim +
+  Android emulator — iOS captures done (conversation,
+  approval, surface, error-retry, dark + full-flow video); Android
+  captures done on KVM-enabled Linux box (same 5 frames + demo video)
