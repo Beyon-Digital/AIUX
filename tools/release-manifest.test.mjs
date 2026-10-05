@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chdir } from 'node:process';
@@ -66,21 +67,39 @@ test('prerelease tags mark the manifest without changing shape', () => {
 
 test('write() emits the manifest and self-checksums into SHA256SUMS once', () => {
   const cwd = process.cwd();
-  chdir(repoRoot);
+  const { dir } = fixture();
+  // write() resolves the tag's commit in the cwd repo; CI checkouts never
+  // contain the project's tags, so give it a repo of its own.
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 'fixture@test'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'Fixture'], { cwd: dir });
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-qm', 'seed'], { cwd: dir });
+  const tag = 'v0.1.1';
+  execFileSync('git', ['tag', tag], { cwd: dir });
+  const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  chdir(dir);
   try {
-    const { dir } = fixture();
-    const tag = 'v0.1.1';
     const m = write(dir, tag);
     const path = join(dir, MANIFEST_FILE);
     assert.ok(existsSync(path));
     const parsed = JSON.parse(readFileSync(path, 'utf8'));
     assert.equal(parsed.tag, tag);
-    assert.equal(parsed.sourceSha.length, 40);
+    assert.equal(m.sourceSha, sha, 'sourceSha must pin the tagged commit');
     const sums = readFileSync(join(dir, 'SHA256SUMS'), 'utf8');
     assert.ok(sums.includes(`${sha256(path)}  ${MANIFEST_FILE}`));
     write(dir, tag);
     const again = readFileSync(join(dir, 'SHA256SUMS'), 'utf8');
     assert.equal(again.split('\n').filter(l => l.endsWith(`  ${MANIFEST_FILE}`)).length, 1, 'idempotent');
     assert.deepEqual(JSON.parse(readFileSync(path, 'utf8')), parsed, 'regeneration is byte-stable');
+    // No local tag ref (detached HEAD checkout): falls back to HEAD, same sha.
+    execFileSync('git', ['tag', '-d', tag], { cwd: dir });
+    assert.equal(write(dir, tag).sourceSha, sha, 'detached-HEAD checkout must resolve the same commit');
+    // Regeneration with changed bytes must refresh the checksum line, not append a stale one.
+    writeFileSync(join(dir, 'aiux-swift-package.tar.gz'), 'changed');
+    write(dir, tag);
+    const refreshed = readFileSync(join(dir, 'SHA256SUMS'), 'utf8');
+    assert.equal(refreshed.split('\n').filter(l => l.endsWith(`  ${MANIFEST_FILE}`)).length, 1);
+    assert.ok(refreshed.includes(`${sha256(path)}  ${MANIFEST_FILE}`), 'stale manifest checksum replaced');
   } finally { chdir(cwd); }
 });

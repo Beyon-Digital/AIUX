@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { jsPackages } from './js-packages.mjs';
+import { resolveSourceSha } from './release-manifest.mjs';
 import assert from 'node:assert/strict';
 import { basename, resolve } from 'node:path';
 const args = process.argv.slice(2);
@@ -20,5 +20,5 @@ for (const file of ['manifest.json', 'release-manifest.json', ...manifest.map(p 
 const inventory = JSON.parse(readFileSync(`${dir}/release-manifest.json`, 'utf8'));
 assert.equal(inventory.schema, 'aiux-release-manifest/v1');
 assert.equal(inventory.packages.length, expected.length, 'inventory package count');
-if (tag) assert.equal(inventory.sourceSha, execFileSync('git', ['rev-parse', `${tag}^{commit}`], { encoding: 'utf8' }).trim(), 'inventory source SHA');
+if (tag) assert.equal(inventory.sourceSha, resolveSourceSha(tag), 'inventory source SHA');
 console.log('Release manifest, inventory and npm tarball checksums verified');
