@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-expo",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "Expo SDK 57 bridge \u2014 the complete AIUX surface behind one native boundary (plan \u00a710).",
   "keywords": [
     "aiux",

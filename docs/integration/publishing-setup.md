@@ -55,8 +55,8 @@ support trusted publishing; no npm API secret is used. [npm trusted publishing](
 After PR review/merge and green main CI, create a new immutable tag:
 
 ```sh
-git tag v0.1.1 <green-main-commit>
-git push origin v0.1.1
+git tag v0.2.0-rc.1 <green-main-commit>
+git push origin v0.2.0-rc.1
 ```
 
 `Release` builds native/WASM/JS artifacts from that commit, validates tarballs and
@@ -73,9 +73,9 @@ simulator accessibility testing; see the [evidence limits](../renderers/accessib
 After fixing credentials, rerun explicitly:
 
 ```sh
-gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.1.1 -f release_tag=v0.1.1 -f auth_mode=token
+gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.2.0-rc.1 -f release_tag=v0.2.0-rc.1 -f auth_mode=token
 # After trusted publishing is configured:
-gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.1.2 -f release_tag=v0.1.2 -f auth_mode=oidc
+gh workflow run publish.yml -R Beyon-Digital/AIUX --ref v0.2.0 -f release_tag=v0.2.0 -f auth_mode=oidc
 ```
 
 Reruns skip identical already-published versions and reject mismatched bytes.

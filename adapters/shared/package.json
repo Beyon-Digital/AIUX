@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-protocol-types",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "AIUX Protocol v1 TypeScript types, generated from protocol/schemas/v1.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

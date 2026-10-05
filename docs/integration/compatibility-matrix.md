@@ -1,4 +1,4 @@
-# Compatibility Matrix — v0.1.1
+# Compatibility Matrix — v0.2.0-rc.1
 
 Protocol versions × renderer versions × platform minimums. Policy rules:
 `docs/integration/compatibility-policy.md`.
@@ -7,16 +7,18 @@ Protocol versions × renderer versions × platform minimums. Policy rules:
 
 | Protocol | Rust core | SwiftUI | Compose | Expo | Web | Flutter | Dart bindings |
 |----------|-----------|---------|---------|------|-----|---------|---------------|
+| `0.1` | `0.2.0-rc.1` | `0.2.0-rc.1` | `0.2.0-rc.1` | `0.2.0-rc.1` (SDK 57) | `0.2.0-rc.1` | `0.2.0-rc.1` | `0.2.0-rc.1` |
 | `0.1` | `0.1.1` | `0.1.1` | `0.1.1` | `0.1.1` (SDK 57) | `0.1.1` | `0.1.1` | `0.1.1` |
 
-`0.1.1` is the published release (npm `latest`, GitHub release `v0.1.1`).
-`v0.1.0` exists only as an immutable tag/draft — it was never published to a
-registry and must not be installed.
+`0.2.0-rc.1` is the current release candidate (npm `next`, GitHub prerelease
+`v0.2.0-rc.1`); `0.1.1` remains the published stable (npm `latest`, GitHub
+release `v0.1.1`). `v0.1.0` exists only as an immutable tag/draft — it was
+never published to a registry and must not be installed.
 
 Every component reports its target (`AIUXSwiftUI.protocolVersion`,
-`aiuxProtocolVersion`, JS `aiux-core` version). `0.1` payloads are
-interchangeable across all `0.1.x` components; additive producer↔renderer
-skew is tolerated per the policy doc.
+`aiuxProtocolVersion`, JS `aiux-core` version). `0.1` wire payloads are
+interchangeable across all `0.1.x` and `0.2.x` components; additive
+producer↔renderer skew is tolerated per the policy doc.
 
 ## Platform minimums
 

@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-web",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "React DOM renderer for AIUX surfaces (plan \u00a712) \u2014 session subscription \u2192 DOM/ARIA, theme roles \u2192 CSS custom properties, every protocol part + Surface Schema primitive.",
   "type": "module",
   "main": "./dist/index.js",

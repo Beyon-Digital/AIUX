@@ -1,10 +1,13 @@
 # Consumer installation
 
-AIUX first-party code is MIT. All eight **0.1.1** npm packages are public under
-scope **@beyond-digital**, with npm `latest` pointing to 0.1.1. The release
+AIUX first-party code is MIT. All eight npm packages are public under scope
+**@beyond-digital**: npm `latest` resolves the stable **0.1.1** and `next`
+resolves the release candidate **0.2.0-rc.1**. The release
 workflow verifies exact tarball bytes and anonymous consumer installation before
 finalizing the [GitHub release](https://github.com/Beyon-Digital/AIUX/releases/tag/v0.1.1).
 v0.1.0 remains an older draft; its source archives are not npm packages.
+Commands below pin the release candidate — swap `@0.2.0-rc.1` for `@latest`
+to stay on stable.
 
 | Client | Distribution / availability |
 | --- | --- |
@@ -22,14 +25,14 @@ v0.1.0 remains an older draft; its source archives are not npm packages.
 Node 20+; React and React DOM 18.3+ (validated with 19.2.3).
 
 ```sh
-npm install @beyond-digital/aiux-core@0.1.1 @beyond-digital/aiux-web@0.1.1 react react-dom
-npm install @beyond-digital/aiux-adapter-sse@0.1.1
+npm install @beyond-digital/aiux-core@0.2.0-rc.1 @beyond-digital/aiux-web@0.2.0-rc.1 react react-dom
+npm install @beyond-digital/aiux-adapter-sse@0.2.0-rc.1
 ```
 
-Other one-line packages: `npm install @beyond-digital/aiux-adapter-websocket@0.1.1`,
-`npm install @beyond-digital/aiux-adapter-ai-sdk@0.1.1`,
-`npm install @beyond-digital/aiux-transport-js@0.1.1`, and
-`npm install @beyond-digital/aiux-protocol-types@0.1.1`.
+Other one-line packages: `npm install @beyond-digital/aiux-adapter-websocket@0.2.0-rc.1`,
+`npm install @beyond-digital/aiux-adapter-ai-sdk@0.2.0-rc.1`,
+`npm install @beyond-digital/aiux-transport-js@0.2.0-rc.1`, and
+`npm install @beyond-digital/aiux-protocol-types@0.2.0-rc.1`.
 
 For Vite, import the shipped WASM URL; no Rust or wasm-bindgen installation is
 needed by the consumer:
@@ -56,7 +59,7 @@ For bare RN first install the matching Expo modules; the plain Fabric bridge is
 not released.
 
 ```sh
-npx expo install @beyond-digital/aiux-expo@0.1.1
+npx expo install @beyond-digital/aiux-expo@0.2.0-rc.1
 npx expo prebuild && npx expo run:android
 # On macOS with Xcode: npx expo run:ios
 ```
@@ -85,14 +88,14 @@ mkdir -p Vendor/AIUX && tar -xzf aiux-swift-package.tar.gz -C Vendor/AIUX
 Extract `aiux-android-maven.tar.gz` to `Vendor/AIUX`; configure
 `maven { url = uri("Vendor/AIUX/maven") }` in the host's repositories alongside
 Google and Maven Central. Install with
-`implementation("in.beyondigital.aiux:compose:0.1.1")` and
-`implementation("in.beyondigital.aiux:bindings:0.1.1")`. Keep the bundled POMs;
+`implementation("in.beyondigital.aiux:compose:0.2.0-rc.1")` and
+`implementation("in.beyondigital.aiux:bindings:0.2.0-rc.1")`. Keep the bundled POMs;
 copying loose AARs loses JNA, Compose and other transitive dependency metadata.
 
 ## Rust
 
 ```sh
-cargo add aiux-session --git https://github.com/Beyon-Digital/AIUX --tag v0.1.1
+cargo add aiux-session --git https://github.com/Beyon-Digital/AIUX --tag v0.2.0-rc.1
 ```
 
 Path dependencies resolve within Cargo's Git checkout. Rust delivery binaries
@@ -101,14 +104,14 @@ native libraries are Linux artifacts, not universal binaries.
 
 ## Dart / Flutter
 
-Use the Git repository with `ref: v0.1.1` and `path: bindings/dart` for
+Use the Git repository with `ref: v0.2.0-rc.1` and `path: bindings/dart` for
 `aiux_ffi`; use `path: renderers/flutter` for `beyond_aiux`. For local
 checkout development the Flutter renderer's relative path dependency is
 intentional. A Git consumer must override that dependency to the same Git tag: A published pub.dev package is not yet available.
 
 ```sh
-flutter pub add --override 'aiux_ffi:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.1.1, path: bindings/dart}}'
-flutter pub add 'beyond_aiux:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.1.1, path: renderers/flutter}}'
+flutter pub add --override 'aiux_ffi:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.2.0-rc.1, path: bindings/dart}}'
+flutter pub add 'beyond_aiux:{git: {url: https://github.com/Beyon-Digital/AIUX, ref: v0.2.0-rc.1, path: renderers/flutter}}'
 ```
 
 The Dart loader accepts `AiuxCapi(libraryPath: ...)` or `AIUX_CAPI_PATH`. Linux

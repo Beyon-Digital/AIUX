@@ -3,7 +3,7 @@
 JS session package over the AIUX WASM core (docs/PLAN.md §5/§10/§12, ADR 0005).
 Consumed by `@beyond-digital/aiux-web` and the JS transport adapters.
 
-MIT. `npm install @beyond-digital/aiux-core@0.1.1` after registry publication.
+MIT. `npm install @beyond-digital/aiux-core` after registry publication.
 The release package includes compiled JS/types and WASM; consumers need no Rust
 toolchain. See [availability and installation](https://github.com/Beyon-Digital/AIUX/blob/main/docs/integration/install.md).
 

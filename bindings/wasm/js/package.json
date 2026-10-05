@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-core",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "JS session package over the AIUX WASM core \u2014 AiuxSession wrapper, streaming EventBuffer, snapshot subscriptions, MockCore.",
   "type": "module",
   "main": "./dist/index.js",

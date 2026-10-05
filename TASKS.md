@@ -12,6 +12,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 - Current phase: **COMPLETE** — all 12 PRs merged to `main` (2026-10-02);
   `v0.1.1` published (npm `latest` + GitHub release) after owner approval
   2026-10-03; `v0.1.0` immutable tag/draft preserved by design.
+  `v0.2.0-rc.1` release candidate in flight (npm `next` + GitHub prerelease).
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
@@ -191,7 +192,11 @@ components, native networking stack, provider SDKs, public registry publishing.
   and independently installed; GitHub release published — all eight
   `@beyond-digital` packages live on npm `latest` @ `0.1.1`.
 - [x] Consolidated `release-manifest.json` inventory asset + prerelease-aware
-  tag validation (`vX.Y.Z-<suffix>` → npm `next` + GitHub prerelease).
+  tag validation (`vX.Y.Z-<suffix>` → npm `next` + GitHub prerelease) — #31.
+- [x] `0.2.0-rc.1` version surface unified across all manifests (root + 8
+  packages, Cargo workspace + members, Dart/Flutter pubspecs, Gradle/Maven
+  coordinates); `release-check.mjs` enforces tag == `v<version>`.
+- [ ] Tag `v0.2.0-rc.1` → release pipeline → npm `next` + GitHub prerelease.
 - [ ] pub.dev/crates.io registry releases and mobile Flutter native payloads.
 
 ## Docs expansion + live captures (Oct 2026 session)
