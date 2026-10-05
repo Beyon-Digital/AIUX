@@ -1,4 +1,4 @@
-# Compatibility Matrix — v0.1.0
+# Compatibility Matrix — v0.1.1
 
 Protocol versions × renderer versions × platform minimums. Policy rules:
 `docs/integration/compatibility-policy.md`.
@@ -7,7 +7,11 @@ Protocol versions × renderer versions × platform minimums. Policy rules:
 
 | Protocol | Rust core | SwiftUI | Compose | Expo | Web | Flutter | Dart bindings |
 |----------|-----------|---------|---------|------|-----|---------|---------------|
-| `0.1` | `0.1.0` | `0.1.0` | `0.1.0` | `0.1.0` (SDK 57) | `0.1.0` | `0.1.0` | `0.1.0` |
+| `0.1` | `0.1.1` | `0.1.1` | `0.1.1` | `0.1.1` (SDK 57) | `0.1.1` | `0.1.1` | `0.1.1` |
+
+`0.1.1` is the published release (npm `latest`, GitHub release `v0.1.1`).
+`v0.1.0` exists only as an immutable tag/draft — it was never published to a
+registry and must not be installed.
 
 Every component reports its target (`AIUXSwiftUI.protocolVersion`,
 `aiuxProtocolVersion`, JS `aiux-core` version). `0.1` payloads are

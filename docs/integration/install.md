@@ -118,9 +118,13 @@ is not yet packaged. Do not install the Linux `.so` on a mobile or Apple target.
 
 ## Verify the downloaded release
 
-`SHA256SUMS` hashes the files using artifact-relative paths. Preserve those paths
-or compare individual file hashes. npm tarballs are created with `pnpm pack`,
+`SHA256SUMS` hashes every release asset. `release-manifest.json` is the
+consolidated inventory: package name/version/sha256 per npm tarball, all other
+assets with hashes, Git-source channels, and the exact source SHA the tag was
+built from. npm tarballs are created with `pnpm pack`,
 which converts workspace dependencies to versioned registry dependencies.
 [Release checklist](ci-release.md) explains the executable gates and publishing.
+Prerelease versions publish to the npm `next` dist-tag
+(`npm install @beyond-digital/aiux-core@next`); `latest` always tracks stable.
 Native accessibility/device checks remain pending wherever marked manual in
 [accessibility](../renderers/accessibility.md); automated builds do not sign them off.
