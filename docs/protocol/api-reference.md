@@ -1,6 +1,12 @@
 # API reference
 
 This reference documents the primary public APIs exposed in the AIUX repo.
+For detailed, source-verified signatures see the per-package docs under
+[`docs/api/`](../api/): [session contract](../api/session-contract.md),
+[JS core](../api/js-core.md), [web](../api/web.md), [Expo](../api/expo.md),
+[SwiftUI](../api/swiftui.md), [Compose](../api/compose.md),
+[Flutter](../api/flutter.md),
+[transports & adapters](../api/transports-adapters.md).
 
 ## Core session contract (all bindings)
 
@@ -63,7 +69,7 @@ Primary exports:
 Primary exports:
 
 - `createEventFactory(sessionId, options?)`
-- `streamToBatches(source, options?)`
+- `streamToBatches(source, sink, options?)`
 - `createWireNormalizer(options)`
 - `TERMINAL_EVENT_TYPES`, `isTerminalEvent`
 - Types:
@@ -87,7 +93,7 @@ Primary exports:
 ## `@beyond-digital/aiux-adapter-ai-sdk`
 
 - `createAiSdkAdapter(stream, options)` → `EventBatchSource`
-- `mapAiSdkPart(part, factory, target, onIssue)` helper
+- `mapAiSdkPart(part, ctx)` helper
 - `AiSdkAdapterOptions`:
   `sessionId`, `target`, `factory`, `onIssue`
 

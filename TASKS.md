@@ -184,3 +184,19 @@ components, native networking stack, provider SDKs, public registry publishing.
 - [ ] Reviewed PR merged, immutable 0.1.1 tag built, registry packages published
   and independently installed; GitHub release published.
 - [ ] pub.dev/crates.io registry releases and mobile Flutter native payloads.
+
+## Docs expansion + live captures (Oct 2026 session)
+
+- [x] docs/README.md documentation hub — index over install → quickstart →
+  per-package API → guides → ops + live-capture media table
+- [x] docs/api/ — source-verified per-package references:
+  session-contract, js-core, web, expo, swiftui, compose, flutter,
+  transports-adapters
+- [x] docs/guides/ — dispatch-semantics, actions, theming, composer-toolbar,
+  surfaces, persistence, connecting-a-model, testing
+- [x] docs/troubleshooting.md — dispatch/web/expo/native/sim failure atlas
+- [x] getting-started/quickstart.md — per-platform end-to-end quickstarts
+- [ ] docs/assets/ screenshots + videos captured live on iOS sim +
+  Android emulator (this session) — iOS captures done (conversation,
+  approval, surface, error-retry, dark + full-flow video); Android pending
+  on TCG-only emulation (no nested virtualization on this box)

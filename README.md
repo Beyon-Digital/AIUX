@@ -28,11 +28,10 @@ Host transport → AIUXEvent[] → Rust Core → AIUXSnapshot → Renderer
 
 ## Docs
 
-- **Plan of record:** [docs/PLAN.md](docs/PLAN.md)
-- **Execution tracker:** [TASKS.md](TASKS.md)
-- **Decisions:** [docs/adr/](docs/adr/)
-- **Usage guide:** [docs/integration/usage.md](docs/integration/usage.md)
-- **API reference:** [docs/protocol/api-reference.md](docs/protocol/api-reference.md)
+- **Documentation hub:** [docs/README.md](docs/README.md) — install → quickstart → per-package API → theming/actions/surfaces → model integration, plus live simulator captures.
+- **Quickstart:** [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)
+- **API reference:** [docs/api/](docs/api/) (per-package, source-verified) · [docs/protocol/api-reference.md](docs/protocol/api-reference.md) (wire schemas)
+- **Plan of record:** [docs/PLAN.md](docs/PLAN.md) · **Tracker:** [TASKS.md](TASKS.md) · **Decisions:** [docs/adr/](docs/adr/)
 
 ## Install and availability
 
