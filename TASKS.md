@@ -196,6 +196,9 @@ components, native networking stack, provider SDKs, public registry publishing.
 - [x] `0.2.0-rc.1` version surface unified across all manifests (root + 8
   packages, Cargo workspace + members, Dart/Flutter pubspecs, Gradle/Maven
   coordinates); `release-check.mjs` enforces tag == `v<version>`.
+- [x] CI lane gating — `tools/ci-changes.mjs` diff-detector + `detect` job so
+  pushes/PRs only run the lanes their files touch (docs-only = ~5s instead of
+  the full 11-job fleet; unresolvable diffs still run everything).
 - [ ] Tag `v0.2.0-rc.1` → release pipeline → npm `next` + GitHub prerelease.
 - [ ] pub.dev/crates.io registry releases and mobile Flutter native payloads.
 

@@ -10,8 +10,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Cheap diff-based gate: each heavyweight lane only runs when the files it
+  # can break actually changed. Lane → job mapping lives in
+  # tools/ci-changes.mjs; unresolvable diffs run everything.
+  detect:
+    name: Detect affected lanes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      proto: ${{ steps.d.outputs.proto }}
+      rust: ${{ steps.d.outputs.rust }}
+      swift: ${{ steps.d.outputs.swift }}
+      kotlin: ${{ steps.d.outputs.kotlin }}
+      js: ${{ steps.d.outputs.js }}
+      web: ${{ steps.d.outputs.web }}
+      expo: ${{ steps.d.outputs.expo }}
+      flutter: ${{ steps.d.outputs.flutter }}
+      conformance: ${{ steps.d.outputs.conformance }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: d
+        run: node tools/ci-changes.mjs
+
   protocol-validate:
     name: Protocol schema validation
+    needs: detect
+    if: needs.detect.outputs.proto == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -29,6 +56,8 @@ jobs:
 
   rust:
     name: Rust fmt / clippy / test
+    needs: detect
+    if: needs.detect.outputs.rust == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -49,6 +78,8 @@ jobs:
 
   swift-bindings:
     name: Swift bindings + tests
+    needs: detect
+    if: needs.detect.outputs.swift == 'true'
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -77,6 +108,8 @@ jobs:
 
   kotlin-bindings:
     name: Kotlin bindings + Gradle
+    needs: detect
+    if: needs.detect.outputs.kotlin == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -96,6 +129,8 @@ jobs:
 
   js:
     name: JS typecheck + test
+    needs: detect
+    if: needs.detect.outputs.js == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -108,12 +143,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r --filter '!@beyond-digital/aiux-example-*' --if-present build
       - run: node tools/release-check.mjs
-      - run: node --test tools/publish-js.test.mjs tools/assemble-release.test.mjs tools/complete-release.test.mjs tools/release-manifest.test.mjs
+      - run: node --test tools/publish-js.test.mjs tools/assemble-release.test.mjs tools/complete-release.test.mjs tools/release-manifest.test.mjs tools/ci-changes.test.mjs
       - run: pnpm run typecheck
       - run: pnpm run test
 
   web-build:
     name: Web renderer build
+    needs: detect
+    # Builds every workspace package (`pnpm -r run build`) — JS changes count.
+    if: needs.detect.outputs.web == 'true' || needs.detect.outputs.js == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -139,6 +177,8 @@ jobs:
 
   expo-android:
     name: Expo Android compile
+    needs: detect
+    if: needs.detect.outputs.expo == 'true' || needs.detect.outputs.kotlin == 'true'
     runs-on: ubuntu-latest
 
     timeout-minutes: 60
@@ -178,6 +218,8 @@ jobs:
 
   expo-ios:
     name: Expo iOS compile
+    needs: detect
+    if: needs.detect.outputs.expo == 'true' || needs.detect.outputs.swift == 'true'
     runs-on: macos-latest
     timeout-minutes: 75
     steps:
@@ -206,6 +248,8 @@ jobs:
 
   flutter:
     name: Dart FFI + Flutter tests
+    needs: detect
+    if: needs.detect.outputs.flutter == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -247,6 +291,8 @@ jobs:
 
   flutter-goldens:
     name: Flutter golden screenshots
+    needs: detect
+    if: needs.detect.outputs.flutter == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -273,6 +319,8 @@ jobs:
 
   conformance:
     name: Fixture conformance
+    needs: detect
+    if: needs.detect.outputs.conformance == 'true' || needs.detect.outputs.proto == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
