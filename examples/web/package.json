@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-example-web",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "private": true,
   "description": "AIUX web example \u2014 replays every conformance fixture through the real aiux-wasm core and renders it with @beyond-digital/aiux-web.",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "aiux-example-react-native",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "private": true,
   "description": "Example bare-RN app mounting AIConversation.",
   "main": "src/index.ts",

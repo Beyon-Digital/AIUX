@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-adapter-ai-sdk",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "Adapter: Vercel AI SDK streams \u2192 AIUXEvent[].",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -4,7 +4,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 group = 'in.beyondigital.aiux'
-version = '0.1.1'
+version = '0.2.0-rc.1'
 
 buildscript {
   def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
@@ -28,7 +28,7 @@ android {
   namespace "aiux.expo"
 
   defaultConfig {
-    versionName "0.1.1"
+    versionName "0.2.0-rc.1"
   }
 
   buildFeatures {
@@ -38,12 +38,12 @@ android {
 
 dependencies {
   if (file('vendor/maven').exists()) {
-    implementation 'in.beyondigital.aiux:compose:0.1.1'
-    implementation 'in.beyondigital.aiux:bindings:0.1.1'
+    implementation 'in.beyondigital.aiux:compose:0.2.0-rc.1'
+    implementation 'in.beyondigital.aiux:bindings:0.2.0-rc.1'
   } else {
     // Source checkout development uses the example's composite build.
-    implementation 'aiux:compose:0.1.1'
-    implementation 'aiux:bindings:0.1.1'
+    implementation 'aiux:compose:0.2.0-rc.1'
+    implementation 'aiux:bindings:0.2.0-rc.1'
   }
 
   implementation platform('androidx.compose:compose-bom:2024.12.01')

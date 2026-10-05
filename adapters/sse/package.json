@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-adapter-sse",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "description": "Adapter: SSE streams \u2192 AIUXEvent[].",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

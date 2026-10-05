@@ -16,8 +16,9 @@ Every platform follows the same loop:
 ## Web (React + WASM)
 
 ```sh
-npm install @beyond-digital/aiux-core@0.1.1 @beyond-digital/aiux-web@0.1.1 \
-    @beyond-digital/aiux-adapter-sse@0.1.1 react react-dom
+npm install @beyond-digital/aiux-core @beyond-digital/aiux-web \
+    @beyond-digital/aiux-adapter-sse react react-dom
+# release candidate: append @next (e.g. @beyond-digital/aiux-core@next)
 ```
 
 Initialize the bundled WASM core once, create a session, render

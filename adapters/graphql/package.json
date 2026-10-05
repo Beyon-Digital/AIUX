@@ -1,6 +1,6 @@
 {
   "name": "@beyond-digital/aiux-adapter-graphql",
-  "version": "0.1.1",
+  "version": "0.2.0-rc.1",
   "private": true,
   "description": "Adapter: GraphQL transport \u2192 AIUXEvent[].",
   "main": "src/index.ts",

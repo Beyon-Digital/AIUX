@@ -55,7 +55,7 @@ fails otherwise. Prereleases publish to npm **`next`** and GitHub
    explicitly labelled prerelease tag (`vX.Y.Z-<suffix>` → npm `next` +
    GitHub prerelease) if those manual gates remain incomplete, unless
    the owner approves a release exception and its evidence limits are recorded.
-5. Merge the reviewed PR through the normal GitHub process. Create `v0.1.1`
+5. Merge the reviewed PR through the normal GitHub process. Create `v0.2.0-rc.1`
    at the exact green commit; tag-triggered Release builds every artifact and
    creates a draft GitHub Release with notes, `manifest.json`,
    `release-manifest.json` and SHA256SUMS.
@@ -102,7 +102,7 @@ bytes and writes checksums using the actual downloadable filenames.
 Prefer CI recovery to avoid downloading large archives locally:
 
 ```sh
-gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.1.1
+gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.2.0-rc.1
 ```
 
 CI verifies every original build/consumer gate and the tag SHA before completing
@@ -112,7 +112,7 @@ run's artifacts; never rebuild or move the tag to replace uploaded bytes:
 ```sh
 gh run download <original-tagged-run-id> -D original-artifacts
 node tools/assemble-release.mjs original-artifacts release-assets
-node tools/complete-release.mjs v0.1.1 release-assets
+node tools/complete-release.mjs v0.2.0-rc.1 release-assets
 gh run rerun <original-tagged-run-id> --failed
 ```
 
@@ -130,7 +130,7 @@ If all versions were accepted but an older immutable tag's verifier fails,
 complete the release without republishing:
 
 ```sh
-gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.1.1 -f finalize_publication=true
+gh workflow run recover-release.yml -f original_run=<original-tagged-run-id> -f release_tag=v0.2.0-rc.1 -f finalize_publication=true
 ```
 
 This path has no npm publication credentials, requires every existing registry

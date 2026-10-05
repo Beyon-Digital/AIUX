@@ -28,7 +28,9 @@ function defaultBase() {
   }
 }
 
-const base = baseArg ?? defaultBase();
+// An empty base arg (release.yml passes "") means auto-detect the previous
+// tag — a literal "" is never a usable ref.
+const base = baseArg || defaultBase();
 const range = base ? `${base}..${head}` : head;
 
 const lines = sh(`git log ${range} --pretty=format:%s%x1f%h%x1f%an`)
@@ -74,6 +76,12 @@ if (tagName === "v0.1.1") {
   console.log("The owner approved a regular release on 2026-10-03 and reports accessibility testing on iOS and Android simulators. Individual checklist items, physical devices, Flutter accessibility and specific screen-reader results remain unverified. CI validates package contents, clean JS/WASM installs and native consumer compilation; compilation does not establish manual accessibility coverage.");
   console.log("");
   console.log("Install: `npm install @beyond-digital/aiux-web@0.1.1 @beyond-digital/aiux-core@0.1.1` or `npx expo install @beyond-digital/aiux-expo@0.1.1`. See [all consumer commands](https://github.com/Beyon-Digital/AIUX/blob/v0.1.1/docs/integration/install.md).");
+  console.log("");
+} else if (tagName.includes("-")) {
+  const v = tagName.slice(1);
+  console.log(`Release candidate ${v}: published to the npm \`next\` dist-tag and marked as a GitHub prerelease. This is not a stable release — npm \`latest\` continues to resolve the most recent stable version. Every versioned manifest on this tag carries ${v}; verify integrity via \`release-manifest.json\` and \`SHA256SUMS\`.`);
+  console.log("");
+  console.log(`Install: \`npm install @beyond-digital/aiux-web@next @beyond-digital/aiux-core@next\` (or pin \`@${v}\`) and \`npx expo install @beyond-digital/aiux-expo@next\`. See [all consumer commands](https://github.com/Beyon-Digital/AIUX/blob/${tagName}/docs/integration/install.md).`);
   console.log("");
 }
 if (base) console.log(`Changes since ${base} (${lines.length} commits).`);

@@ -87,7 +87,7 @@ dependencies {
 // A local Maven repository is shipped inside native/Expo release artifacts.
 // POMs preserve transitive dependencies that loose AAR files cannot express.
 group = "in.beyondigital.aiux"
-version = "0.1.1"
+version = "0.2.0-rc.1"
 android { publishing { singleVariant("release") } }
 afterEvaluate {
     publishing {

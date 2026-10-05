@@ -1,6 +1,6 @@
 name: beyond_aiux
 description: "AIUX Flutter renderer — every part type, AISurface, AIConversation over the Dart FFI boundary (PLAN §13)."
-version: 0.1.1
+version: 0.2.0-rc.1
 publish_to: none
 
 environment:
