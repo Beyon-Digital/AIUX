@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Immutable release tag with validated npm tarballs (vX.Y.Z)'
+        description: 'Immutable release tag with validated npm tarballs (vX.Y.Z or vX.Y.Z-<prerelease>)'
         required: true
       auth_mode:
         type: choice
@@ -38,7 +38,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
           AUTH_MODE: ${{ vars.NPM_AUTH_MODE || 'token' }}
         run: |
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]
           [[ "$AUTH_MODE" = token || "$AUTH_MODE" = oidc ]]
           gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_TAG" -f release_tag="$RELEASE_TAG" -f auth_mode="$AUTH_MODE"
 
@@ -61,10 +61,15 @@ jobs:
         run: |
           tag="${INPUT_TAG:-$RUN_TAG}"
           auth="${INPUT_AUTH:-${CONFIGURED_AUTH:-token}}"
-          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]
           [[ "$auth" = token || "$auth" = oidc ]]
+          # Semver prereleases publish to npm `next` and stay GitHub
+          # prereleases; `latest` and regular releases are stable-only.
+          dist_tag=latest
+          [[ "$tag" == *-* ]] && dist_tag=next
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "auth=$auth" >> "$GITHUB_OUTPUT"
+          echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.target.outputs.tag }}
@@ -97,8 +102,8 @@ jobs:
           RELEASE_TAG: ${{ steps.target.outputs.tag }}
         run: |
           mkdir -p dist/npm
-          gh release download "$RELEASE_TAG" -p '*.tgz' -p manifest.json -p SHA256SUMS -D dist/npm
-          node tools/verify-release-download.mjs
+          gh release download "$RELEASE_TAG" -p '*.tgz' -p manifest.json -p release-manifest.json -p SHA256SUMS -D dist/npm
+          node tools/verify-release-download.mjs dist/npm --tag "$RELEASE_TAG"
           node tools/publish-js.mjs --preflight
       - name: Require bootstrap secret
         if: steps.target.outputs.auth == 'token'
@@ -110,12 +115,12 @@ jobs:
         if: steps.target.outputs.auth == 'token'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TAG: latest
+          NPM_TAG: ${{ steps.target.outputs.dist_tag }}
         run: node tools/publish-js.mjs
       - name: Subsequent publication with npm trusted publishing
         if: steps.target.outputs.auth == 'oidc'
         env:
-          NPM_TAG: latest
+          NPM_TAG: ${{ steps.target.outputs.dist_tag }}
         run: node tools/publish-js.mjs
       - name: Independently verify published consumer installation
         run: node tools/consumer-smoke.mjs --registry
@@ -123,4 +128,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.target.outputs.tag }}
-        run: gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest
+          DIST_TAG: ${{ steps.target.outputs.dist_tag }}
+        run: |
+          # Stable tags become the regular latest release; prerelease tags
+          # publish as GitHub prereleases and never take `latest`.
+          if [[ "$DIST_TAG" = next ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease=true --latest=false
+          else
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest
+          fi

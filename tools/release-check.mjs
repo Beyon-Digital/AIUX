@@ -2,6 +2,9 @@ import { readFileSync, existsSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { jsPackages } from './js-packages.mjs';
 const version = JSON.parse(readFileSync('package.json')).version;
+// Semver with optional prerelease suffix (e.g. 0.2.0-rc.1): RC tags require
+// every package version to carry the matching suffix.
+assert.match(version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/, 'version must be semver (prerelease suffix allowed)');
 if (process.argv[2]) assert.equal(process.argv[2], `v${version}`, 'tag must match package version');
 for (const dir of jsPackages) {
   const pkg = JSON.parse(readFileSync(`${dir}/package.json`));

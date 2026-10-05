@@ -4,8 +4,9 @@ import {readFileSync, readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {sha256} from './assemble-release.mjs';
+import {TAG_RE} from './release-manifest.mjs';
 const [tag,dir]=process.argv.slice(2);
-assert.match(tag??'',/^v\d+\.\d+\.\d+$/);
+assert.match(tag??'',TAG_RE);
 const gh=args=>execFileSync('gh',args,{encoding:'utf8'}).trim();
 const repository=JSON.parse(gh(['repo','view','--json','nameWithOwner'])).nameWithOwner;
 // GitHub's by-tag endpoint hides drafts; the CLI resolves drafts from listings.

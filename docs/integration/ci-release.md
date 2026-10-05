@@ -25,6 +25,23 @@ preserved; 0.1.1 is the first installable release. See [consumer installation](i
   with shipped CSS/WASM, and resolves Expo JS declarations without repo links.
 - `pnpm release:smoke -- --registry` / `node tools/consumer-smoke.mjs --registry`
   repeats installation against exact published registry versions.
+- `tools/release-manifest.mjs <assets-dir> <tag>` emits
+  `release-manifest.json` — one deterministic inventory of every asset, npm
+  package (name/version/sha256/channel), Git-source channel, the exact source
+  SHA and whether the tag is a prerelease — then appends its own line to
+  `SHA256SUMS`. Recovery regenerates byte-identical output; it carries no
+  timestamps.
+
+## Tag shapes
+
+Stable tags are `vX.Y.Z`; semver prerelease tags `vX.Y.Z-<suffix>` (e.g.
+`v0.2.0-rc.1`) are accepted everywhere a stable tag is: tag validation,
+release assembly, draft recovery and publication. An RC requires **every**
+versioned manifest — root `package.json`, the eight package manifests,
+`Cargo.toml`, both `pubspec.yaml`s and `bridges/expo/android/build.gradle` —
+to carry the identical prerelease version before tagging; `release-check.mjs`
+fails otherwise. Prereleases publish to npm **`next`** and GitHub
+**prerelease**; `latest` never moves for them.
 
 ## Operator checklist
 
@@ -35,11 +52,13 @@ preserved; 0.1.1 is the first installable release. See [consumer installation](i
    distribution artifacts. Branch runs upload artifacts and do not create a release.
 4. Review [native accessibility/device gates](../renderers/accessibility.md).
    Record actual results; do not infer sign-off from native compilation. Use an
-   explicitly labelled prerelease if those manual gates remain incomplete, unless
+   explicitly labelled prerelease tag (`vX.Y.Z-<suffix>` → npm `next` +
+   GitHub prerelease) if those manual gates remain incomplete, unless
    the owner approves a release exception and its evidence limits are recorded.
 5. Merge the reviewed PR through the normal GitHub process. Create `v0.1.1`
    at the exact green commit; tag-triggered Release builds every artifact and
-   creates a draft GitHub Release with notes, manifest and SHA256SUMS.
+   creates a draft GitHub Release with notes, `manifest.json`,
+   `release-manifest.json` and SHA256SUMS.
 6. Configure CI publication using [publishing setup](publishing-setup.md):
    `NPM_TOKEN` for the first release, then tokenless npm trusted publishing.
    The successful tag build triggers `publish.yml` automatically.

@@ -84,7 +84,23 @@ publication is not atomic: a failure can leave an installable subset published;
 the GitHub release stays draft until every exact package and install passes.
 If an immutable version contains different bytes, bump all versions and create
 a new tag. Preserve the old tag. Branch candidate Release runs build/upload
-artifacts but do not trigger registry publication.
+artifacts but do not trigger registry publication. Publication reruns must use
+the tag's own workflow version (`gh workflow run publish.yml --ref <tag>`):
+an older tag's asset set predates later tooling additions.
+
+## Prerelease (RC) publications
+
+Semver prerelease tags (`vX.Y.Z-<suffix>`, e.g. `v0.2.0-rc.1`) are accepted
+everywhere `vX.Y.Z` is. Before tagging an RC, bump **every** versioned manifest
+to the exact prerelease version — root `package.json`, the eight publishable
+package manifests, `Cargo.toml`, both `pubspec.yaml`s and
+`bridges/expo/android/build.gradle` — `release-check.mjs` requires tag ==
+version across all of them. Prereleases publish to the npm **`next`** dist-tag
+(consumers install `@beyond-digital/aiux-core@next` or the exact version) and
+the GitHub release is marked a **prerelease**; npm `latest` and the regular
+release flag stay stable-only. A successful RC tag Release run auto-dispatches
+publication just like a stable tag. Promoting an RC means bumping to the stable
+version and cutting a new stable tag — never re-tag or mutate the RC.
 
 ## Native destinations and credentials
 
@@ -96,3 +112,18 @@ No `CARGO_REGISTRY_TOKEN`, `PUB_*`, Maven Central credentials, Apple signing
 credentials or GitHub Packages token is required for the implemented channels.
 Mobile Flutter C ABI packaging, plain RN Fabric and GraphQL remain unavailable
 as installable registry packages; see [installation](install.md).
+
+## Open owner decisions
+
+Resolved so far: MIT licensing, `@beyond-digital` scope ownership, and the
+v0.1.1 stable `latest` channel (approved 2026-10-03). Still pending, none of
+which this repository can configure on its own:
+
+- **npm trusted publishing** — per-package OIDC setup on npmjs.com for all
+  eight packages, then `NPM_AUTH_MODE=oidc` and `NPM_TOKEN` removal.
+- **Non-npm registries** — crates.io, pub.dev and Maven Central stay
+  unconfigured; enabling them needs owner accounts/credentials.
+- **Mobile Flutter C ABI packaging** — iOS/Android native library bundling for
+  Flutter consumers; currently Git-source only.
+- **Physical-device sign-off** — simulator accessibility was reported;
+  physical-device coverage remains an owner call (or a prerelease label).

@@ -10,7 +10,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 ## Status snapshot
 
 - Current phase: **COMPLETE** — all 12 PRs merged to `main` (2026-10-02);
-  `v0.1.0` tag pending DoD signoff (plan §26).
+  `v0.1.1` published (npm `latest` + GitHub release) after owner approval
+  2026-10-03; `v0.1.0` immutable tag/draft preserved by design.
 - Branching model: one draft PR per phase, branched off `main` (or off the prior
   open phase branch when it is still unmerged — keep PRs stackable and small).
 - Parallel lanes: SwiftUI (PR 4) ∥ Compose (PR 5) after PR 3; Web/WASM lane
@@ -158,8 +159,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(_)` blocked/skipped (
 - [x] release notes automation + dependency audit — `tools/release-notes.mjs`
   + `docs/integration/dependency-audit.md` (cargo clean; pnpm 4 fixed,
   2 documented Expo transitives; gradle inventory + OWASP path noted)
-- [ ] tag `v0.1.0` internal release via `release.yml` — orchestrator cuts
-  after this PR merges + v0.1 DoD signoff (not part of PR 12)
+- [x] tag `v0.1.0` internal release via `release.yml` — cut at `1d77f34`;
+  draft preserved immutable by design (superseded by installable v0.1.1)
 - [x] `release.yml` real pipeline bodies (bindings gen, XCFramework, AARs,
   wasm, JS package builds, checksums, draft GitHub Release)
 - **Gate:** v0.1 DoD (plan §26) — one Expo app installs AIUX, renders
@@ -178,11 +179,19 @@ components, native networking stack, provider SDKs, public registry publishing.
   GraphQL and plain RN remain private.
 - [x] Executable metadata/tarball gates and isolated consumer validation scripts.
 - [x] Native distribution assembly and npm trusted-publishing workflow prepared.
-- [ ] Exact candidate commit passes all CI + distribution consumer builds.
-- [ ] Manual native accessibility/device sign-off (see renderer checklist).
-- [ ] npm account authenticated / trusted publishers configured.
-- [ ] Reviewed PR merged, immutable 0.1.1 tag built, registry packages published
-  and independently installed; GitHub release published.
+- [x] Exact candidate commit passed all CI + distribution consumer builds
+  (tag `v0.1.1` @ `8da587d`; Clean Expo consumer ubuntu+macOS green).
+- [x] Manual native accessibility/device sign-off — owner reported iOS/Android
+  simulator accessibility testing on 2026-10-03 (recorded with evidence limits;
+  physical devices + Flutter + specific screen readers still unverified).
+- [x] npm account authenticated — first publication ran granular-token
+  (`auth_mode=token`); per-package OIDC trusted-publisher migration path
+  documented in `docs/integration/publishing-setup.md`.
+- [x] Reviewed PR merged, immutable 0.1.1 tag built, registry packages published
+  and independently installed; GitHub release published — all eight
+  `@beyond-digital` packages live on npm `latest` @ `0.1.1`.
+- [x] Consolidated `release-manifest.json` inventory asset + prerelease-aware
+  tag validation (`vX.Y.Z-<suffix>` → npm `next` + GitHub prerelease).
 - [ ] pub.dev/crates.io registry releases and mobile Flutter native payloads.
 
 ## Docs expansion + live captures (Oct 2026 session)
